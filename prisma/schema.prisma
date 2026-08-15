@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum ListingCondition {
+  NEW
+  USED_LIKE_NEW
+}
+
+enum InventoryMovementType {
+  PURCHASE_IN
+  WEBSITE_SALE
+  ORDER_CANCELLATION_RETURN
+  FBA_OUTBOUND
+  DAMAGE_ADJUSTMENT
+  MANUAL_ADJUSTMENT
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  passwordHash       String
+  emailVerified      Boolean             @default(false)
+  role               UserRole            @default(CUSTOMER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  addresses          Address[]
+  inventoryMovements InventoryMovement[]
+}
+
+model Address {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName String
+  line1         String
+  line2         String?
+  city          String
+  county        String?
+  postcode      String
+  countryCode   String
+  phone         String?
+  isDefault     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  @@index([userId])
+}
+
+model LegoProduct {
+  id               Int                @id @default(autoincrement())
+  setNumber        String             @unique
+  title            String
+  description      String?
+  theme            String
+  ageRecommendation String
+  pieceCount       Int
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  productListings  ProductListing[]
+  @@index([theme])
+}
+
+model ProductListing {
+  id           Int                @id @default(autoincrement())
+  legoProductId Int
+  legoProduct   LegoProduct        @relation(fields: [legoProductId], references: [id])
+  condition    ListingCondition
+  originalPrice Decimal          @db.Decimal(10,2)
+  salePrice    Decimal?          @db.Decimal(10,2)
+  currentStock Int                @default(0)
+  active       Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  listingImages ListingImage[]
+  inventoryMovements InventoryMovement[]
+  @@index([legoProductId])
+  @@index([condition])
+  @@index([active])
+}
+
+model ListingImage {
+  id        Int      @id @default(autoincrement())
+  listingId Int
+  listing   ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  @@index([listingId])
+  @@index([listingId, sortOrder])
+}
+
+model InventoryMovement {
+  id                Int                    @id @default(autoincrement())
+  listingId         Int
+  listing           ProductListing         @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  quantityChange    Int
+  type              InventoryMovementType
+  note              String
+  performedByUserId Int
+  performedByUser   User                   @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt         DateTime               @default(now())
+  @@index([listingId])
+  @@index([performedByUserId])
+  @@index([createdAt])
+  @@index([type])
+}
