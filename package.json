@@ -24,6 +24,7 @@
     "@types/node": "^20.11.0",
     "@types/pg": "^8.10.9",
     "@typescript/typescript-linux-x64": "^7.0.2",
-    "prisma": "^7.9.1"
+    "prisma": "^7.9.1",
+    "typescript": "^5.5.4"
   }
 }
