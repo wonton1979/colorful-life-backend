@@ -11,6 +11,8 @@ const configSchema = z.object({
       z.number().int().positive()
     ),
   DATABASE_URL: z.string().nonempty(),
+    JWT_SECRET: z.string().nonempty(),
+    JWT_EXPIRES_IN: z.string().nonempty().default("1h"),
 });
 
 const parsed = configSchema.safeParse(process.env);

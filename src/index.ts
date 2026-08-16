@@ -1,8 +1,18 @@
 import express from "express";
-import { config } from "./config";
+import authRouter from "./routes/auth.js";
+import profileRouter from "./routes/profile.js";
+// Import the configuration from the config directory. Adding the .js extension
+// ensures that Node resolves the module correctly when running the compiled
+// JavaScript. This is required for Node 22+ when "moduleResolution" is set
+// to "bundler".
+import { config } from "./config/index.js";
 
 const app = express();
 app.use(express.json());
+// Mount authentication routes
+app.use("/auth", authRouter);
+// Mount profile routes at root to expose GET /profile
+app.use("/", profileRouter);
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
