@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import bcrypt from "bcrypt";
-import { sign, SignOptions } from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { Prisma } from "../generated/prisma-client/client.js";
 import { prisma } from "../prisma/runtime.js";
 import { config } from "../config/index.js";
@@ -30,7 +30,7 @@ export const signup = async (req: Request, res: Response) => {
         passwordHash: hashedPassword,
       },
     });
-    const token = sign(
+    const token = jwt.sign(
       { id: user.id, role: user.role },
       config.JWT_SECRET,
       { expiresIn: config.JWT_EXPIRES_IN } as SignOptions
@@ -66,7 +66,7 @@ export const login = async (req: Request, res: Response) => {
     if (!passwordMatches) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    const token = sign(
+    const token = jwt.sign(
       { id: user.id, role: user.role },
       config.JWT_SECRET,
       { expiresIn: config.JWT_EXPIRES_IN } as SignOptions

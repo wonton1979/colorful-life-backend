@@ -8,10 +8,10 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User'
-export type * from './models/Address'
-export type * from './models/LegoProduct'
-export type * from './models/ProductListing'
-export type * from './models/ListingImage'
-export type * from './models/InventoryMovement'
-export type * from './commonInputTypes'
+export type * from './models/User.js'
+export type * from './models/Address.js'
+export type * from './models/LegoProduct.js'
+export type * from './models/ProductListing.js'
+export type * from './models/ListingImage.js'
+export type * from './models/InventoryMovement.js'
+export type * from './commonInputTypes.js'
