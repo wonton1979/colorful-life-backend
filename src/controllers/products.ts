@@ -433,3 +433,42 @@ export const adjustInventory = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/**
+ * GET /products/:id/inventory-movements
+ * Returns the inventory movement history for a ProductListing.
+ * Requires authentication via authMiddleware.
+ */
+export const getInventoryMovements = async (req: Request, res: Response) => {
+  const listingId = Number(req.params.id);
+  if (!Number.isInteger(listingId) || listingId <= 0) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+  try {
+    // Verify listing exists (active or inactive)
+    const listing = await prisma.productListing.findUnique({
+      where: { id: listingId },
+      select: { id: true },
+    });
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+    const movements = await prisma.inventoryMovement.findMany({
+      where: { listingId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        listingId: true,
+        quantityChange: true,
+        type: true,
+        note: true,
+        performedByUserId: true,
+        createdAt: true,
+      },
+    });
+    res.json({ listingId, movements });
+  } catch (err) {
+    console.error("Get inventory movements error", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
