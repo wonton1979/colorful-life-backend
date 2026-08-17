@@ -272,3 +272,85 @@ export const getProductById = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+/**
+ * PATCH /products/:id/deactivate
+ * Deactivates a product listing without deleting data.
+ */
+export const deactivateProduct = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+  try {
+    const existing = await prisma.productListing.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+    await prisma.productListing.update({ where: { id }, data: { active: false } });
+    const updated = await prisma.productListing.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        legoProductId: true,
+        condition: true,
+        originalPrice: true,
+        salePrice: true,
+        active: true,
+        currentStock: true,
+        createdAt: true,
+        updatedAt: true,
+        legoProduct: true,
+        listingImages: { orderBy: { sortOrder: "asc" } },
+      },
+    });
+    if (!updated) {
+      return res.status(500).json({ error: "Failed to retrieve updated listing" });
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("Deactivate product error", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * PATCH /products/:id/reactivate
+ * Reactivates a product listing without deleting data.
+ */
+export const reactivateProduct = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+  try {
+    const existing = await prisma.productListing.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+    await prisma.productListing.update({ where: { id }, data: { active: true } });
+    const updated = await prisma.productListing.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        legoProductId: true,
+        condition: true,
+        originalPrice: true,
+        salePrice: true,
+        active: true,
+        currentStock: true,
+        createdAt: true,
+        updatedAt: true,
+        legoProduct: true,
+        listingImages: { orderBy: { sortOrder: "asc" } },
+      },
+    });
+    if (!updated) {
+      return res.status(500).json({ error: "Failed to retrieve updated listing" });
+    }
+    res.json(updated);
+  } catch (err) {
+    console.error("Reactivate product error", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
