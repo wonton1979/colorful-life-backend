@@ -47,3 +47,18 @@ export type ListingImage = Prisma.ListingImageModel
  * 
  */
 export type InventoryMovement = Prisma.InventoryMovementModel
+/**
+ * Model Purchase
+ * 
+ */
+export type Purchase = Prisma.PurchaseModel
+/**
+ * Model PurchaseDocument
+ * 
+ */
+export type PurchaseDocument = Prisma.PurchaseDocumentModel
+/**
+ * Model PurchaseItem
+ * 
+ */
+export type PurchaseItem = Prisma.PurchaseItemModel

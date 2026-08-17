@@ -56,7 +56,10 @@ export const ModelName = {
   LegoProduct: 'LegoProduct',
   ProductListing: 'ProductListing',
   ListingImage: 'ListingImage',
-  InventoryMovement: 'InventoryMovement'
+  InventoryMovement: 'InventoryMovement',
+  Purchase: 'Purchase',
+  PurchaseDocument: 'PurchaseDocument',
+  PurchaseItem: 'PurchaseItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -161,6 +164,59 @@ export const InventoryMovementScalarFieldEnum = {
 } as const
 
 export type InventoryMovementScalarFieldEnum = (typeof InventoryMovementScalarFieldEnum)[keyof typeof InventoryMovementScalarFieldEnum]
+
+
+export const PurchaseScalarFieldEnum = {
+  id: 'id',
+  sourceOrderReference: 'sourceOrderReference',
+  sourceOrderDate: 'sourceOrderDate',
+  merchantName: 'merchantName',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PurchaseScalarFieldEnum = (typeof PurchaseScalarFieldEnum)[keyof typeof PurchaseScalarFieldEnum]
+
+
+export const PurchaseDocumentScalarFieldEnum = {
+  id: 'id',
+  purchaseId: 'purchaseId',
+  partNumber: 'partNumber',
+  sourceInvoiceReference: 'sourceInvoiceReference',
+  importHash: 'importHash',
+  sourceDocumentDate: 'sourceDocumentDate',
+  importedByUserId: 'importedByUserId',
+  originalGrossMerchandiseTotal: 'originalGrossMerchandiseTotal',
+  shippingTotal: 'shippingTotal',
+  discountTotal: 'discountTotal',
+  finalTotalPaid: 'finalTotalPaid',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PurchaseDocumentScalarFieldEnum = (typeof PurchaseDocumentScalarFieldEnum)[keyof typeof PurchaseDocumentScalarFieldEnum]
+
+
+export const PurchaseItemScalarFieldEnum = {
+  id: 'id',
+  purchaseDocumentId: 'purchaseDocumentId',
+  productListingId: 'productListingId',
+  externalProductId: 'externalProductId',
+  sourceDescription: 'sourceDescription',
+  sourceSetNumber: 'sourceSetNumber',
+  sourceLineNumber: 'sourceLineNumber',
+  quantity: 'quantity',
+  originalGrossUnitCost: 'originalGrossUnitCost',
+  originalGrossLineTotal: 'originalGrossLineTotal',
+  allocatedShipping: 'allocatedShipping',
+  allocatedDiscount: 'allocatedDiscount',
+  finalLineCost: 'finalLineCost',
+  finalUnitCost: 'finalUnitCost',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PurchaseItemScalarFieldEnum = (typeof PurchaseItemScalarFieldEnum)[keyof typeof PurchaseItemScalarFieldEnum]
 
 
 export const SortOrder = {
