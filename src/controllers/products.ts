@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Prisma } from "../generated/prisma-client/client.js";
-import { ListingCondition } from "../generated/prisma-client/enums.js";
+import { ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
 import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 
@@ -351,6 +351,85 @@ export const reactivateProduct = async (req: Request, res: Response) => {
     res.json(updated);
   } catch (err) {
     console.error("Reactivate product error", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * POST /products/:id/inventory-adjustments
+ * Manually adjust the stock of a product listing and record an inventory movement.
+ *
+ * Request body: { quantity: number }
+ * Positive integer increases stock, negative decreases.
+ */
+export const adjustInventory = async (req: Request, res: Response) => {
+  const listingId = Number(req.params.id);
+  if (!Number.isInteger(listingId) || listingId <= 0) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+  const schema = z.object({
+    quantity: z
+      .number()
+      .int()
+      .refine((q) => q !== 0, { message: "quantity must not be zero" }),
+  });
+  const parseResult = schema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  const { quantity } = parseResult.data;
+  // Ensure authenticated user
+  const performedBy = req.user?.id;
+  if (!performedBy) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const listing = await tx.productListing.findUnique({ where: { id: listingId } });
+      if (!listing) {
+        throw new Error("listing_not_found");
+      }
+      const updatedRows = await tx.$executeRaw`
+        UPDATE "ProductListing"
+        SET "currentStock" = "currentStock" + ${quantity}
+        WHERE "id" = ${listingId} AND "currentStock" + ${quantity} >= 0
+      `;
+      if (updatedRows === 0) {
+        throw new Error("negative_stock");
+      }
+      const movement = await tx.inventoryMovement.create({
+        data: {
+          listingId,
+          quantityChange: quantity,
+          type: InventoryMovementType.MANUAL_ADJUSTMENT,
+          note: `Manual inventory adjustment of ${quantity}`,
+          performedByUserId: performedBy,
+        },
+      });
+      const updatedListing = await tx.productListing.findUnique({ where: { id: listingId } });
+      return { listing: updatedListing, movement };
+    });
+    const { listing, movement } = result;
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+    res.json({
+      listing: {
+        id: listing.id,
+        currentStock: listing.currentStock,
+      },
+      movement,
+    });
+  } catch (err: any) {
+    if (err.message === "negative_stock") {
+      return res
+        .status(400)
+        .json({ error: "Adjustment would make stock negative" });
+    }
+    if (err.message === "listing_not_found") {
+      return res.status(404).json({ error: "Listing not found" });
+    }
+    console.error("Inventory adjustment error", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
