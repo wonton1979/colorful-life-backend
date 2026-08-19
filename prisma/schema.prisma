@@ -39,6 +39,7 @@ model User {
   updatedAt          DateTime            @updatedAt
   addresses          Address[]
   inventoryMovements InventoryMovement[]
+  purchaseDocuments PurchaseDocument[]
 }
 
 model Address {
@@ -86,6 +87,7 @@ model ProductListing {
   updatedAt    DateTime          @updatedAt
   listingImages ListingImage[]
   inventoryMovements InventoryMovement[]
+  purchaseItems PurchaseItem[]
   @@index([legoProductId])
   @@index([condition])
   @@index([active])
@@ -118,4 +120,76 @@ model InventoryMovement {
   @@index([performedByUserId])
   @@index([createdAt])
   @@index([type])
+}
+
+model Purchase {
+  id                   Int                @id @default(autoincrement())
+  sourceOrderReference String             @unique
+  sourceOrderDate      DateTime?
+  merchantName         String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  purchaseDocuments    PurchaseDocument[]
+}
+
+model PurchaseDocument {
+  id                            Int            @id @default(autoincrement())
+  purchaseId                    Int
+  purchase                      Purchase       @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+
+  partNumber                    Int
+  sourceInvoiceReference        String?
+  importHash                    String         @db.VarChar(64) @unique
+  sourceDocumentDate            DateTime?
+
+  importedByUserId              Int
+  importedByUser                User           @relation(fields: [importedByUserId], references: [id], onDelete: Restrict)
+
+  originalGrossMerchandiseTotal Decimal        @db.Decimal(12,2)
+  shippingTotal                 Decimal        @db.Decimal(12,2) @default(0.00)
+  discountTotal                 Decimal        @db.Decimal(12,2) @default(0.00)
+  finalTotalPaid                Decimal        @db.Decimal(12,2)
+
+  createdAt                     DateTime       @default(now())
+  updatedAt                     DateTime       @updatedAt
+
+  purchaseItems                 PurchaseItem[]
+
+  @@unique([purchaseId, partNumber])
+  @@index([purchaseId])
+  @@index([importedByUserId])
+}
+
+model PurchaseItem {
+  id                        Int                 @id @default(autoincrement())
+
+  purchaseDocumentId        Int
+  purchaseDocument          PurchaseDocument    @relation(fields: [purchaseDocumentId], references: [id], onDelete: Restrict)
+
+  productListingId          Int?
+  productListing            ProductListing?     @relation(fields: [productListingId], references: [id], onDelete: SetNull)
+
+  externalProductId         String?
+  sourceDescription         String
+  sourceSetNumber           String?
+  sourceLineNumber          Int?
+
+  quantity                  Int
+
+  originalGrossUnitCost     Decimal             @db.Decimal(12,2)
+  originalGrossLineTotal    Decimal             @db.Decimal(12,2)
+
+  allocatedShipping         Decimal             @db.Decimal(12,2) @default(0.00)
+  allocatedDiscount         Decimal             @db.Decimal(12,2) @default(0.00)
+
+  finalLineCost             Decimal             @db.Decimal(12,2)
+  finalUnitCost             Decimal             @db.Decimal(14,6)
+
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+
+  @@index([purchaseDocumentId])
+  @@index([productListingId])
+  @@index([externalProductId])
+  @@index([sourceSetNumber])
 }
