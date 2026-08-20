@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import type { Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../middleware/auth.js";
-import { importPurchaseInvoice } from "../controllers/purchases.js";
+import { importPurchaseInvoice, listPurchases, getPurchaseById } from "../controllers/purchases.js";
 
 const router = Router();
 
@@ -31,5 +31,7 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
 }
 
 router.post("/import", authMiddleware, uploadMiddleware, importPurchaseInvoice);
+router.get("/", authMiddleware, listPurchases);
+router.get("/:id", authMiddleware, getPurchaseById);
 
 export default router;
