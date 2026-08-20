@@ -62,6 +62,29 @@ async function cleanup(userId: number): Promise<void> {
   await prisma.user.deleteMany({ where: { id: userId } });
 }
 
+/**
+ * Cleanup stale purchase data that may exist from a previous test run for the same
+ * PDF fixture hash. This function only touches rows that have the exact
+ * `importHash` value passed in.
+ */
+async function cleanupImportHash(importHash: string): Promise<void> {
+  const docs = await prisma.purchaseDocument.findMany({ where: { importHash } });
+  const docIds = docs.map((d) => d.id);
+  const purchaseIds = docs.map((d) => d.purchaseId);
+  if (docIds.length) {
+    await prisma.purchaseItem.deleteMany({ where: { purchaseDocumentId: { in: docIds } } });
+    await prisma.purchaseDocument.deleteMany({ where: { id: { in: docIds } } });
+  }
+  if (purchaseIds.length) {
+    const remainingDocs = await prisma.purchaseDocument.findMany({ where: { purchaseId: { in: purchaseIds } } });
+    const remainingPurchaseIds = new Set(remainingDocs.map((d) => d.purchaseId));
+    const idsToDelete = purchaseIds.filter((id) => !remainingPurchaseIds.has(id));
+    if (idsToDelete.length) {
+      await prisma.purchase.deleteMany({ where: { id: { in: idsToDelete } } });
+    }
+  }
+}
+
 describe("Purchase Import API", () => {
   let server: Server;
   let url: string;
@@ -85,6 +108,7 @@ describe("Purchase Import API", () => {
   });
 
   beforeEach(async () => {
+    await cleanupImportHash(expectedHash);
     const user = await createTestUser(url);
     token = user.token;
     userId = user.userId;

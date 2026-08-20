@@ -1,5 +1,7 @@
 import { prisma } from "../../prisma/runtime.js";
 import type { CalculatedPurchaseDocument } from "./purchaseImport.js";
+import { matchProductListingId } from "../../services/purchaseItemMatcher.js";
+import type { Prisma } from "../../generated/prisma-client/client.js";
 
 /**
  * Error thrown when attempting to import a purchase document that has already
@@ -96,23 +98,31 @@ export async function persistCalculatedPurchaseDocument(
        *    for efficiency; the `purchaseDocumentId` foreign key is added
        *    to each row.
        */
-      const itemData = doc.items.map((item) => ({
-        purchaseDocumentId: purchaseDocument.id,
-        productListingId: item.productListingId ?? null,
-        externalProductId: item.externalProductId ?? null,
-        sourceDescription: item.sourceDescription,
-        sourceSetNumber: item.sourceSetNumber ?? null,
-        sourceLineNumber: item.sourceLineNumber ?? null,
-        quantity: item.quantity,
-        originalGrossUnitCost: penniesToDecimal(item.originalGrossUnitCost),
-        originalGrossLineTotal: penniesToDecimal(item.originalGrossLineTotal),
-        allocatedShipping: penniesToDecimal(item.allocatedShipping),
-        allocatedDiscount: penniesToDecimal(item.allocatedDiscount),
-        finalLineCost: penniesToDecimal(item.finalLineCost),
-        finalUnitCost: item.finalUnitCost,
-      }));
+       // Resolve product listings for each item sequentially to keep transaction
+       // isolation and avoid racing conditions.
+       const itemData: Prisma.PurchaseItemCreateManyInput[] = [];
+        for (const item of doc.items) {
+          const productListingId =
+            item.productListingId ??
+            (await matchProductListingId(item.sourceSetNumber, tx));
+          itemData.push({
+            purchaseDocumentId: purchaseDocument.id,
+            productListingId,
+           externalProductId: item.externalProductId ?? null,
+           sourceDescription: item.sourceDescription,
+           sourceSetNumber: item.sourceSetNumber ?? null,
+           sourceLineNumber: item.sourceLineNumber ?? null,
+           quantity: item.quantity,
+           originalGrossUnitCost: penniesToDecimal(item.originalGrossUnitCost),
+           originalGrossLineTotal: penniesToDecimal(item.originalGrossLineTotal),
+           allocatedShipping: penniesToDecimal(item.allocatedShipping),
+           allocatedDiscount: penniesToDecimal(item.allocatedDiscount),
+           finalLineCost: penniesToDecimal(item.finalLineCost),
+           finalUnitCost: item.finalUnitCost,
+         });
+       }
 
-      await tx.purchaseItem.createMany({ data: itemData });
+       await tx.purchaseItem.createMany({ data: itemData });
     });
   } catch (err: unknown) {
   if (
