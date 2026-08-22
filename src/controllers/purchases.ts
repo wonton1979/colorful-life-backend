@@ -7,6 +7,14 @@ import { AmazonPurchaseInvoiceParseError } from "../domain/purchases/parsers/ama
 import { PurchaseNormalizationError } from "../domain/purchases/purchaseNormalizer.js";
 import { ValidationError } from "../domain/purchases/purchaseImport.js";
 import { prisma } from "../prisma/runtime.js";
+// Domain service and error classes for purchase item receiving
+import {
+  receivePurchaseItem as domainReceivePurchaseItem,
+  PurchaseItemNotFoundError,
+  AlreadyReceivedError,
+  InvalidQuantityError,
+  ProductListingMissingError,
+} from "../domain/purchases/purchaseItemReceiving.js";
 
 /**
  * Controller for the Purchase Invoice import endpoint.
@@ -55,6 +63,42 @@ export const importPurchaseInvoice = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
     console.error("Purchase import error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * HTTP controller for receiving a purchase item.
+ *
+ * This controller validates the request, calls the domain service
+ * `receivePurchaseItem(userId, purchaseItemId)`, and maps domain errors
+ * to appropriate HTTP status codes.  It does not perform any business logic
+ * beyond delegating to the domain service.
+ */
+export const receivePurchaseItem = async (req: Request, res: Response) => {
+  const userId = (req.user as { id: number }).id;
+  const idParam = req.params.id;
+  const purchaseItemId = Number(idParam);
+  if (!Number.isInteger(purchaseItemId) || purchaseItemId < 1) {
+    return res.status(400).json({ error: "Invalid purchase item id" });
+  }
+  try {
+    const result = await domainReceivePurchaseItem(userId, purchaseItemId);
+    return res.status(200).json(result);
+  } catch (err: unknown) {
+    if (err instanceof PurchaseItemNotFoundError) {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err instanceof AlreadyReceivedError) {
+      return res.status(409).json({ error: err.message });
+    }
+    if (err instanceof InvalidQuantityError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof ProductListingMissingError) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("Receive purchase item error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
