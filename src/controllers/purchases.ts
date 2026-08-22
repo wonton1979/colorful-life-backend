@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { createHash } from "node:crypto";
 import { importAmazonPurchaseInvoice } from "../domain/purchases/purchaseImportService.js";
+// Manual purchase controller
+import { createManualPurchase as domainCreateManualPurchase } from "../domain/purchases/manualPurchaseService.js";
+import { ProductListingNotFoundError } from "../domain/purchases/manualPurchaseService.js";
+import { ManualPurchaseSchema } from "../domain/purchases/manualPurchaseValidator.js";
 import { DuplicateImportError } from "../domain/purchases/purchasePersistence.js";
 import { PdfTextExtractionError } from "../domain/purchases/pdfTextExtractor.js";
 import { AmazonPurchaseInvoiceParseError } from "../domain/purchases/parsers/amazonPurchaseInvoiceParser.js";
@@ -150,6 +154,41 @@ export const returnPurchaseItem = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
     console.error("Return purchase item error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * HTTP controller for creating a manual purchase entry.
+ *
+ * The request body is validated against {@link ManualPurchaseSchema}.  On
+ * validation failure a 400 with a formatted Zod error object is returned.
+ * Domain errors are mapped to appropriate HTTP status codes:
+ *   • {@link ProductListingNotFoundError} → 400
+ *   • {@link DuplicateImportError} → 409
+ *   • {@link ValidationError} or {@link PurchaseNormalizationError} → 400
+ *   • Any other error → 500
+ */
+export const createManualPurchase = async (req: Request, res: Response) => {
+  const userId = (req.user as { id: number }).id;
+  const parseResult = ManualPurchaseSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  try {
+    const purchaseDocument = await domainCreateManualPurchase(parseResult.data, userId);
+    return res.status(201).json(purchaseDocument);
+  } catch (err: unknown) {
+    if (err instanceof ProductListingNotFoundError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof DuplicateImportError) {
+      return res.status(409).json({ error: err.message });
+    }
+    if (err instanceof ValidationError || err instanceof PurchaseNormalizationError) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("Manual purchase error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
