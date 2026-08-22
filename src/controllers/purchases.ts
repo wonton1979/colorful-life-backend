@@ -15,6 +15,16 @@ import {
   InvalidQuantityError,
   ProductListingMissingError,
 } from "../domain/purchases/purchaseItemReceiving.js";
+// Domain service and error classes for purchase item return
+import {
+  returnPurchaseItem as domainReturnPurchaseItem,
+  PurchaseItemNotFoundError as ReturnPurchaseItemNotFoundError,
+  PurchaseItemNotReceivedError as ReturnPurchaseItemNotReceivedError,
+  PurchaseItemAlreadyReturnedError as ReturnPurchaseItemAlreadyReturnedError,
+  ProductListingMissingError as ReturnProductListingMissingError,
+  InvalidQuantityError as ReturnInvalidQuantityError,
+  InsufficientStockError as ReturnInsufficientStockError,
+} from "../domain/purchases/purchaseItemReturn.js";
 
 /**
  * Controller for the Purchase Invoice import endpoint.
@@ -99,6 +109,47 @@ export const receivePurchaseItem = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
     console.error("Receive purchase item error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/**
+ * HTTP controller for returning a fully received purchase item.
+ *
+ * It delegates to the domain service {@link domainReturnPurchaseItem} and
+ * maps domain errors to appropriate HTTP status codes.
+ */
+export const returnPurchaseItem = async (req: Request, res: Response) => {
+  const authenticatedUserId = (req.user as { id: number }).id;
+  const idParam = req.params.id;
+  const purchaseItemId = Number(idParam);
+  if (!Number.isInteger(purchaseItemId) || purchaseItemId < 1) {
+    return res.status(400).json({ error: "Invalid purchase item id" });
+  }
+  try {
+    const result = await domainReturnPurchaseItem(authenticatedUserId, purchaseItemId);
+    return res.status(200).json(result);
+  } catch (err: unknown) {
+    // Map domain errors to HTTP status codes
+    if (err instanceof ReturnPurchaseItemNotFoundError) {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err instanceof ReturnPurchaseItemNotReceivedError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof ReturnPurchaseItemAlreadyReturnedError) {
+      return res.status(409).json({ error: err.message });
+    }
+    if (err instanceof ReturnProductListingMissingError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof ReturnInvalidQuantityError) {
+      return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof ReturnInsufficientStockError) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("Return purchase item error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

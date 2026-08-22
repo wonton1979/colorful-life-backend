@@ -27,6 +27,7 @@ enum InventoryMovementType {
   FBA_OUTBOUND
   DAMAGE_ADJUSTMENT
   MANUAL_ADJUSTMENT
+  PURCHASE_RETURN_OUT
 }
 
 model User {
@@ -189,6 +190,9 @@ model PurchaseItem {
   updatedAt                 DateTime            @updatedAt
 
   receivedAt DateTime?
+
+  // Timestamp marking when this item was returned to the supplier.
+  returnedAt DateTime?
 
   @@index([purchaseDocumentId])
   @@index([productListingId])

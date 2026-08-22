@@ -1266,7 +1266,8 @@ export const PurchaseItemScalarFieldEnum = {
   finalUnitCost: 'finalUnitCost',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  receivedAt: 'receivedAt'
+  receivedAt: 'receivedAt',
+  returnedAt: 'returnedAt'
 } as const
 
 export type PurchaseItemScalarFieldEnum = (typeof PurchaseItemScalarFieldEnum)[keyof typeof PurchaseItemScalarFieldEnum]

@@ -31,7 +31,8 @@ export const InventoryMovementType = {
   ORDER_CANCELLATION_RETURN: 'ORDER_CANCELLATION_RETURN',
   FBA_OUTBOUND: 'FBA_OUTBOUND',
   DAMAGE_ADJUSTMENT: 'DAMAGE_ADJUSTMENT',
-  MANUAL_ADJUSTMENT: 'MANUAL_ADJUSTMENT'
+  MANUAL_ADJUSTMENT: 'MANUAL_ADJUSTMENT',
+  PURCHASE_RETURN_OUT: 'PURCHASE_RETURN_OUT'
 } as const
 
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
