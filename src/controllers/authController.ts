@@ -1,20 +1,11 @@
 import { Request, Response } from "express";
-import { z } from "zod";
+import { signupSchema, loginSchema } from "../utils/authValidation.js";
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { Prisma } from "../generated/prisma-client/client.js";
 import { prisma } from "../prisma/runtime.js";
 import { config } from "../config/index.js";
 
-const signupSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
 
 export const signup = async (req: Request, res: Response) => {
   const parseResult = signupSchema.safeParse(req.body);
@@ -22,11 +13,13 @@ export const signup = async (req: Request, res: Response) => {
     return res.status(400).json({ error: parseResult.error.format() });
   }
   const { email, password } = parseResult.data;
+  // `email` is already normalized by the Zod schema via trim+lowercase
+  const normalizedEmail = email;
   try {
     const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         passwordHash: hashedPassword,
       },
     });
@@ -37,15 +30,16 @@ export const signup = async (req: Request, res: Response) => {
     );
     return res.status(201).json({ token });
    } catch (err) {
-     if (
-       err instanceof Prisma.PrismaClientKnownRequestError &&
-       err.code === "P2002"
-     ) {
-       const target = err.meta?.target;
-       if (Array.isArray(target) && target.includes("email")) {
-         return res.status(409).json({ error: "Email already in use" });
-       }
-     }
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002"
+      ) {
+        // For the current schema the unique constraint violation on User.email
+        // surfaces as a P2002 error with meta.modelName === "User".
+        if (err.meta?.modelName === "User") {
+          return res.status(409).json({ error: "Email already in use" });
+        }
+      }
      console.error("Signup error", err);
      return res.status(500).json({ error: "Internal server error" });
    }
@@ -57,8 +51,9 @@ export const login = async (req: Request, res: Response) => {
     return res.status(400).json({ error: parseResult.error.format() });
   }
   const { email, password } = parseResult.data;
+  const normalizedEmail = email;
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
