@@ -33,7 +33,7 @@ async function startServer(): Promise<{ server: Server; url: string }> {
  */
 async function createTestUser(url: string): Promise<{ token: string; userId: number }> {
   const email = `history-test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
-  const password = "Test1234";
+  const password = "Test1234!";
   const signupRes = await fetch(`${url}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
