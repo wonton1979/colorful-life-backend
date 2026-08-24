@@ -20,6 +20,10 @@ enum ListingCondition {
   USED_LIKE_NEW
 }
 
+enum OrderStatus {
+  PENDING
+}
+
 enum InventoryMovementType {
   PURCHASE_IN
   WEBSITE_SALE
@@ -41,6 +45,7 @@ model User {
   addresses          Address[]
   inventoryMovements InventoryMovement[]
   purchaseDocuments PurchaseDocument[]
+  orders Order[]
 }
 
 model Address {
@@ -89,6 +94,7 @@ model ProductListing {
   listingImages ListingImage[]
   inventoryMovements InventoryMovement[]
   purchaseItems PurchaseItem[]
+  orderItems OrderItem[]
   @@index([legoProductId])
   @@index([condition])
   @@index([active])
@@ -121,6 +127,52 @@ model InventoryMovement {
   @@index([performedByUserId])
   @@index([createdAt])
   @@index([type])
+}
+
+model Order {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status            OrderStatus        @default(PENDING)
+  // Billing address snapshot – comes from the user's saved/default address
+  billingRecipientName String
+  billingLine1         String
+  billingLine2         String?
+  billingCity          String
+  billingCounty        String?
+  billingPostcode      String
+  billingCountryCode   String
+  billingPhone         String?
+
+  // Delivery address snapshot – defaults to billing but can be overridden
+  deliveryRecipientName String
+  deliveryLine1         String
+  deliveryLine2         String?
+  deliveryCity          String
+  deliveryCounty        String?
+  deliveryPostcode      String
+  deliveryCountryCode   String
+  deliveryPhone         String?
+  totalAmount       Decimal            @db.Decimal(12,2)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  @@index([userId])
+  orderItems        OrderItem[]
+}
+
+model OrderItem {
+  id                Int                @id @default(autoincrement())
+  orderId           Int
+  order             Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productListingId  Int
+  productListing    ProductListing     @relation(fields: [productListingId], references: [id], onDelete: Restrict)
+  quantity          Int
+  unitPrice         Decimal            @db.Decimal(10,2)
+  lineTotal         Decimal            @db.Decimal(12,2)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  @@index([orderId])
+  @@index([productListingId])
 }
 
 model Purchase {

@@ -57,6 +57,8 @@ export const ModelName = {
   ProductListing: 'ProductListing',
   ListingImage: 'ListingImage',
   InventoryMovement: 'InventoryMovement',
+  Order: 'Order',
+  OrderItem: 'OrderItem',
   Purchase: 'Purchase',
   PurchaseDocument: 'PurchaseDocument',
   PurchaseItem: 'PurchaseItem'
@@ -164,6 +166,48 @@ export const InventoryMovementScalarFieldEnum = {
 } as const
 
 export type InventoryMovementScalarFieldEnum = (typeof InventoryMovementScalarFieldEnum)[keyof typeof InventoryMovementScalarFieldEnum]
+
+
+export const OrderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  status: 'status',
+  billingRecipientName: 'billingRecipientName',
+  billingLine1: 'billingLine1',
+  billingLine2: 'billingLine2',
+  billingCity: 'billingCity',
+  billingCounty: 'billingCounty',
+  billingPostcode: 'billingPostcode',
+  billingCountryCode: 'billingCountryCode',
+  billingPhone: 'billingPhone',
+  deliveryRecipientName: 'deliveryRecipientName',
+  deliveryLine1: 'deliveryLine1',
+  deliveryLine2: 'deliveryLine2',
+  deliveryCity: 'deliveryCity',
+  deliveryCounty: 'deliveryCounty',
+  deliveryPostcode: 'deliveryPostcode',
+  deliveryCountryCode: 'deliveryCountryCode',
+  deliveryPhone: 'deliveryPhone',
+  totalAmount: 'totalAmount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const OrderItemScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  productListingId: 'productListingId',
+  quantity: 'quantity',
+  unitPrice: 'unitPrice',
+  lineTotal: 'lineTotal',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
 
 
 export const PurchaseScalarFieldEnum = {

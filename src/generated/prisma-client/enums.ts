@@ -25,6 +25,13 @@ export const ListingCondition = {
 export type ListingCondition = (typeof ListingCondition)[keyof typeof ListingCondition]
 
 
+export const OrderStatus = {
+  PENDING: 'PENDING'
+} as const
+
+export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
+
+
 export const InventoryMovementType = {
   PURCHASE_IN: 'PURCHASE_IN',
   WEBSITE_SALE: 'WEBSITE_SALE',
