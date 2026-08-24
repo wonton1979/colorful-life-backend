@@ -64,6 +64,8 @@ model Address {
   countryCode   String
   phone         String?
   isDefault     Boolean   @default(false)
+  // Separate default billing flag, used for the new API.
+  isDefaultBilling Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   @@index([userId])

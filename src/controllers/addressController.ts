@@ -1,0 +1,274 @@
+import { Request, Response } from "express";
+import { prisma } from "../prisma/runtime.js";
+import { Prisma } from "../generated/prisma-client/client.js";
+import { z } from "zod";
+
+// ---------------------------------------------------------------------------
+// Address API shapes and helpers
+// ---------------------------------------------------------------------------
+type AddressOutput = {
+  id: number;
+  recipientName: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  postcode: string;
+  country: string;
+  phone: string | null;
+  isDefaultShipping: boolean;
+  isDefaultBilling: boolean;
+};
+
+// Prisma projection used throughout the file when querying addresses
+type AddressSelect = {
+  id: number;
+  recipientName: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  postcode: string;
+  countryCode: string;
+  phone: string | null;
+  isDefault: boolean;
+  isDefaultBilling: boolean;
+};
+
+/**
+ * Map the Prisma.Address model to the API representation.
+ */
+function mapAddressToApi(addr: AddressSelect): AddressOutput {
+  return {
+    id: addr.id,
+    recipientName: addr.recipientName,
+    line1: addr.line1,
+    line2: addr.line2 ?? null,
+    city: addr.city,
+    postcode: addr.postcode,
+    country: addr.countryCode,
+    phone: addr.phone ?? null,
+    isDefaultShipping: addr.isDefault,
+    isDefaultBilling: addr.isDefaultBilling ?? false,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Validation schemas
+// ---------------------------------------------------------------------------
+const CreateAddressSchema = z.object({
+  recipientName: z.string().trim().min(1, { message: "recipientName cannot be empty" }),
+  line1: z.string().trim().min(1, { message: "line1 cannot be empty" }),
+  city: z.string().trim().min(1, { message: "city cannot be empty" }),
+  postcode: z.string().trim().min(1, { message: "postcode cannot be empty" }),
+  country: z.string().trim().min(1, { message: "country cannot be empty" }),
+  line2: z.string().trim().nullable().optional(),
+  phone: z.string().trim().nullable().optional(),
+  isDefaultShipping: z.boolean().optional(),
+  isDefaultBilling: z.boolean().optional(),
+});
+
+const PatchAddressSchema = z.object({
+  recipientName: z.string().trim().min(1).optional(),
+  line1: z.string().trim().min(1).optional(),
+  city: z.string().trim().min(1).optional(),
+  postcode: z.string().trim().min(1).optional(),
+  country: z.string().trim().min(1).optional(),
+  line2: z.string().trim().nullable().optional(),
+  phone: z.string().trim().nullable().optional(),
+  isDefaultShipping: z.boolean().optional(),
+  isDefaultBilling: z.boolean().optional(),
+}).refine((data) => Object.keys(data).length > 0, {
+  message: "No fields provided for update",
+});
+
+// ---------------------------------------------------------------------------
+// GET /users/me/addresses
+// ---------------------------------------------------------------------------
+export const getAddresses = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const addresses = await prisma.address.findMany({
+      where: { userId },
+      orderBy: { id: "asc" },
+      select: {
+        id: true,
+        recipientName: true,
+        line1: true,
+        line2: true,
+        city: true,
+        postcode: true,
+        countryCode: true,
+        phone: true,
+        isDefault: true,
+        isDefaultBilling: true,
+      },
+    });
+    const response = addresses.map(mapAddressToApi);
+    return res.json(response);
+  } catch (err) {
+    console.error("Get addresses error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// POST /users/me/addresses
+// ---------------------------------------------------------------------------
+export const createAddress = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const parseResult = CreateAddressSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  const data = parseResult.data;
+  try {
+    const created = await prisma.$transaction(async (tx) => {
+      const addressCount = await tx.address.count({ where: { userId } });
+      const isFirst = addressCount === 0;
+      let isDefaultShipping = data.isDefaultShipping ?? false;
+      let isDefaultBilling = data.isDefaultBilling ?? false;
+      if (isFirst) {
+        isDefaultShipping = true;
+        isDefaultBilling = true;
+      }
+      if (isDefaultShipping) {
+        await tx.address.updateMany({ where: { userId, isDefault: true }, data: { isDefault: false } });
+      }
+      if (isDefaultBilling) {
+        await tx.address.updateMany({ where: { userId, isDefaultBilling: true }, data: { isDefaultBilling: false } });
+      }
+      const createData: Prisma.AddressCreateInput = {
+        user: { connect: { id: userId } },
+        recipientName: data.recipientName,
+        line1: data.line1,
+        line2: data.line2 ?? null,
+        city: data.city,
+        postcode: data.postcode,
+        countryCode: data.country,
+        phone: data.phone ?? null,
+        isDefault: isDefaultShipping,
+        isDefaultBilling,
+      };
+      const addr = await tx.address.create({ data: createData });
+      return addr;
+    });
+    return res.status(201).json(mapAddressToApi(created));
+  } catch (err) {
+    console.error("Create address error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// PATCH /users/me/addresses/:addressId
+// ---------------------------------------------------------------------------
+export const updateAddress = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const addressId = Number(req.params.addressId);
+  if (!Number.isInteger(addressId) || addressId < 1) {
+    return res.status(400).json({ error: "Invalid address id" });
+  }
+  const parseResult = PatchAddressSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  const data = parseResult.data;
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const address = await tx.address.findFirst({
+        where: { id: addressId, userId },
+        select: { id: true, userId: true, isDefault: true, isDefaultBilling: true },
+      });
+      if (!address) {
+        return null;
+      }
+      const updateData: Prisma.AddressUpdateInput = {};
+      if (data.recipientName !== undefined) updateData.recipientName = data.recipientName;
+      if (data.line1 !== undefined) updateData.line1 = data.line1;
+        if (data.line2 !== undefined) updateData.line2 = data.line2 ?? null;
+        if (data.city !== undefined) updateData.city = data.city;
+        if (data.postcode !== undefined) updateData.postcode = data.postcode;
+        if (data.country !== undefined) updateData.countryCode = data.country;
+        if (data.phone !== undefined) updateData.phone = data.phone ?? null;
+      if (data.isDefaultShipping !== undefined) {
+        if (data.isDefaultShipping) {
+          await tx.address.updateMany({ where: { userId, isDefault: true }, data: { isDefault: false } });
+          updateData.isDefault = true;
+        } else if (address.isDefault) {
+          return "cannot_unset_shipping_default";
+        }
+      }
+      if (data.isDefaultBilling !== undefined) {
+        if (data.isDefaultBilling) {
+          await tx.address.updateMany({ where: { userId, isDefaultBilling: true }, data: { isDefaultBilling: false } });
+          updateData.isDefaultBilling = true;
+        } else if (address.isDefaultBilling) {
+          return "cannot_unset_billing_default";
+        }
+      }
+      const updatedAddr = await tx.address.update({ where: { id: addressId }, data: updateData, select: { id: true, recipientName: true, line1: true, line2: true, city: true, postcode: true, countryCode: true, phone: true, isDefault: true, isDefaultBilling: true } });
+      return updatedAddr;
+    });
+    if (result === null) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+    if (result === "cannot_unset_shipping_default") {
+      return res.status(400).json({ error: "Cannot directly unset the default shipping address" });
+    }
+    if (result === "cannot_unset_billing_default") {
+      return res.status(400).json({ error: "Cannot directly unset the default billing address" });
+    }
+    return res.json(mapAddressToApi(result));
+  } catch (err) {
+    console.error("Update address error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// ---------------------------------------------------------------------------
+// DELETE /users/me/addresses/:addressId
+// ---------------------------------------------------------------------------
+export const deleteAddress = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const addressId = Number(req.params.addressId);
+  if (!Number.isInteger(addressId) || addressId < 1) {
+    return res.status(400).json({ error: "Invalid address id" });
+  }
+  try {
+    const deleted = await prisma.$transaction(async (tx) => {
+      const address = await tx.address.findFirst({ where: { id: addressId, userId }, select: { id: true, userId: true, isDefault: true, isDefaultBilling: true } });
+      if (!address) {
+        return false;
+      }
+      const { isDefault, isDefaultBilling } = address;
+      const remaining = await tx.address.findMany({ where: { userId, id: { not: addressId } }, orderBy: { id: "asc" } });
+      if (remaining.length > 0) {
+        const promote = remaining[0];
+        const promoteData: Prisma.AddressUpdateInput = {};
+        if (isDefault) promoteData.isDefault = true;
+        if (isDefaultBilling) promoteData.isDefaultBilling = true;
+        await tx.address.update({ where: { id: promote.id }, data: promoteData });
+      }
+      await tx.address.delete({ where: { id: addressId } });
+      return true;
+    });
+    if (!deleted) {
+      return res.status(404).json({ error: "Address not found" });
+    }
+    return res.status(204).send();
+  } catch (err) {
+    console.error("Delete address error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

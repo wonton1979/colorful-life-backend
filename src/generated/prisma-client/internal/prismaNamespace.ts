@@ -1308,6 +1308,7 @@ export const AddressScalarFieldEnum = {
   countryCode: 'countryCode',
   phone: 'phone',
   isDefault: 'isDefault',
+  isDefaultBilling: 'isDefaultBilling',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
