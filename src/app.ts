@@ -1,6 +1,7 @@
 import express from "express";
 import authRouter from "./routes/auth.js";
 import profileRouter from "./routes/profile.js";
+import usersRouter from "./routes/users.js";
 import productsRouter from "./routes/products.js";
 import purchasesRouter from "./routes/purchases.js";
 import purchaseItemsRouter from "./routes/purchaseItems.js";
@@ -13,6 +14,7 @@ app.use(express.json());
 // Mount routers
 app.use("/auth", authRouter);
 app.use("/", profileRouter);
+app.use("/users", usersRouter);
 app.use("/products", productsRouter);
 app.use("/purchases", purchasesRouter);
 app.use("/purchase-items", purchaseItemsRouter);
