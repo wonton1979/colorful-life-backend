@@ -48,6 +48,16 @@ export type ListingImage = Prisma.ListingImageModel
  */
 export type InventoryMovement = Prisma.InventoryMovementModel
 /**
+ * Model Order
+ * 
+ */
+export type Order = Prisma.OrderModel
+/**
+ * Model OrderItem
+ * 
+ */
+export type OrderItem = Prisma.OrderItemModel
+/**
  * Model Purchase
  * 
  */
