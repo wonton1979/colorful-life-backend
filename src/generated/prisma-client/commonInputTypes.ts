@@ -262,16 +262,6 @@ export type EnumOrderStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
 }
 
-export type EnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.OrderStatus | Prisma.EnumOrderStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
-}
-
 export type DateTimeNullableFilter<$PrismaModel = never> = {
   equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel> | null
   in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -281,6 +271,30 @@ export type DateTimeNullableFilter<$PrismaModel = never> = {
   gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
   gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
   not?: Prisma.NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+}
+
+export type EnumCancellationInitiatorNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationInitiator | Prisma.EnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel> | $Enums.CancellationInitiator | null
+}
+
+export type EnumCancellationReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationReason | Prisma.EnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel> | $Enums.CancellationReason | null
+}
+
+export type EnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OrderStatus | Prisma.EnumOrderStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
 }
 
 export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -295,6 +309,26 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
+}
+
+export type EnumCancellationInitiatorNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationInitiator | Prisma.EnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationInitiatorNullableWithAggregatesFilter<$PrismaModel> | $Enums.CancellationInitiator | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel>
+}
+
+export type EnumCancellationReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationReason | Prisma.EnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.CancellationReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
 }
 
 export type IntNullableFilter<$PrismaModel = never> = {
@@ -585,16 +619,6 @@ export type NestedEnumOrderStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel> | $Enums.OrderStatus
 }
 
-export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
-  equals?: $Enums.OrderStatus | Prisma.EnumOrderStatusFieldRefInput<$PrismaModel>
-  in?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
-  notIn?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
-  not?: Prisma.NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
-  _count?: Prisma.NestedIntFilter<$PrismaModel>
-  _min?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
-  _max?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
-}
-
 export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
   equals?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel> | null
   in?: Date[] | string[] | Prisma.ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -604,6 +628,30 @@ export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
   gt?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
   gte?: Date | string | Prisma.DateTimeFieldRefInput<$PrismaModel>
   not?: Prisma.NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+}
+
+export type NestedEnumCancellationInitiatorNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationInitiator | Prisma.EnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel> | $Enums.CancellationInitiator | null
+}
+
+export type NestedEnumCancellationReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationReason | Prisma.EnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel> | $Enums.CancellationReason | null
+}
+
+export type NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.OrderStatus | Prisma.EnumOrderStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumOrderStatusWithAggregatesFilter<$PrismaModel> | $Enums.OrderStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumOrderStatusFilter<$PrismaModel>
 }
 
 export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -618,6 +666,26 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumCancellationInitiatorNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationInitiator | Prisma.EnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationInitiator[] | Prisma.ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationInitiatorNullableWithAggregatesFilter<$PrismaModel> | $Enums.CancellationInitiator | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCancellationInitiatorNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumCancellationReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CancellationReason | Prisma.EnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.CancellationReason[] | Prisma.ListEnumCancellationReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumCancellationReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.CancellationReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
 }
 
 export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {

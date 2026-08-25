@@ -380,10 +380,6 @@ export type PurchaseScalarRelationFilter = {
   isNot?: Prisma.PurchaseWhereInput
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type PurchaseCreateNestedOneWithoutPurchaseDocumentsInput = {
   create?: Prisma.XOR<Prisma.PurchaseCreateWithoutPurchaseDocumentsInput, Prisma.PurchaseUncheckedCreateWithoutPurchaseDocumentsInput>
   connectOrCreate?: Prisma.PurchaseCreateOrConnectWithoutPurchaseDocumentsInput

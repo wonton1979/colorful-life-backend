@@ -38,7 +38,7 @@ export async function createOrder(
   return prisma.$transaction(async (tx) => {
     // 2a. Billing address
     const defaultBillingAddrs = await tx.address.findMany({
-      where: { userId, isDefault: true },
+      where: { userId, isDefaultBilling: true },
       select: {
         recipientName: true,
         line1: true,

@@ -1394,6 +1394,9 @@ export const OrderScalarFieldEnum = {
   deliveryPhone: 'deliveryPhone',
   totalAmount: 'totalAmount',
   createdAt: 'createdAt',
+  cancelledAt: 'cancelledAt',
+  cancelledBy: 'cancelledBy',
+  cancellationReason: 'cancellationReason',
   updatedAt: 'updatedAt'
 } as const
 
@@ -1615,6 +1618,34 @@ export type EnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pris
  * Reference to a field of type 'OrderStatus[]'
  */
 export type ListEnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CancellationInitiator'
+ */
+export type EnumCancellationInitiatorFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CancellationInitiator'>
+    
+
+
+/**
+ * Reference to a field of type 'CancellationInitiator[]'
+ */
+export type ListEnumCancellationInitiatorFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CancellationInitiator[]'>
+    
+
+
+/**
+ * Reference to a field of type 'CancellationReason'
+ */
+export type EnumCancellationReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CancellationReason'>
+    
+
+
+/**
+ * Reference to a field of type 'CancellationReason[]'
+ */
+export type ListEnumCancellationReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CancellationReason[]'>
     
 
 
