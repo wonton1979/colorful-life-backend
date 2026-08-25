@@ -26,10 +26,34 @@ export type ListingCondition = (typeof ListingCondition)[keyof typeof ListingCon
 
 
 export const OrderStatus = {
-  PENDING: 'PENDING'
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  DISPATCHED: 'DISPATCHED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  RETURNED: 'RETURNED'
 } as const
 
 export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
+
+
+export const CancellationInitiator = {
+  CUSTOMER: 'CUSTOMER',
+  SELLER: 'SELLER'
+} as const
+
+export type CancellationInitiator = (typeof CancellationInitiator)[keyof typeof CancellationInitiator]
+
+
+export const CancellationReason = {
+  CHANGED_MIND: 'CHANGED_MIND',
+  ORDERED_BY_MISTAKE: 'ORDERED_BY_MISTAKE',
+  ADDRESS_PROBLEM: 'ADDRESS_PROBLEM',
+  FOUND_CHEAPER_ELSEWHERE: 'FOUND_CHEAPER_ELSEWHERE',
+  OTHER: 'OTHER'
+} as const
+
+export type CancellationReason = (typeof CancellationReason)[keyof typeof CancellationReason]
 
 
 export const InventoryMovementType = {

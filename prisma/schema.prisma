@@ -22,6 +22,25 @@ enum ListingCondition {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+  RETURNED
+}
+
+// Cancellation metadata enums
+enum CancellationInitiator {
+  CUSTOMER
+  SELLER
+}
+
+enum CancellationReason {
+  CHANGED_MIND
+  ORDERED_BY_MISTAKE
+  ADDRESS_PROBLEM
+  FOUND_CHEAPER_ELSEWHERE
+  OTHER
 }
 
 enum InventoryMovementType {
@@ -160,6 +179,10 @@ model Order {
   deliveryPhone         String?
   totalAmount       Decimal            @db.Decimal(12,2)
   createdAt         DateTime           @default(now())
+  // Cancellation metadata – optional until cancellation occurs
+  cancelledAt           DateTime?
+  cancelledBy           CancellationInitiator?
+  cancellationReason    CancellationReason?
   updatedAt         DateTime           @updatedAt
   @@index([userId])
   orderItems        OrderItem[]

@@ -1,0 +1,197 @@
+import { strict as assert } from "node:assert";
+import { describe, it, before, after, afterEach } from "node:test";
+import { prisma } from "../prisma/runtime.js";
+import { Decimal } from "@prisma/client/runtime/client";
+import { createOrder } from "../domain/orders/orderService.js";
+import { cancelOrder } from "../domain/orders/orderCancellationService.js";
+import { OrderNotFoundError, OrderNotCancellableError } from "../domain/orders/orderCancellationErrors.js";
+import { CancellationReason } from "../generated/prisma-client/enums.js";
+
+const TEST_PREFIX = `orderCancelTest-${Date.now()}`;
+let userId: number;
+let legoProductId: number;
+let productListingIds: number[] = [];
+const createdOrderIds: number[] = [];
+
+async function createUserWithAddress() {
+  const user = await prisma.user.create({
+    data: {
+      email: `${TEST_PREFIX}@example.com`,
+      passwordHash: "hashed",
+      emailVerified: true,
+      role: "CUSTOMER",
+      addresses: {
+        create: {
+          recipientName: "Test User",
+          line1: "123 Test St",
+          city: "Testville",
+          postcode: "12345",
+          countryCode: "US",
+          isDefaultBilling: true,
+        },
+      },
+    },
+    include: { addresses: true },
+  });
+  return { user, address: user.addresses[0] };
+}
+
+async function createProductAndListings(count: number) {
+  const product = await prisma.legoProduct.create({
+    data: {
+      setNumber: `${TEST_PREFIX}-SET`,
+      title: `${TEST_PREFIX} Lego`,
+      theme: "TEST",
+      ageRecommendation: "8+",
+      pieceCount: 100,
+      productListings: {
+        create: Array.from({ length: count }, (_, i) => ({
+          condition: "NEW",
+          originalPrice: new Decimal(20 + i * 5),
+          salePrice: i % 2 === 0 ? new Decimal(15 + i * 5) : null,
+          currentStock: 10,
+          active: true,
+        })),
+      },
+    },
+    include: { productListings: true },
+  });
+  return {
+    productId: product.id,
+    listingIds: product.productListings.map((l) => l.id),
+  };
+}
+
+async function recordOrder(input: { items: { productListingId: number; quantity: number }[] }) {
+  const order = await createOrder(userId, input);
+  createdOrderIds.push(order.id);
+  return order;
+}
+
+before(async () => {
+  const { user } = await createUserWithAddress();
+  userId = user.id;
+  const { productId, listingIds } = await createProductAndListings(2);
+  legoProductId = productId;
+  productListingIds = listingIds;
+});
+
+after(async () => {
+  await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
+  await prisma.productListing.deleteMany({ where: { legoProductId } });
+  await prisma.legoProduct.deleteMany({ where: { id: legoProductId } });
+  await prisma.address.deleteMany({ where: { userId } });
+  await prisma.user.deleteMany({ where: { id: userId } });
+  await prisma.$disconnect();
+});
+
+afterEach(async () => {
+  if (createdOrderIds.length) {
+    await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
+    createdOrderIds.length = 0;
+  }
+});
+
+describe("Order Cancellation Domain Tests", () => {
+  it("customer can cancel own PENDING order", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const cancelled = await cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
+    assert.strictEqual(cancelled.status, "CANCELLED");
+    assert.ok(cancelled.cancelledAt);
+    assert.strictEqual(cancelled.cancelledBy, "CUSTOMER");
+    assert.strictEqual(cancelled.cancellationReason, CancellationReason.CHANGED_MIND);
+  });
+
+  it("customer can cancel own CONFIRMED order", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[1], quantity: 1 }] });
+    await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
+    const cancelled = await cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE);
+    assert.strictEqual(cancelled.status, "CANCELLED");
+  });
+
+  it("cannot cancel another customer's order", async () => {
+    const otherUser = await prisma.user.create({
+      data: {
+        email: `${TEST_PREFIX}-other@example.com`,
+        passwordHash: "hashed",
+        emailVerified: true,
+        role: "CUSTOMER",
+        addresses: {
+          create: {
+            recipientName: "Other User",
+            line1: "456 Test Ave",
+            city: "Testville",
+            postcode: "67890",
+            countryCode: "US",
+            isDefaultBilling: true,
+          },
+        },
+      },
+      include: { addresses: true },
+    });
+    const order = await createOrder(otherUser.id, {
+      items: [{ productListingId: productListingIds[0], quantity: 1 }],
+    });
+    await assert.rejects(
+      async () => cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND),
+      (err) => err instanceof OrderNotFoundError,
+    );
+    const after = await prisma.order.findUnique({ where: { id: order.id } });
+    assert.strictEqual(after?.status, "PENDING");
+    assert.strictEqual(after?.cancelledAt, null);
+    assert.strictEqual(after?.cancellationReason, null);
+    await prisma.order.deleteMany({ where: { id: { in: [order.id] } } });
+    await prisma.user.deleteMany({ where: { id: otherUser.id } });
+  });
+
+  it("already CANCELLED order cannot be cancelled again", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const cancelled = await cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
+    const originalCancelledAt = cancelled.cancelledAt;
+    const originalReason = cancelled.cancellationReason;
+    await assert.rejects(
+      async () => cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE),
+      (err) => err instanceof OrderNotCancellableError,
+    );
+    const after = await prisma.order.findUnique({ where: { id: order.id } });
+    assert.strictEqual(after?.status, "CANCELLED");
+    assert.deepStrictEqual(after?.cancelledAt, originalCancelledAt);
+    assert.strictEqual(after?.cancellationReason, originalReason);
+  });
+
+  const nonCancellableStatuses = ["DISPATCHED", "COMPLETED", "RETURNED"] as const;
+  nonCancellableStatuses.forEach((status) => {
+    it(`${status} order cannot be cancelled`, async () => {
+      const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+      await prisma.order.update({ where: { id: order.id }, data: { status } });
+      await assert.rejects(
+        async () => cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND),
+        (err) => err instanceof OrderNotCancellableError,
+      );
+    });
+  });
+
+  it("no InventoryMovement and stock unchanged on cancellation", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const initialStock = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))?.currentStock;
+    await cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
+    const afterStock = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))?.currentStock;
+    assert.strictEqual(afterStock, initialStock);
+    const movements = await prisma.inventoryMovement.findMany({ where: { listingId: productListingIds[0] } });
+    assert.strictEqual(movements.length, 0);
+  });
+
+  it("concurrent cancellation: exactly one succeeds", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const promise1 = cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
+    const promise2 = cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE);
+    const results = await Promise.allSettled([promise1, promise2]);
+    const fulfilled = results.filter((r) => r.status === "fulfilled");
+    const rejected = results.filter((r) => r.status === "rejected");
+    assert.strictEqual(fulfilled.length, 1);
+    assert.strictEqual(rejected.length, 1);
+    const finalOrder = await prisma.order.findUnique({ where: { id: order.id } });
+    assert.strictEqual(finalOrder?.status, "CANCELLED");
+    assert.ok(finalOrder?.cancelledAt);
+  });
+});

@@ -35,7 +35,7 @@ async function createUserWithAddress() {
           city: "Testville",
           postcode: "12345",
           countryCode: "US",
-          isDefault: true,
+           isDefaultBilling: true,
         },
       },
     },
@@ -105,10 +105,10 @@ afterEach(async () => {
     extraAddressIds.length = 0;
   }
   const addresses = await prisma.address.findMany({ where: { userId } });
-  const defaults = addresses.filter((a) => a.isDefault);
+  const defaults = addresses.filter((a) => a.isDefaultBilling);
   if (defaults.length !== 1) {
-    await prisma.address.updateMany({ where: { userId, isDefault: true }, data: { isDefault: false } });
-    await prisma.address.update({ where: { id: addresses[0].id }, data: { isDefault: true } });
+    await prisma.address.updateMany({ where: { userId, isDefaultBilling: true }, data: { isDefaultBilling: false } });
+    await prisma.address.update({ where: { id: addresses[0].id }, data: { isDefaultBilling: true } });
   }
 });
 
@@ -139,14 +139,14 @@ describe("Order Creation Domain Integration Tests", () => {
   });
 
   it("no default address throws error", async () => {
-    await prisma.address.updateMany({ where: { userId }, data: { isDefault: false } });
+    await prisma.address.updateMany({ where: { userId }, data: { isDefaultBilling: false } });
     await assert.rejects(
       async () => recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] }),
       (e) => e instanceof NoDefaultBillingAddressError
     );
     const count = await prisma.order.count({ where: { userId } });
     assert.strictEqual(count, 0);
-    await prisma.address.updateMany({ where: { userId }, data: { isDefault: true } });
+    await prisma.address.updateMany({ where: { userId }, data: { isDefaultBilling: true } });
   });
 
   it("multiple default addresses throws error", async () => {
@@ -158,7 +158,7 @@ describe("Order Creation Domain Integration Tests", () => {
         city: "Testville",
         postcode: "67890",
         countryCode: "US",
-        isDefault: true,
+        isDefaultBilling: true,
       },
     });
     extraAddressIds.push(second.id);
