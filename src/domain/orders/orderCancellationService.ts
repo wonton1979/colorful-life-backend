@@ -58,4 +58,51 @@ export async function cancelOrder(
   });
 
   return updatedOrder;
+ }
+/**
+ * Cancel an order by an ADMIN user.
+ *
+ * @param orderId Order id to cancel.
+ * @param reason Cancellation reason.
+ * @returns Updated order record.
+ * @throws OrderNotFoundError          if the order does not exist.
+ * @throws OrderNotCancellableError    if the order is in a non‑cancellable state.
+ */
+export async function cancelOrderByAdmin(
+  orderId: number,
+  reason: CancellationReason,
+  ) {
+  const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
+
+  const updatedOrder = await prisma.$transaction(async (tx) => {
+    const updateResult = await tx.order.updateMany({
+      where: {
+        id: orderId,
+        status: { in: cancellableStatuses },
+        cancelledAt: null,
+      },
+      data: {
+        status: OrderStatus.CANCELLED,
+        cancelledAt: new Date(),
+        cancelledBy: CancellationInitiator.SELLER,
+        cancellationReason: reason,
+      },
+    });
+
+    if (updateResult.count === 0) {
+      const order = await tx.order.findUnique({ where: { id: orderId } });
+      if (!order) {
+        throw new OrderNotFoundError(orderId);
+      }
+      throw new OrderNotCancellableError(orderId, order.status);
+    }
+
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new OrderNotFoundError(orderId);
+    }
+    return order;
+  });
+
+  return updatedOrder;
 }

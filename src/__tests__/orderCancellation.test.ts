@@ -3,7 +3,7 @@ import { describe, it, before, after, afterEach } from "node:test";
 import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createOrder } from "../domain/orders/orderService.js";
-import { cancelOrder } from "../domain/orders/orderCancellationService.js";
+import { cancelOrder, cancelOrderByAdmin } from "../domain/orders/orderCancellationService.js";
 import { OrderNotFoundError, OrderNotCancellableError } from "../domain/orders/orderCancellationErrors.js";
 import { CancellationReason } from "../generated/prisma-client/enums.js";
 
@@ -26,6 +26,29 @@ async function createUserWithAddress() {
           line1: "123 Test St",
           city: "Testville",
           postcode: "12345",
+          countryCode: "US",
+          isDefaultBilling: true,
+        },
+      },
+    },
+    include: { addresses: true },
+  });
+  return { user, address: user.addresses[0] };
+}
+
+async function createAdminUserWithAddress() {
+  const user = await prisma.user.create({
+    data: {
+      email: `${TEST_PREFIX}-admin@example.com`,
+      passwordHash: "hashed",
+      emailVerified: true,
+      role: "ADMIN",
+      addresses: {
+        create: {
+          recipientName: "Admin User",
+          line1: "Admin St 1",
+          city: "Adminville",
+          postcode: "99999",
           countryCode: "US",
           isDefaultBilling: true,
         },
