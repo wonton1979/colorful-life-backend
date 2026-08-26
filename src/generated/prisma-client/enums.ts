@@ -50,7 +50,11 @@ export const CancellationReason = {
   ORDERED_BY_MISTAKE: 'ORDERED_BY_MISTAKE',
   ADDRESS_PROBLEM: 'ADDRESS_PROBLEM',
   FOUND_CHEAPER_ELSEWHERE: 'FOUND_CHEAPER_ELSEWHERE',
-  OTHER: 'OTHER'
+  OTHER: 'OTHER',
+  OUT_OF_STOCK: 'OUT_OF_STOCK',
+  PRICING_ERROR: 'PRICING_ERROR',
+  PRODUCT_UNAVAILABLE: 'PRODUCT_UNAVAILABLE',
+  FULFILMENT_ISSUE: 'FULFILMENT_ISSUE'
 } as const
 
 export type CancellationReason = (typeof CancellationReason)[keyof typeof CancellationReason]

@@ -10,8 +10,9 @@ import {
 } from "../domain/orders/orderErrors.js";
 import {
   CancelOrderSchema,
+  SellerCancelOrderSchema,
 } from "../domain/orders/orderCancellationValidator.js";
-import { cancelOrder } from "../domain/orders/orderCancellationService.js";
+import { cancelOrder, cancelOrderByAdmin } from "../domain/orders/orderCancellationService.js";
 import {
   OrderNotFoundError,
   OrderNotCancellableError,
@@ -37,6 +38,37 @@ export const createOrderHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: err.message });
     }
     console.error("Order creation error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+/**
+ * ADMIN seller cancellation handler.
+ * Requires the requester to be an ADMIN.
+ */
+export const cancelOrderBySellerHandler = async (req: Request, res: Response) => {
+  const userRole = (req.user as { role: string }).role;
+  if (userRole !== "ADMIN") {
+    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  }
+  const parseResult = SellerCancelOrderSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  const orderId = Number(req.params.orderId);
+  if (!Number.isInteger(orderId) || orderId < 1) {
+    return res.status(400).json({ error: "Invalid order id" });
+  }
+  try {
+    const order = await cancelOrderByAdmin(orderId, parseResult.data.reason);
+    return res.status(200).json(order);
+  } catch (err: unknown) {
+    if (err instanceof OrderNotFoundError) {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err instanceof OrderNotCancellableError) {
+      return res.status(400).json({ error: err.message });
+    }
+    console.error("Seller order cancellation error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
