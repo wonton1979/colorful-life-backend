@@ -8,12 +8,11 @@ import {
   ProductListingInactiveError,
   DuplicateProductListingError,
 } from "../domain/orders/orderErrors.js";
-import {
-  CancelOrderSchema,
-  SellerCancelOrderSchema,
-} from "../domain/orders/orderCancellationValidator.js";
+import { CancelOrderSchema, SellerCancelOrderSchema } from "../domain/orders/orderCancellationValidator.js";
+import { DispatchOrderSchema } from "../domain/orders/orderDispatchValidator.js";
 import { cancelOrder, cancelOrderByAdmin } from "../domain/orders/orderCancellationService.js";
 import { confirmOrder } from "../domain/orders/orderConfirmationService.js";
+import { dispatchOrder } from "../domain/orders/orderDispatchService.js";
 import {
   OrderNotFoundError as OrderNotFoundErrorCancel,
   OrderNotCancellableError,
@@ -23,6 +22,7 @@ import {
   OrderNotConfirmableError,
   InsufficientStockError,
 } from "../domain/orders/orderConfirmationErrors.js";
+import { OrderNotFoundError as OrderNotFoundErrorDispatch, OrderNotDispatchableError } from "../domain/orders/orderDispatchErrors.js";
 
 export const createOrderHandler = async (req: Request, res: Response) => {
   const parseResult = CreateOrderSchema.safeParse(req.body);
@@ -132,3 +132,38 @@ export const cancelOrderHandler = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+  export const dispatchOrderHandler = async (req: Request, res: Response) => {
+    const userRole = (req.user as { role: string }).role;
+    if (userRole !== "ADMIN") {
+      return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    }
+    const parseResult = DispatchOrderSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({ error: parseResult.error.format() });
+    }
+    const orderId = Number(req.params.orderId);
+    if (!Number.isInteger(orderId) || orderId < 1) {
+      return res.status(400).json({ error: "Invalid order id" });
+    }
+    try {
+      const order = await dispatchOrder(
+        orderId,
+        parseResult.data.actualShippingCost,
+        parseResult.data.shippingCarrier,
+        parseResult.data.trackingNumber,
+      );
+      // Omit actualShippingCost from the response as it's an internal field
+      const { actualShippingCost, ...rest } = order;
+      return res.status(200).json(rest);
+    } catch (err: unknown) {
+      if (err instanceof OrderNotFoundErrorDispatch) {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err instanceof OrderNotDispatchableError) {
+        return res.status(400).json({ error: err.message });
+      }
+      console.error("Order dispatch error", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  };
