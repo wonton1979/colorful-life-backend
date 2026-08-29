@@ -69,6 +69,7 @@ export type OrderMinAggregateOutputType = {
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
   cancellationReason: $Enums.CancellationReason | null
+  completedAt: Date | null
   updatedAt: Date | null
 }
 
@@ -101,6 +102,7 @@ export type OrderMaxAggregateOutputType = {
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
   cancellationReason: $Enums.CancellationReason | null
+  completedAt: Date | null
   updatedAt: Date | null
 }
 
@@ -133,6 +135,7 @@ export type OrderCountAggregateOutputType = {
   cancelledAt: number
   cancelledBy: number
   cancellationReason: number
+  completedAt: number
   updatedAt: number
   _all: number
 }
@@ -181,6 +184,7 @@ export type OrderMinAggregateInputType = {
   cancelledAt?: true
   cancelledBy?: true
   cancellationReason?: true
+  completedAt?: true
   updatedAt?: true
 }
 
@@ -213,6 +217,7 @@ export type OrderMaxAggregateInputType = {
   cancelledAt?: true
   cancelledBy?: true
   cancellationReason?: true
+  completedAt?: true
   updatedAt?: true
 }
 
@@ -245,6 +250,7 @@ export type OrderCountAggregateInputType = {
   cancelledAt?: true
   cancelledBy?: true
   cancellationReason?: true
+  completedAt?: true
   updatedAt?: true
   _all?: true
 }
@@ -364,6 +370,7 @@ export type OrderGroupByOutputType = {
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
   cancellationReason: $Enums.CancellationReason | null
+  completedAt: Date | null
   updatedAt: Date
   _count: OrderCountAggregateOutputType | null
   _avg: OrderAvgAggregateOutputType | null
@@ -419,6 +426,7 @@ export type OrderWhereInput = {
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.EnumCancellationReasonNullableFilter<"Order"> | $Enums.CancellationReason | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   orderItems?: Prisma.OrderItemListRelationFilter
@@ -453,6 +461,7 @@ export type OrderOrderByWithRelationInput = {
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledBy?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   orderItems?: Prisma.OrderItemOrderByRelationAggregateInput
@@ -490,6 +499,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.EnumCancellationReasonNullableFilter<"Order"> | $Enums.CancellationReason | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   orderItems?: Prisma.OrderItemListRelationFilter
@@ -524,6 +534,7 @@ export type OrderOrderByWithAggregationInput = {
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledBy?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.OrderCountOrderByAggregateInput
   _avg?: Prisma.OrderAvgOrderByAggregateInput
@@ -564,6 +575,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   cancelledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableWithAggregatesFilter<"Order"> | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.EnumCancellationReasonNullableWithAggregatesFilter<"Order"> | $Enums.CancellationReason | null
+  completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
 }
 
@@ -594,6 +606,7 @@ export type OrderCreateInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutOrdersInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
@@ -628,6 +641,7 @@ export type OrderUncheckedCreateInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
@@ -659,6 +673,7 @@ export type OrderUpdateInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
@@ -693,6 +708,7 @@ export type OrderUncheckedUpdateInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -726,6 +742,7 @@ export type OrderCreateManyInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
 }
 
@@ -756,6 +773,7 @@ export type OrderUpdateManyMutationInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -788,6 +806,7 @@ export type OrderUncheckedUpdateManyInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -830,6 +849,7 @@ export type OrderCountOrderByAggregateInput = {
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -869,6 +889,7 @@ export type OrderMaxOrderByAggregateInput = {
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -901,6 +922,7 @@ export type OrderMinOrderByAggregateInput = {
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
+  completedAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
@@ -1015,6 +1037,7 @@ export type OrderCreateWithoutUserInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutOrderInput
 }
@@ -1047,6 +1070,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutOrderInput
 }
@@ -1109,6 +1133,7 @@ export type OrderScalarWhereInput = {
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.EnumCancellationReasonNullableFilter<"Order"> | $Enums.CancellationReason | null
+  completedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   updatedAt?: Prisma.DateTimeFilter<"Order"> | Date | string
 }
 
@@ -1139,6 +1164,7 @@ export type OrderCreateWithoutOrderItemsInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutOrdersInput
 }
@@ -1172,6 +1198,7 @@ export type OrderUncheckedCreateWithoutOrderItemsInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
 }
 
@@ -1218,6 +1245,7 @@ export type OrderUpdateWithoutOrderItemsInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutOrdersNestedInput
 }
@@ -1251,6 +1279,7 @@ export type OrderUncheckedUpdateWithoutOrderItemsInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1282,6 +1311,7 @@ export type OrderCreateManyUserInput = {
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
   cancellationReason?: $Enums.CancellationReason | null
+  completedAt?: Date | string | null
   updatedAt?: Date | string
 }
 
@@ -1312,6 +1342,7 @@ export type OrderUpdateWithoutUserInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.OrderItemUpdateManyWithoutOrderNestedInput
 }
@@ -1344,6 +1375,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutOrderNestedInput
 }
@@ -1376,6 +1408,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
   cancellationReason?: Prisma.NullableEnumCancellationReasonFieldUpdateOperationsInput | $Enums.CancellationReason | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -1439,6 +1472,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   cancelledAt?: boolean
   cancelledBy?: boolean
   cancellationReason?: boolean
+  completedAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   orderItems?: boolean | Prisma.Order$orderItemsArgs<ExtArgs>
@@ -1474,6 +1508,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   cancelledAt?: boolean
   cancelledBy?: boolean
   cancellationReason?: boolean
+  completedAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
@@ -1507,6 +1542,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   cancelledAt?: boolean
   cancelledBy?: boolean
   cancellationReason?: boolean
+  completedAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["order"]>
@@ -1540,10 +1576,11 @@ export type OrderSelectScalar = {
   cancelledAt?: boolean
   cancelledBy?: boolean
   cancellationReason?: boolean
+  completedAt?: boolean
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "completedAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   orderItems?: boolean | Prisma.Order$orderItemsArgs<ExtArgs>
@@ -1591,6 +1628,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     cancelledAt: Date | null
     cancelledBy: $Enums.CancellationInitiator | null
     cancellationReason: $Enums.CancellationReason | null
+    completedAt: Date | null
     updatedAt: Date
   }, ExtArgs["result"]["order"]>
   composites: {}
@@ -2045,6 +2083,7 @@ export interface OrderFieldRefs {
   readonly cancelledAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly cancelledBy: Prisma.FieldRef<"Order", 'CancellationInitiator'>
   readonly cancellationReason: Prisma.FieldRef<"Order", 'CancellationReason'>
+  readonly completedAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Order", 'DateTime'>
 }
     

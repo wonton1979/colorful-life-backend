@@ -1,6 +1,10 @@
 import { Request, Response } from "express";
 import { CreateOrderSchema } from "../domain/orders/orderValidator.js";
+import { completeOrder } from "../domain/orders/orderCompletionService.js";
 import { createOrder } from "../domain/orders/orderService.js";
+// Error type used by the completion service
+import { OrderNotCompletableError } from "../domain/orders/orderCompletionErrors.js";
+import { OrderNotFoundError as OrderNotFoundErrorComplete } from "../domain/orders/orderDispatchErrors.js";
 import {
   NoDefaultBillingAddressError,
   MultipleDefaultBillingAddressesError,
@@ -106,6 +110,30 @@ export const confirmOrderHandler = async (req: Request, res: Response) => {
     console.error("Order confirmation error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
+};
+// ADMIN order completion handler
+export const completeOrderHandler = async (req: Request, res: Response) => {
+  const userRole = (req.user as { role: string }).role;
+  if (userRole !== "ADMIN") {
+    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  }
+  const orderId = Number(req.params.orderId);
+  if (!Number.isInteger(orderId) || orderId < 1) {
+    return res.status(400).json({ error: "Invalid order id" });
+  }
+  try {
+    const order = await completeOrder(orderId);
+    return res.status(200).json(order);
+    } catch (err: unknown) {
+      if (err instanceof OrderNotFoundErrorComplete) {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err instanceof OrderNotCompletableError) {
+        return res.status(400).json({ error: err.message });
+      }
+      console.error("Order completion error", err);
+      return res.status(500).json({ error: "Internal server error" });
+    }
 };
 
 export const cancelOrderHandler = async (req: Request, res: Response) => {
