@@ -192,6 +192,7 @@ model Order {
   cancelledAt           DateTime?
   cancelledBy           CancellationInitiator?
   cancellationReason    CancellationReason?
+  completedAt          DateTime?          @db.Timestamptz
   updatedAt         DateTime           @updatedAt
   @@index([userId])
   orderItems        OrderItem[]

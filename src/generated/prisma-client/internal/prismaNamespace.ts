@@ -1401,6 +1401,7 @@ export const OrderScalarFieldEnum = {
   cancelledAt: 'cancelledAt',
   cancelledBy: 'cancelledBy',
   cancellationReason: 'cancellationReason',
+  completedAt: 'completedAt',
   updatedAt: 'updatedAt'
 } as const
 
