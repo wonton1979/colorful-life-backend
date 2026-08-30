@@ -51,6 +51,7 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  BusinessExpense: 'BusinessExpense',
   User: 'User',
   Address: 'Address',
   LegoProduct: 'LegoProduct',
@@ -78,6 +79,21 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const BusinessExpenseScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  amount: 'amount',
+  incurredAt: 'incurredAt',
+  description: 'description',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BusinessExpenseScalarFieldEnum = (typeof BusinessExpenseScalarFieldEnum)[keyof typeof BusinessExpenseScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {

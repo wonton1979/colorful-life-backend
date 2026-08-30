@@ -6,6 +6,7 @@ import productsRouter from "./routes/products.js";
 import purchasesRouter from "./routes/purchases.js";
 import purchaseItemsRouter from "./routes/purchaseItems.js";
 import ordersRouter from "./routes/orders.js";
+import businessExpensesRouter from "./routes/businessExpenses.js";
 
 // Construct the Express application without starting the HTTP server.
 const app = express();
@@ -19,6 +20,7 @@ app.use("/products", productsRouter);
 app.use("/purchases", purchasesRouter);
 app.use("/purchase-items", purchaseItemsRouter);
 app.use("/orders", ordersRouter);
+app.use("/business-expenses", businessExpensesRouter);
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
