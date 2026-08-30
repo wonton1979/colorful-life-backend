@@ -71,3 +71,21 @@ export const InventoryMovementType = {
 } as const
 
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
+
+
+export const BusinessExpenseCategory = {
+  PURCHASE: 'PURCHASE',
+  SHIPPING: 'SHIPPING',
+  PLATFORM_FEE: 'PLATFORM_FEE',
+  PACKAGING: 'PACKAGING',
+  OTHER: 'OTHER'
+} as const
+
+export type BusinessExpenseCategory = (typeof BusinessExpenseCategory)[keyof typeof BusinessExpenseCategory]
+
+
+export const BusinessExpenseSourceType = {
+  MANUAL: 'MANUAL'
+} as const
+
+export type BusinessExpenseSourceType = (typeof BusinessExpenseSourceType)[keyof typeof BusinessExpenseSourceType]

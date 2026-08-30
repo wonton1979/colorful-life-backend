@@ -397,6 +397,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
+  BusinessExpense: 'BusinessExpense',
   User: 'User',
   Address: 'Address',
   LegoProduct: 'LegoProduct',
@@ -423,10 +424,84 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "order" | "orderItem" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "order" | "orderItem" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
+    BusinessExpense: {
+      payload: Prisma.$BusinessExpensePayload<ExtArgs>
+      fields: Prisma.BusinessExpenseFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BusinessExpenseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BusinessExpenseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        findFirst: {
+          args: Prisma.BusinessExpenseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BusinessExpenseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        findMany: {
+          args: Prisma.BusinessExpenseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>[]
+        }
+        create: {
+          args: Prisma.BusinessExpenseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        createMany: {
+          args: Prisma.BusinessExpenseCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BusinessExpenseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>[]
+        }
+        delete: {
+          args: Prisma.BusinessExpenseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        update: {
+          args: Prisma.BusinessExpenseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        deleteMany: {
+          args: Prisma.BusinessExpenseDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BusinessExpenseUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BusinessExpenseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>[]
+        }
+        upsert: {
+          args: Prisma.BusinessExpenseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BusinessExpensePayload>
+        }
+        aggregate: {
+          args: Prisma.BusinessExpenseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBusinessExpense>
+        }
+        groupBy: {
+          args: Prisma.BusinessExpenseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessExpenseGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BusinessExpenseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BusinessExpenseCountAggregateOutputType> | number
+        }
+      }
+    }
     User: {
       payload: Prisma.$UserPayload<ExtArgs>
       fields: Prisma.UserFieldRefs
@@ -1280,6 +1355,21 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const BusinessExpenseScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  amount: 'amount',
+  incurredAt: 'incurredAt',
+  description: 'description',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type BusinessExpenseScalarFieldEnum = (typeof BusinessExpenseScalarFieldEnum)[keyof typeof BusinessExpenseScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -1522,6 +1612,48 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'BusinessExpenseCategory'
+ */
+export type EnumBusinessExpenseCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessExpenseCategory'>
+    
+
+
+/**
+ * Reference to a field of type 'BusinessExpenseCategory[]'
+ */
+export type ListEnumBusinessExpenseCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessExpenseCategory[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal'
+ */
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal[]'
+ */
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime[]'
+ */
+export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
  * Reference to a field of type 'String'
  */
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
@@ -1532,6 +1664,20 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BusinessExpenseSourceType'
+ */
+export type EnumBusinessExpenseSourceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessExpenseSourceType'>
+    
+
+
+/**
+ * Reference to a field of type 'BusinessExpenseSourceType[]'
+ */
+export type ListEnumBusinessExpenseSourceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BusinessExpenseSourceType[]'>
     
 
 
@@ -1557,20 +1703,6 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
- * Reference to a field of type 'DateTime'
- */
-export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
-    
-
-
-/**
- * Reference to a field of type 'DateTime[]'
- */
-export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-/**
  * Reference to a field of type 'ListingCondition'
  */
 export type EnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ListingCondition'>
@@ -1581,20 +1713,6 @@ export type EnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'ListingCondition[]'
  */
 export type ListEnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ListingCondition[]'>
-    
-
-
-/**
- * Reference to a field of type 'Decimal'
- */
-export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
-    
-
-
-/**
- * Reference to a field of type 'Decimal[]'
- */
-export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
     
 
 
@@ -1818,6 +1936,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  */
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
+  businessExpense?: Prisma.BusinessExpenseOmit
   user?: Prisma.UserOmit
   address?: Prisma.AddressOmit
   legoProduct?: Prisma.LegoProductOmit
