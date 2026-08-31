@@ -12,7 +12,7 @@ import { SourcePurchaseDocument } from "../../../domain/purchases/purchaseNormal
  * pipeline this value will be the SHA‑256 of the PDF file contents.
  */
 export const multiPagePurchaseInvoiceFixture: SourcePurchaseDocument = {
-  importHash: "TEST_IMPORT_HASH", // placeholder for real SHA‑256 hash
+  importHash: `TEST_IMPORT_HASH_${Date.now()}_${Math.random().toString(36).slice(2)}`,
   sourceOrderReference: "202-6362918-3056349",
   sourceOrderDate: "09 Aug 2026",
   merchantName: "Amazon EU S.à r.l., UK Branch",

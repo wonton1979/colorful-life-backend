@@ -58,6 +58,11 @@ export type InventoryMovement = Prisma.InventoryMovementModel
  */
 export type Order = Prisma.OrderModel
 /**
+ * Model Payment
+ * 
+ */
+export type Payment = Prisma.PaymentModel
+/**
  * Model OrderItem
  * 
  */
