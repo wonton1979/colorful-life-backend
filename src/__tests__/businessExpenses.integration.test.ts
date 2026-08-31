@@ -6,11 +6,14 @@ import app from "../app.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { randomUUID } from "node:crypto";
+import { Decimal } from "@prisma/client/runtime/client";
 import type { UserRole } from "../generated/prisma-client/enums.js";
 
 // Arrays for cleanup
   const userIdsForCleanup: number[] = [];
   const expenseIdsForCleanup: number[] = [];
+  const listingIdsForCleanup: number[] = [];
+  const legoProductIdsForCleanup: number[] = [];
 
 /** Helper to start the Express app on an OS‑assigned port. */
 async function startServer(): Promise<{ server: Server; url: string }> {
@@ -94,6 +97,21 @@ describe("Business Expenses HTTP Integration", () => {
     if (userIdsForCleanup.length) {
       await prisma.user.deleteMany({ where: { id: { in: userIdsForCleanup } } });
       userIdsForCleanup.length = 0;
+    }
+    if (listingIdsForCleanup.length) {
+      await prisma.inventoryMovement.deleteMany({
+        where: { listingId: { in: listingIdsForCleanup } },
+      });
+      await prisma.productListing.deleteMany({
+        where: { id: { in: listingIdsForCleanup } },
+      });
+      listingIdsForCleanup.length = 0;
+    }
+    if (legoProductIdsForCleanup.length) {
+      await prisma.legoProduct.deleteMany({
+        where: { id: { in: legoProductIdsForCleanup } },
+      });
+      legoProductIdsForCleanup.length = 0;
     }
   });
 
@@ -202,12 +220,38 @@ describe("Business Expenses HTTP Integration", () => {
   });
 
   it("expense creation has no inventory/order side effects", async () => {
-    const beforeCount = await prisma.inventoryMovement.count();
+    const product = await prisma.legoProduct.create({
+      data: {
+        setNumber: `EXP-${randomUUID()}`,
+        title: "Business expense isolation listing",
+        theme: "TEST",
+        ageRecommendation: "8+",
+        pieceCount: 1,
+        productListings: {
+          create: {
+            condition: "NEW",
+            originalPrice: new Decimal("10.00"),
+            salePrice: new Decimal("10.00"),
+            currentStock: 1,
+            active: true,
+          },
+        },
+      },
+      include: { productListings: true },
+    });
+    const listingId = product.productListings[0].id;
+    legoProductIdsForCleanup.push(product.id);
+    listingIdsForCleanup.push(listingId);
+    const beforeCount = await prisma.inventoryMovement.count({
+      where: { listingId },
+    });
     const res = await postExpense({ category: "PACKAGING", amount: 5, incurredAt: "2026-08-29T12:00:00.000Z", description: "none" });
     assert.strictEqual(res.status, 201);
     const expense = await res.json();
     expenseIdsForCleanup.push(expense.id);
-    const afterCount = await prisma.inventoryMovement.count();
+    const afterCount = await prisma.inventoryMovement.count({
+      where: { listingId },
+    });
     assert.strictEqual(afterCount, beforeCount);
   });
 });
