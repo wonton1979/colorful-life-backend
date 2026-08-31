@@ -62,11 +62,45 @@ enum CancellationReason {
 enum InventoryMovementType {
   PURCHASE_IN
   WEBSITE_SALE
+  ORDER_RETURN
   ORDER_CANCELLATION_RETURN
   FBA_OUTBOUND
   DAMAGE_ADJUSTMENT
   MANUAL_ADJUSTMENT
   PURCHASE_RETURN_OUT
+}
+
+enum OrderReturnStatus {
+  REQUESTED
+  AUTHORIZED
+  RECEIVED
+  INSPECTED
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum ReturnReason {
+  CHANGE_OF_MIND
+  DAMAGED
+  DEFECTIVE
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  OTHER
+}
+
+enum ReturnShippingPayer {
+  CUSTOMER
+  SELLER
+}
+
+enum ReturnCondition {
+  AS_NEW
+  OPENED_COMPLETE
+  DAMAGED
+  INCOMPLETE
+  WRONG_ITEM_RETURNED
+  OTHER
 }
 
 // -----------------------------------------------------------------------------
@@ -113,6 +147,8 @@ model User {
   inventoryMovements InventoryMovement[]
   purchaseDocuments PurchaseDocument[]
   orders Order[]
+  orderReturns OrderReturn[]
+  inspectedOrderReturns OrderReturn[] @relation("OrderReturnInspectedBy")
 }
 
 model Address {
@@ -267,12 +303,48 @@ model OrderItem {
   productListingId  Int
   productListing    ProductListing     @relation(fields: [productListingId], references: [id], onDelete: Restrict)
   quantity          Int
+  returnedQuantity  Int                @default(0)
   unitPrice         Decimal            @db.Decimal(10,2)
   lineTotal         Decimal            @db.Decimal(12,2)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  returns           OrderReturn[]
   @@index([orderId])
   @@index([productListingId])
+}
+
+model OrderReturn {
+  id                Int       @id @default(autoincrement())
+  orderItemId       Int
+  orderItem         OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  quantity          Int
+  restockQuantity   Int                @default(0)
+  reason            ReturnReason
+  reasonNote        String?
+  status            OrderReturnStatus   @default(REQUESTED)
+  shippingPayer     ReturnShippingPayer?
+  returnShippingCost Decimal?           @db.Decimal(10, 2)
+  performedByUserId Int
+  performedByUser   User      @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  condition         ReturnCondition?
+  inspectionNote    String?
+  inspectedAt       DateTime?
+  inspectedByUserId Int?
+  inspectedByUser   User?     @relation("OrderReturnInspectedBy", fields: [inspectedByUserId], references: [id], onDelete: Restrict)
+  requestedAt       DateTime  @default(now())
+  authorizedAt      DateTime?
+  receivedAt        DateTime?
+  completedAt       DateTime?
+  rejectedAt        DateTime?
+  cancelledAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([orderItemId])
+  @@index([status])
+  @@index([performedByUserId])
+  @@index([inspectedByUserId])
+  @@index([requestedAt])
 }
 
 model Purchase {
