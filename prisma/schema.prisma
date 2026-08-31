@@ -28,6 +28,7 @@ enum OrderStatus {
   CANCELLED
   RETURNED
 }
+
 // -----------------------------------------------------------------------------
 // Payment domain enums
 // -----------------------------------------------------------------------------
@@ -37,6 +38,15 @@ enum PaymentProvider {
 
 enum PaymentStatus {
   PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum RefundProvider {
+  MANUAL
+}
+
+enum RefundStatus {
   SUCCEEDED
   FAILED
 }
@@ -122,112 +132,119 @@ enum BusinessExpenseSourceType {
 // BusinessExpense model
 // -----------------------------------------------------------------------------
 model BusinessExpense {
-  id          Int                      @id @default(autoincrement())
+  id          Int                       @id @default(autoincrement())
   category    BusinessExpenseCategory
-  amount      Decimal                  @db.Decimal(12,2)
+  amount      Decimal                   @db.Decimal(12, 2)
   incurredAt  DateTime
   description String?
   sourceType  BusinessExpenseSourceType
   sourceId    Int?
-  createdAt   DateTime                 @default(now())
-  updatedAt   DateTime                 @updatedAt
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
 }
+
 model User {
-  id                 Int                 @id @default(autoincrement())
-  email              String              @unique
-  passwordHash       String
-  emailVerified      Boolean             @default(false)
-  role               UserRole            @default(CUSTOMER)
-  firstName          String?
-  lastName           String?
-  phone              String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  addresses          Address[]
-  inventoryMovements InventoryMovement[]
-  purchaseDocuments PurchaseDocument[]
-  orders Order[]
-  orderReturns OrderReturn[]
-  inspectedOrderReturns OrderReturn[] @relation("OrderReturnInspectedBy")
+  id                    Int                 @id @default(autoincrement())
+  email                 String              @unique
+  passwordHash          String
+  emailVerified         Boolean             @default(false)
+  role                  UserRole            @default(CUSTOMER)
+  firstName             String?
+  lastName              String?
+  phone                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  addresses             Address[]
+  inventoryMovements    InventoryMovement[]
+  purchaseDocuments     PurchaseDocument[]
+  orders                Order[]
+  orderReturns          OrderReturn[]
+  inspectedOrderReturns OrderReturn[]       @relation("OrderReturnInspectedBy")
+  refunds               Refund[]
 }
 
 model Address {
-  id            Int       @id @default(autoincrement())
-  userId        Int
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recipientName String
-  line1         String
-  line2         String?
-  city          String
-  county        String?
-  postcode      String
-  countryCode   String
-  phone         String?
-  isDefault     Boolean   @default(false)
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipientName    String
+  line1            String
+  line2            String?
+  city             String
+  county           String?
+  postcode         String
+  countryCode      String
+  phone            String?
+  isDefault        Boolean  @default(false)
   // Separate default billing flag, used for the new API.
-  isDefaultBilling Boolean   @default(false)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  isDefaultBilling Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
   @@index([userId])
 }
 
 model LegoProduct {
-  id               Int                @id @default(autoincrement())
-  setNumber        String             @unique
-  title            String
-  description      String?
-  theme            String
+  id                Int              @id @default(autoincrement())
+  setNumber         String           @unique
+  title             String
+  description       String?
+  theme             String
   ageRecommendation String
-  pieceCount       Int
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  productListings  ProductListing[]
+  pieceCount        Int
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  productListings   ProductListing[]
+
   @@index([theme])
 }
 
 model ProductListing {
-  id           Int                @id @default(autoincrement())
-  legoProductId Int
-  legoProduct   LegoProduct        @relation(fields: [legoProductId], references: [id])
-  condition    ListingCondition
-  originalPrice Decimal          @db.Decimal(10,2)
-  salePrice    Decimal?          @db.Decimal(10,2)
-  currentStock Int                @default(0)
-  active       Boolean           @default(true)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  listingImages ListingImage[]
+  id                 Int                 @id @default(autoincrement())
+  legoProductId      Int
+  legoProduct        LegoProduct         @relation(fields: [legoProductId], references: [id])
+  condition          ListingCondition
+  originalPrice      Decimal             @db.Decimal(10, 2)
+  salePrice          Decimal?            @db.Decimal(10, 2)
+  currentStock       Int                 @default(0)
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  listingImages      ListingImage[]
   inventoryMovements InventoryMovement[]
-  purchaseItems PurchaseItem[]
-  orderItems OrderItem[]
+  purchaseItems      PurchaseItem[]
+  orderItems         OrderItem[]
+
   @@index([legoProductId])
   @@index([condition])
   @@index([active])
 }
 
 model ListingImage {
-  id        Int      @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   listingId Int
   listing   ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
   url       String
   publicId  String
   altText   String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  sortOrder Int            @default(0)
+  createdAt DateTime       @default(now())
+
   @@index([listingId])
   @@index([listingId, sortOrder])
 }
 
 model InventoryMovement {
-  id                Int                    @id @default(autoincrement())
+  id                Int                   @id @default(autoincrement())
   listingId         Int
-  listing           ProductListing         @relation(fields: [listingId], references: [id], onDelete: Restrict)
+  listing           ProductListing        @relation(fields: [listingId], references: [id], onDelete: Restrict)
   quantityChange    Int
   type              InventoryMovementType
   note              String
   performedByUserId Int
-  performedByUser   User                   @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
-  createdAt         DateTime               @default(now())
+  performedByUser   User                  @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt         DateTime              @default(now())
+
   @@index([listingId])
   @@index([performedByUserId])
   @@index([createdAt])
@@ -235,10 +252,10 @@ model InventoryMovement {
 }
 
 model Order {
-  id                Int                @id @default(autoincrement())
-  userId            Int
-  user              User               @relation(fields: [userId], references: [id], onDelete: Restrict)
-  status            OrderStatus        @default(PENDING)
+  id                   Int         @id @default(autoincrement())
+  userId               Int
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status               OrderStatus @default(PENDING)
   // Billing address snapshot – comes from the user's saved/default address
   billingRecipientName String
   billingLine1         String
@@ -258,87 +275,116 @@ model Order {
   deliveryPostcode      String
   deliveryCountryCode   String
   deliveryPhone         String?
-  totalAmount       Decimal            @db.Decimal(12,2)
+  totalAmount           Decimal                @db.Decimal(12, 2)
   // Shipping details – only visible to admins
-  actualShippingCost Decimal?           @db.Decimal(10,2)
-  shippingCarrier   String?
-  trackingNumber    String?
-  dispatchedAt      DateTime?
-  createdAt         DateTime           @default(now())
+  actualShippingCost    Decimal?               @db.Decimal(10, 2)
+  shippingCarrier       String?
+  trackingNumber        String?
+  dispatchedAt          DateTime?
+  createdAt             DateTime               @default(now())
   // Cancellation metadata – optional until cancellation occurs
   cancelledAt           DateTime?
   cancelledBy           CancellationInitiator?
   cancellationReason    CancellationReason?
-  completedAt          DateTime?          @db.Timestamptz
-  updatedAt         DateTime           @updatedAt
+  completedAt           DateTime?              @db.Timestamptz
+  updatedAt             DateTime               @updatedAt
+  orderItems            OrderItem[]
+  payments              Payment[]
+  refunds               Refund[]
+
   @@index([userId])
-  orderItems        OrderItem[]
-  payments          Payment[]
 }
 
 // -----------------------------------------------------------------------------
 // Payment domain model
 // -----------------------------------------------------------------------------
 model Payment {
-  id                Int              @id @default(autoincrement())
+  id                Int             @id @default(autoincrement())
   orderId           Int
-  order             Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  amount            Decimal          @db.Decimal(12,2)
-  currency          String @db.VarChar(3) @default("GBP")
-  provider          PaymentProvider  @default(MANUAL)
+  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount            Decimal         @db.Decimal(12, 2)
+  currency          String          @default("GBP") @db.VarChar(3)
+  provider          PaymentProvider @default(MANUAL)
   providerReference String
-  status            PaymentStatus    @default(PENDING)
+  status            PaymentStatus   @default(PENDING)
   paidAt            DateTime?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  refundedAmount    Decimal         @default(0) @db.Decimal(12, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  refunds           Refund[]
 
   @@unique([provider, providerReference])
   @@index([orderId])
 }
 
-model OrderItem {
-  id                Int                @id @default(autoincrement())
+model Refund {
+  id                Int            @id @default(autoincrement())
   orderId           Int
-  order             Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productListingId  Int
-  productListing    ProductListing     @relation(fields: [productListingId], references: [id], onDelete: Restrict)
-  quantity          Int
-  returnedQuantity  Int                @default(0)
-  unitPrice         Decimal            @db.Decimal(10,2)
-  lineTotal         Decimal            @db.Decimal(12,2)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  returns           OrderReturn[]
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentId         Int
+  payment           Payment        @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amount            Decimal        @db.Decimal(12, 2)
+  currency          String         @db.VarChar(3)
+  status            RefundStatus   @default(SUCCEEDED)
+  provider          RefundProvider @default(MANUAL)
+  providerReference String
+  reason            String?
+  performedByUserId Int
+  performedByUser   User           @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@unique([provider, providerReference])
+  @@index([orderId])
+  @@index([paymentId])
+  @@index([performedByUserId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id               Int            @id @default(autoincrement())
+  orderId          Int
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productListingId Int
+  productListing   ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
+  quantity         Int
+  returnedQuantity Int            @default(0)
+  unitPrice        Decimal        @db.Decimal(10, 2)
+  lineTotal        Decimal        @db.Decimal(12, 2)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  returns          OrderReturn[]
+
   @@index([orderId])
   @@index([productListingId])
 }
 
 model OrderReturn {
-  id                Int       @id @default(autoincrement())
-  orderItemId       Int
-  orderItem         OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  quantity          Int
-  restockQuantity   Int                @default(0)
-  reason            ReturnReason
-  reasonNote        String?
-  status            OrderReturnStatus   @default(REQUESTED)
-  shippingPayer     ReturnShippingPayer?
-  returnShippingCost Decimal?           @db.Decimal(10, 2)
-  performedByUserId Int
-  performedByUser   User      @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
-  condition         ReturnCondition?
-  inspectionNote    String?
-  inspectedAt       DateTime?
-  inspectedByUserId Int?
-  inspectedByUser   User?     @relation("OrderReturnInspectedBy", fields: [inspectedByUserId], references: [id], onDelete: Restrict)
-  requestedAt       DateTime  @default(now())
-  authorizedAt      DateTime?
-  receivedAt        DateTime?
-  completedAt       DateTime?
-  rejectedAt        DateTime?
-  cancelledAt       DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                 Int                  @id @default(autoincrement())
+  orderItemId        Int
+  orderItem          OrderItem            @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  quantity           Int
+  restockQuantity    Int                  @default(0)
+  reason             ReturnReason
+  reasonNote         String?
+  status             OrderReturnStatus    @default(REQUESTED)
+  shippingPayer      ReturnShippingPayer?
+  returnShippingCost Decimal?             @db.Decimal(10, 2)
+  performedByUserId  Int
+  performedByUser    User                 @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  condition          ReturnCondition?
+  inspectionNote     String?
+  inspectedAt        DateTime?
+  inspectedByUserId  Int?
+  inspectedByUser    User?                @relation("OrderReturnInspectedBy", fields: [inspectedByUserId], references: [id], onDelete: Restrict)
+  requestedAt        DateTime             @default(now())
+  authorizedAt       DateTime?
+  receivedAt         DateTime?
+  completedAt        DateTime?
+  rejectedAt         DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 
   @@index([orderItemId])
   @@index([status])
@@ -358,27 +404,27 @@ model Purchase {
 }
 
 model PurchaseDocument {
-  id                            Int            @id @default(autoincrement())
-  purchaseId                    Int
-  purchase                      Purchase       @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
+  id         Int      @id @default(autoincrement())
+  purchaseId Int
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Restrict)
 
-  partNumber                    Int
-  sourceInvoiceReference        String?
-  importHash                    String         @db.VarChar(64) @unique
-  sourceDocumentDate            DateTime?
+  partNumber             Int
+  sourceInvoiceReference String?
+  importHash             String    @unique @db.VarChar(64)
+  sourceDocumentDate     DateTime?
 
-  importedByUserId              Int
-  importedByUser                User           @relation(fields: [importedByUserId], references: [id], onDelete: Restrict)
+  importedByUserId Int
+  importedByUser   User @relation(fields: [importedByUserId], references: [id], onDelete: Restrict)
 
-  originalGrossMerchandiseTotal Decimal        @db.Decimal(12,2)
-  shippingTotal                 Decimal        @db.Decimal(12,2) @default(0.00)
-  discountTotal                 Decimal        @db.Decimal(12,2) @default(0.00)
-  finalTotalPaid                Decimal        @db.Decimal(12,2)
+  originalGrossMerchandiseTotal Decimal @db.Decimal(12, 2)
+  shippingTotal                 Decimal @default(0.00) @db.Decimal(12, 2)
+  discountTotal                 Decimal @default(0.00) @db.Decimal(12, 2)
+  finalTotalPaid                Decimal @db.Decimal(12, 2)
 
-  createdAt                     DateTime       @default(now())
-  updatedAt                     DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  purchaseItems                 PurchaseItem[]
+  purchaseItems PurchaseItem[]
 
   @@unique([purchaseId, partNumber])
   @@index([purchaseId])
@@ -386,32 +432,32 @@ model PurchaseDocument {
 }
 
 model PurchaseItem {
-  id                        Int                 @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  purchaseDocumentId        Int
-  purchaseDocument          PurchaseDocument    @relation(fields: [purchaseDocumentId], references: [id], onDelete: Restrict)
+  purchaseDocumentId Int
+  purchaseDocument   PurchaseDocument @relation(fields: [purchaseDocumentId], references: [id], onDelete: Restrict)
 
-  productListingId          Int?
-  productListing            ProductListing?     @relation(fields: [productListingId], references: [id], onDelete: SetNull)
+  productListingId Int?
+  productListing   ProductListing? @relation(fields: [productListingId], references: [id], onDelete: SetNull)
 
-  externalProductId         String?
-  sourceDescription         String
-  sourceSetNumber           String?
-  sourceLineNumber          Int?
+  externalProductId String?
+  sourceDescription String
+  sourceSetNumber   String?
+  sourceLineNumber  Int?
 
-  quantity                  Int
+  quantity Int
 
-  originalGrossUnitCost     Decimal             @db.Decimal(12,2)
-  originalGrossLineTotal    Decimal             @db.Decimal(12,2)
+  originalGrossUnitCost  Decimal @db.Decimal(12, 2)
+  originalGrossLineTotal Decimal @db.Decimal(12, 2)
 
-  allocatedShipping         Decimal             @db.Decimal(12,2) @default(0.00)
-  allocatedDiscount         Decimal             @db.Decimal(12,2) @default(0.00)
+  allocatedShipping Decimal @default(0.00) @db.Decimal(12, 2)
+  allocatedDiscount Decimal @default(0.00) @db.Decimal(12, 2)
 
-  finalLineCost             Decimal             @db.Decimal(12,2)
-  finalUnitCost             Decimal             @db.Decimal(14,6)
+  finalLineCost Decimal @db.Decimal(12, 2)
+  finalUnitCost Decimal @db.Decimal(14, 6)
 
-  createdAt                 DateTime            @default(now())
-  updatedAt                 DateTime            @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   receivedAt DateTime?
 

@@ -60,6 +60,7 @@ export const ModelName = {
   InventoryMovement: 'InventoryMovement',
   Order: 'Order',
   Payment: 'Payment',
+  Refund: 'Refund',
   OrderItem: 'OrderItem',
   OrderReturn: 'OrderReturn',
   Purchase: 'Purchase',
@@ -235,11 +236,30 @@ export const PaymentScalarFieldEnum = {
   providerReference: 'providerReference',
   status: 'status',
   paidAt: 'paidAt',
+  refundedAmount: 'refundedAmount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const RefundScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  paymentId: 'paymentId',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  provider: 'provider',
+  providerReference: 'providerReference',
+  reason: 'reason',
+  performedByUserId: 'performedByUserId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RefundScalarFieldEnum = (typeof RefundScalarFieldEnum)[keyof typeof RefundScalarFieldEnum]
 
 
 export const OrderItemScalarFieldEnum = {
