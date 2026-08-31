@@ -17,6 +17,10 @@ import {
   createPaymentHandler,
   listPaymentsHandler,
 } from "../controllers/payments.js";
+import {
+  createRefundHandler,
+  listRefundsHandler,
+} from "../controllers/refunds.js";
 
 const router = Router();
 
@@ -49,5 +53,7 @@ router.post(
 // Payment routes
 router.post("/:orderId/payments", authMiddleware, createPaymentHandler);
 router.get("/:orderId/payments", authMiddleware, listPaymentsHandler);
+router.post("/:orderId/refunds", authMiddleware, createRefundHandler);
+router.get("/:orderId/refunds", authMiddleware, listRefundsHandler);
 
 export default router;

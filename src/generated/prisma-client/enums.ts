@@ -53,6 +53,21 @@ export const PaymentStatus = {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 
+export const RefundProvider = {
+  MANUAL: 'MANUAL'
+} as const
+
+export type RefundProvider = (typeof RefundProvider)[keyof typeof RefundProvider]
+
+
+export const RefundStatus = {
+  SUCCEEDED: 'SUCCEEDED',
+  FAILED: 'FAILED'
+} as const
+
+export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]
+
+
 export const CancellationInitiator = {
   CUSTOMER: 'CUSTOMER',
   SELLER: 'SELLER'
