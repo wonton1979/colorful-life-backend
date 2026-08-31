@@ -407,6 +407,7 @@ export const ModelName = {
   Order: 'Order',
   Payment: 'Payment',
   OrderItem: 'OrderItem',
+  OrderReturn: 'OrderReturn',
   Purchase: 'Purchase',
   PurchaseDocument: 'PurchaseDocument',
   PurchaseItem: 'PurchaseItem'
@@ -425,7 +426,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "businessExpense" | "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "order" | "payment" | "orderItem" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "order" | "payment" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1169,6 +1170,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderReturn: {
+      payload: Prisma.$OrderReturnPayload<ExtArgs>
+      fields: Prisma.OrderReturnFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderReturnFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderReturnFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderReturnFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderReturnFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        findMany: {
+          args: Prisma.OrderReturnFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>[]
+        }
+        create: {
+          args: Prisma.OrderReturnCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        createMany: {
+          args: Prisma.OrderReturnCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderReturnCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderReturnDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        update: {
+          args: Prisma.OrderReturnUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderReturnDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderReturnUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderReturnUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderReturnUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderReturnPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderReturnAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderReturn>
+        }
+        groupBy: {
+          args: Prisma.OrderReturnGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderReturnGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderReturnCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderReturnCountAggregateOutputType> | number
+        }
+      }
+    }
     Purchase: {
       payload: Prisma.$PurchasePayload<ExtArgs>
       fields: Prisma.PurchaseFieldRefs
@@ -1594,6 +1669,7 @@ export const OrderItemScalarFieldEnum = {
   orderId: 'orderId',
   productListingId: 'productListingId',
   quantity: 'quantity',
+  returnedQuantity: 'returnedQuantity',
   unitPrice: 'unitPrice',
   lineTotal: 'lineTotal',
   createdAt: 'createdAt',
@@ -1601,6 +1677,34 @@ export const OrderItemScalarFieldEnum = {
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const OrderReturnScalarFieldEnum = {
+  id: 'id',
+  orderItemId: 'orderItemId',
+  quantity: 'quantity',
+  restockQuantity: 'restockQuantity',
+  reason: 'reason',
+  reasonNote: 'reasonNote',
+  status: 'status',
+  shippingPayer: 'shippingPayer',
+  returnShippingCost: 'returnShippingCost',
+  performedByUserId: 'performedByUserId',
+  condition: 'condition',
+  inspectionNote: 'inspectionNote',
+  inspectedAt: 'inspectedAt',
+  inspectedByUserId: 'inspectedByUserId',
+  requestedAt: 'requestedAt',
+  authorizedAt: 'authorizedAt',
+  receivedAt: 'receivedAt',
+  completedAt: 'completedAt',
+  rejectedAt: 'rejectedAt',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderReturnScalarFieldEnum = (typeof OrderReturnScalarFieldEnum)[keyof typeof OrderReturnScalarFieldEnum]
 
 
 export const PurchaseScalarFieldEnum = {
@@ -1892,6 +1996,62 @@ export type ListEnumPaymentStatusFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
+ * Reference to a field of type 'ReturnReason'
+ */
+export type EnumReturnReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnReason'>
+    
+
+
+/**
+ * Reference to a field of type 'ReturnReason[]'
+ */
+export type ListEnumReturnReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnReason[]'>
+    
+
+
+/**
+ * Reference to a field of type 'OrderReturnStatus'
+ */
+export type EnumOrderReturnStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderReturnStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'OrderReturnStatus[]'
+ */
+export type ListEnumOrderReturnStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderReturnStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ReturnShippingPayer'
+ */
+export type EnumReturnShippingPayerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnShippingPayer'>
+    
+
+
+/**
+ * Reference to a field of type 'ReturnShippingPayer[]'
+ */
+export type ListEnumReturnShippingPayerFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnShippingPayer[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ReturnCondition'
+ */
+export type EnumReturnConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnCondition'>
+    
+
+
+/**
+ * Reference to a field of type 'ReturnCondition[]'
+ */
+export type ListEnumReturnConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnCondition[]'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -2065,6 +2225,7 @@ export type GlobalOmitConfig = {
   order?: Prisma.OrderOmit
   payment?: Prisma.PaymentOmit
   orderItem?: Prisma.OrderItemOmit
+  orderReturn?: Prisma.OrderReturnOmit
   purchase?: Prisma.PurchaseOmit
   purchaseDocument?: Prisma.PurchaseDocumentOmit
   purchaseItem?: Prisma.PurchaseItemOmit

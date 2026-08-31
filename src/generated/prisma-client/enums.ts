@@ -79,6 +79,7 @@ export type CancellationReason = (typeof CancellationReason)[keyof typeof Cancel
 export const InventoryMovementType = {
   PURCHASE_IN: 'PURCHASE_IN',
   WEBSITE_SALE: 'WEBSITE_SALE',
+  ORDER_RETURN: 'ORDER_RETURN',
   ORDER_CANCELLATION_RETURN: 'ORDER_CANCELLATION_RETURN',
   FBA_OUTBOUND: 'FBA_OUTBOUND',
   DAMAGE_ADJUSTMENT: 'DAMAGE_ADJUSTMENT',
@@ -87,6 +88,51 @@ export const InventoryMovementType = {
 } as const
 
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
+
+
+export const OrderReturnStatus = {
+  REQUESTED: 'REQUESTED',
+  AUTHORIZED: 'AUTHORIZED',
+  RECEIVED: 'RECEIVED',
+  INSPECTED: 'INSPECTED',
+  COMPLETED: 'COMPLETED',
+  REJECTED: 'REJECTED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type OrderReturnStatus = (typeof OrderReturnStatus)[keyof typeof OrderReturnStatus]
+
+
+export const ReturnReason = {
+  CHANGE_OF_MIND: 'CHANGE_OF_MIND',
+  DAMAGED: 'DAMAGED',
+  DEFECTIVE: 'DEFECTIVE',
+  WRONG_ITEM: 'WRONG_ITEM',
+  NOT_AS_DESCRIBED: 'NOT_AS_DESCRIBED',
+  OTHER: 'OTHER'
+} as const
+
+export type ReturnReason = (typeof ReturnReason)[keyof typeof ReturnReason]
+
+
+export const ReturnShippingPayer = {
+  CUSTOMER: 'CUSTOMER',
+  SELLER: 'SELLER'
+} as const
+
+export type ReturnShippingPayer = (typeof ReturnShippingPayer)[keyof typeof ReturnShippingPayer]
+
+
+export const ReturnCondition = {
+  AS_NEW: 'AS_NEW',
+  OPENED_COMPLETE: 'OPENED_COMPLETE',
+  DAMAGED: 'DAMAGED',
+  INCOMPLETE: 'INCOMPLETE',
+  WRONG_ITEM_RETURNED: 'WRONG_ITEM_RETURNED',
+  OTHER: 'OTHER'
+} as const
+
+export type ReturnCondition = (typeof ReturnCondition)[keyof typeof ReturnCondition]
 
 
 export const BusinessExpenseCategory = {

@@ -7,6 +7,11 @@ import {
   confirmOrderHandler,
   dispatchOrderHandler,
   completeOrderHandler,
+  processOrderReturnHandler,
+  authorizeOrderReturnHandler,
+  receiveOrderReturnHandler,
+  inspectOrderReturnHandler,
+  completeOrderReturnHandler,
 } from "../controllers/orders.js";
 import {
   createPaymentHandler,
@@ -20,6 +25,27 @@ router.post("/:orderId/cancel", authMiddleware, cancelOrderHandler);
 router.post("/:orderId/seller-cancel", authMiddleware, cancelOrderBySellerHandler);
 router.post("/:orderId/confirm", authMiddleware, confirmOrderHandler);
 router.post("/:orderId/complete", authMiddleware, completeOrderHandler);
+router.post("/:orderId/returns", authMiddleware, processOrderReturnHandler);
+router.post(
+  "/:orderId/returns/:returnId/authorize",
+  authMiddleware,
+  authorizeOrderReturnHandler,
+);
+router.post(
+  "/:orderId/returns/:returnId/receive",
+  authMiddleware,
+  receiveOrderReturnHandler,
+);
+router.post(
+  "/:orderId/returns/:returnId/inspect",
+  authMiddleware,
+  inspectOrderReturnHandler,
+);
+router.post(
+  "/:orderId/returns/:returnId/complete",
+  authMiddleware,
+  completeOrderReturnHandler,
+);
 // Payment routes
 router.post("/:orderId/payments", authMiddleware, createPaymentHandler);
 router.get("/:orderId/payments", authMiddleware, listPaymentsHandler);

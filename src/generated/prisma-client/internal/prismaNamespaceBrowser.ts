@@ -61,6 +61,7 @@ export const ModelName = {
   Order: 'Order',
   Payment: 'Payment',
   OrderItem: 'OrderItem',
+  OrderReturn: 'OrderReturn',
   Purchase: 'Purchase',
   PurchaseDocument: 'PurchaseDocument',
   PurchaseItem: 'PurchaseItem'
@@ -246,6 +247,7 @@ export const OrderItemScalarFieldEnum = {
   orderId: 'orderId',
   productListingId: 'productListingId',
   quantity: 'quantity',
+  returnedQuantity: 'returnedQuantity',
   unitPrice: 'unitPrice',
   lineTotal: 'lineTotal',
   createdAt: 'createdAt',
@@ -253,6 +255,34 @@ export const OrderItemScalarFieldEnum = {
 } as const
 
 export type OrderItemScalarFieldEnum = (typeof OrderItemScalarFieldEnum)[keyof typeof OrderItemScalarFieldEnum]
+
+
+export const OrderReturnScalarFieldEnum = {
+  id: 'id',
+  orderItemId: 'orderItemId',
+  quantity: 'quantity',
+  restockQuantity: 'restockQuantity',
+  reason: 'reason',
+  reasonNote: 'reasonNote',
+  status: 'status',
+  shippingPayer: 'shippingPayer',
+  returnShippingCost: 'returnShippingCost',
+  performedByUserId: 'performedByUserId',
+  condition: 'condition',
+  inspectionNote: 'inspectionNote',
+  inspectedAt: 'inspectedAt',
+  inspectedByUserId: 'inspectedByUserId',
+  requestedAt: 'requestedAt',
+  authorizedAt: 'authorizedAt',
+  receivedAt: 'receivedAt',
+  completedAt: 'completedAt',
+  rejectedAt: 'rejectedAt',
+  cancelledAt: 'cancelledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrderReturnScalarFieldEnum = (typeof OrderReturnScalarFieldEnum)[keyof typeof OrderReturnScalarFieldEnum]
 
 
 export const PurchaseScalarFieldEnum = {
