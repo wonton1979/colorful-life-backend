@@ -15,6 +15,7 @@ const configSchema = z.object({
     JWT_EXPIRES_IN: z.string().nonempty().default("1h"),
     AWS_REGION: z.string().nonempty().default("eu-west-2"),
     SES_FROM_EMAIL: z.string().email().default("noreply@example.com"),
+    FRONTEND_URL: z.string().url().default("http://localhost:3000"),
 });
 
 const parsed = configSchema.safeParse(process.env);

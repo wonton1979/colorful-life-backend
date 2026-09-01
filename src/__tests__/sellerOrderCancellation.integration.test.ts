@@ -156,6 +156,7 @@ describe("Seller Order Cancellation HTTP Integration", () => {
     const payload = jwt.verify(token, config.JWT_SECRET) as { id: number };
 
     const userId = payload.id;
+    await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
 
     await createDefaultBillingAddress(userId);
 

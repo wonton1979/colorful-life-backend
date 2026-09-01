@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { config } from "../config/index.js";
 import { randomUUID } from "node:crypto";
+import { setVerificationEmailSenderForTests } from "../services/emailService.js";
 
 /**
  * Helper to start the Express app on an OS‑assigned port.
@@ -38,14 +39,17 @@ describe("Auth API", () => {
   let server: Server;
   let url: string;
   const userIdsForCleanup: number[] = [];
+  let restoreVerificationSender: (() => void) | undefined;
 
   before(async () => {
+    restoreVerificationSender = setVerificationEmailSenderForTests(async () => undefined);
     const { server: srv, url: u } = await startServer();
     server = srv;
     url = u;
   });
 
   after(async () => {
+    restoreVerificationSender?.();
     await new Promise((resolve) => server.close(resolve));
   });
 

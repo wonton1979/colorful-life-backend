@@ -49,6 +49,7 @@ async function makeUser(role: "ADMIN" | "CUSTOMER", email?: string) {
       email: email ?? `${role.toLowerCase()}-${randomUUID()}@example.com`,
       passwordHash: "test",
       role,
+      emailVerified: true,
       addresses: role === "CUSTOMER" ? { create: { recipientName: "Customer", line1: "1 Test Street", city: "Testville", postcode: "T1", countryCode: "GB", isDefaultBilling: true } } : undefined,
     },
   });

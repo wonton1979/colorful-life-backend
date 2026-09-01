@@ -12,6 +12,8 @@ import {
   ProductListingInactiveError,
   DuplicateProductListingError,
   InsufficientAvailableStockError,
+  EmailVerificationRequiredError,
+  OrderUserNotFoundError,
 } from "../domain/orders/orderErrors.js";
 import { CancelOrderSchema, SellerCancelOrderSchema } from "../domain/orders/orderCancellationValidator.js";
 import { DispatchOrderSchema } from "../domain/orders/orderDispatchValidator.js";
@@ -96,6 +98,12 @@ export const createOrderHandler = async (req: Request, res: Response) => {
     const order = await createOrder(userId, parseResult.data);
     return res.status(201).json(order);
   } catch (err: unknown) {
+      if (err instanceof EmailVerificationRequiredError) {
+        return res.status(403).json({ error: err.message });
+      }
+      if (err instanceof OrderUserNotFoundError) {
+        return res.status(404).json({ error: err.message });
+      }
       if (
         err instanceof NoDefaultBillingAddressError ||
         err instanceof MultipleDefaultBillingAddressesError ||

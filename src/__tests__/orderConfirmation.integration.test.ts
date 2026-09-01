@@ -169,6 +169,7 @@ describe("Order Confirmation HTTP Integration", () => {
     const token = body.token;
     const payload = jwt.verify(token, config.JWT_SECRET) as { id: number };
     const userId = payload.id;
+    await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
     await createDefaultBillingAddress(userId);
     return { token, userId };
   }
