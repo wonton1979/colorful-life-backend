@@ -1854,6 +1854,7 @@ export const OrderItemScalarFieldEnum = {
   productListingId: 'productListingId',
   quantity: 'quantity',
   returnedQuantity: 'returnedQuantity',
+  reservedReturnQuantity: 'reservedReturnQuantity',
   unitPrice: 'unitPrice',
   lineTotal: 'lineTotal',
   createdAt: 'createdAt',

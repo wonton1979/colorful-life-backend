@@ -133,6 +133,15 @@ export class OrderReturnNotCompletableError extends Error {
   }
 }
 
+export class OrderReturnNotCancellableError extends Error {
+  constructor(returnId: number, status: OrderReturnStatus) {
+    super(
+      `Order return ${returnId} cannot be cancelled in its current status: ${status}`,
+    );
+    this.name = "OrderReturnNotCancellableError";
+  }
+}
+
 export async function requestOrderReturn(
   orderId: number,
   orderItemId: number,
@@ -184,11 +193,23 @@ export async function requestOrderReturn(
       throw new OrderItemNotFoundError(orderItemId, orderId);
     }
 
-    if (quantity > orderItem.quantity) {
+    const reservationResult = await tx.$executeRaw`
+      UPDATE "OrderItem"
+      SET "reservedReturnQuantity" = "reservedReturnQuantity" + ${quantity}
+      WHERE id = ${orderItem.id}
+        AND "orderId" = ${orderId}
+        AND "reservedReturnQuantity" <= "quantity" - "returnedQuantity" - ${quantity}
+    `;
+
+    if (reservationResult === 0) {
+      const latest = await tx.orderItem.findUnique({
+        where: { id: orderItem.id },
+        select: { quantity: true, returnedQuantity: true, reservedReturnQuantity: true },
+      });
       throw new OrderReturnQuantityExceededError(
         orderItemId,
         quantity,
-        orderItem.quantity,
+        Math.max(0, (latest?.quantity ?? orderItem.quantity) - (latest?.returnedQuantity ?? orderItem.returnedQuantity) - (latest?.reservedReturnQuantity ?? orderItem.reservedReturnQuantity)),
       );
     }
 
@@ -205,6 +226,54 @@ export async function requestOrderReturn(
         performedByUserId,
       },
     });
+  });
+}
+
+export async function cancelOrderReturn(orderId: number, returnId: number) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { id: true },
+    });
+    if (!order) throw new OrderNotFoundError(orderId);
+
+    const orderReturn = await tx.orderReturn.findFirst({
+      where: { id: returnId, orderItem: { orderId } },
+      select: { id: true, quantity: true, status: true, orderItemId: true },
+    });
+    if (!orderReturn) throw new OrderReturnNotFoundError(returnId, orderId);
+
+    const cancelledAt = new Date();
+    const claimResult = await tx.orderReturn.updateMany({
+      where: {
+        id: returnId,
+        status: OrderReturnStatus.REQUESTED,
+        orderItem: { orderId },
+      },
+      data: { status: OrderReturnStatus.CANCELLED, cancelledAt },
+    });
+    if (claimResult.count === 0) {
+      const latest = await tx.orderReturn.findFirst({
+        where: { id: returnId, orderItem: { orderId } },
+        select: { status: true },
+      });
+      if (!latest) throw new OrderReturnNotFoundError(returnId, orderId);
+      throw new OrderReturnNotCancellableError(returnId, latest.status);
+    }
+
+    const releaseResult = await tx.orderItem.updateMany({
+      where: {
+        id: orderReturn.orderItemId,
+        orderId,
+        reservedReturnQuantity: { gte: orderReturn.quantity },
+      },
+      data: { reservedReturnQuantity: { decrement: orderReturn.quantity } },
+    });
+    if (releaseResult.count === 0) {
+      throw new OrderReturnQuantityExceededError(orderReturn.orderItemId, orderReturn.quantity, 0);
+    }
+
+    return tx.orderReturn.findFirstOrThrow({ where: { id: returnId, orderItem: { orderId } } });
   });
 }
 
@@ -499,22 +568,17 @@ export async function completeOrderReturn(
       throw new ProductListingMissingError(orderItem.productListingId);
     }
 
-    const claimResult = await tx.orderItem.updateMany({
-      where: {
-        id: orderItem.id,
-        orderId,
-        returnedQuantity: {
-          lte: orderItem.quantity - orderReturn.quantity,
-        },
-      },
-      data: {
-        returnedQuantity: {
-          increment: orderReturn.quantity,
-        },
-      },
-    });
+    const claimResult = await tx.$executeRaw`
+      UPDATE "OrderItem"
+      SET "returnedQuantity" = "returnedQuantity" + ${orderReturn.quantity},
+          "reservedReturnQuantity" = "reservedReturnQuantity" - ${orderReturn.quantity}
+      WHERE id = ${orderItem.id}
+        AND "orderId" = ${orderId}
+        AND "reservedReturnQuantity" >= ${orderReturn.quantity}
+        AND "returnedQuantity" + ${orderReturn.quantity} <= "quantity"
+    `;
 
-    if (claimResult.count === 0) {
+    if (claimResult === 0) {
       const latestReturn = await tx.orderReturn.findFirst({
         where: {
           id: returnId,
@@ -529,6 +593,7 @@ export async function completeOrderReturn(
             select: {
               quantity: true,
               returnedQuantity: true,
+              reservedReturnQuantity: true,
             },
           },
         },
@@ -545,7 +610,7 @@ export async function completeOrderReturn(
       throw new OrderReturnQuantityExceededError(
         orderItem.id,
         latestReturn.quantity,
-        latestReturn.orderItem.quantity - latestReturn.orderItem.returnedQuantity,
+        latestReturn.orderItem.quantity - latestReturn.orderItem.returnedQuantity - latestReturn.orderItem.reservedReturnQuantity,
       );
     }
 
