@@ -7,6 +7,7 @@ import { Decimal } from "@prisma/client/runtime/client";
 import app from "../app.js";
 import { config } from "../config/index.js";
 import { prisma } from "../prisma/runtime.js";
+import { InventoryMovementType } from "../generated/prisma-client/enums.js";
 
 const userIds: number[] = [];
 const productIds: number[] = [];
@@ -25,6 +26,7 @@ before(async () => {
 
 afterEach(async () => {
   if (orderIds.length) await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
+  if (listingIds.length) await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: listingIds } } });
   if (listingIds.length) await prisma.productListing.deleteMany({ where: { id: { in: listingIds } } });
   if (productIds.length) await prisma.legoProduct.deleteMany({ where: { id: { in: productIds } } });
   if (userIds.length) {
@@ -109,6 +111,22 @@ describe("customer order cancellation HTTP integration", () => {
     assert.strictEqual((await cancel(order.id, other.token)).status, 404);
     assert.strictEqual((await cancel(order.id, undefined)).status, 401);
     assert.strictEqual((await prisma.order.findUnique({ where: { id: order.id } }))?.status, "PENDING");
+  });
+
+  it("restores stock and records a movement when a customer cancels a CONFIRMED order", async () => {
+    const customer = await makeCustomer();
+    const order = await makeOrder(customer.id);
+    const listingId = (await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id } })).productListingId;
+    const before = (await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock;
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 } } });
+    await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
+    const response = await cancel(order.id, customer.token);
+    assert.strictEqual(response.status, 200);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock, before);
+    const movements = await prisma.inventoryMovement.findMany({ where: { listingId, type: InventoryMovementType.ORDER_CANCELLATION_RETURN } });
+    assert.strictEqual(movements.length, 1);
+    assert.strictEqual(movements[0].quantityChange, 1);
+    assert.strictEqual(movements[0].performedByUserId, customer.id);
   });
 
   it("rejects cancellation of a non-cancellable order", async () => {

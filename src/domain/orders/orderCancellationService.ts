@@ -27,6 +27,11 @@ export async function cancelOrder(
   const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
 
   const updatedOrder = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order || order.userId !== userId) {
+      throw new OrderNotFoundError(orderId);
+    }
+
     const updateResult = await tx.order.updateMany({
       where: {
         id: orderId,
@@ -43,18 +48,37 @@ export async function cancelOrder(
     });
 
     if (updateResult.count === 0) {
-      const order = await tx.order.findUnique({ where: { id: orderId } });
-      if (!order || order.userId !== userId) {
-        throw new OrderNotFoundError(orderId);
-      }
       throw new OrderNotCancellableError(orderId, order.status);
     }
 
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) {
+    if (order.status === OrderStatus.CONFIRMED) {
+      const orderItems = await tx.orderItem.findMany({
+        where: { orderId },
+        select: { productListingId: true, quantity: true },
+      });
+
+      for (const item of orderItems) {
+        await tx.productListing.update({
+          where: { id: item.productListingId },
+          data: { currentStock: { increment: item.quantity } },
+        });
+        await tx.inventoryMovement.create({
+          data: {
+            listingId: item.productListingId,
+            quantityChange: item.quantity,
+            type: "ORDER_CANCELLATION_RETURN",
+            performedByUserId: userId,
+            note: `Order ${orderId} cancellation return`,
+          },
+        });
+      }
+    }
+
+    const updated = await tx.order.findUnique({ where: { id: orderId } });
+    if (!updated) {
       throw new OrderNotFoundError(orderId);
     }
-    return order;
+    return updated;
   });
 
   return updatedOrder;
@@ -71,10 +95,16 @@ export async function cancelOrder(
 export async function cancelOrderByAdmin(
   orderId: number,
   reason: CancellationReason,
+  adminUserId: number,
   ) {
   const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
 
   const updatedOrder = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order) {
+      throw new OrderNotFoundError(orderId);
+    }
+
     const updateResult = await tx.order.updateMany({
       where: {
         id: orderId,
@@ -90,18 +120,37 @@ export async function cancelOrderByAdmin(
     });
 
     if (updateResult.count === 0) {
-      const order = await tx.order.findUnique({ where: { id: orderId } });
-      if (!order) {
-        throw new OrderNotFoundError(orderId);
-      }
       throw new OrderNotCancellableError(orderId, order.status);
     }
 
-    const order = await tx.order.findUnique({ where: { id: orderId } });
-    if (!order) {
+    if (order.status === OrderStatus.CONFIRMED) {
+      const orderItems = await tx.orderItem.findMany({
+        where: { orderId },
+        select: { productListingId: true, quantity: true },
+      });
+
+      for (const item of orderItems) {
+        await tx.productListing.update({
+          where: { id: item.productListingId },
+          data: { currentStock: { increment: item.quantity } },
+        });
+        await tx.inventoryMovement.create({
+          data: {
+            listingId: item.productListingId,
+            quantityChange: item.quantity,
+            type: "ORDER_CANCELLATION_RETURN",
+            performedByUserId: adminUserId,
+            note: `Order ${orderId} cancellation return`,
+          },
+        });
+      }
+    }
+
+    const updated = await tx.order.findUnique({ where: { id: orderId } });
+    if (!updated) {
       throw new OrderNotFoundError(orderId);
     }
-    return order;
+    return updated;
   });
 
   return updatedOrder;

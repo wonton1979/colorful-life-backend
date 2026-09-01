@@ -5,7 +5,7 @@ import { Decimal } from "@prisma/client/runtime/client";
 import { createOrder } from "../domain/orders/orderService.js";
 import { cancelOrder, cancelOrderByAdmin } from "../domain/orders/orderCancellationService.js";
 import { OrderNotFoundError, OrderNotCancellableError } from "../domain/orders/orderCancellationErrors.js";
-import { CancellationReason } from "../generated/prisma-client/enums.js";
+import { CancellationReason, InventoryMovementType } from "../generated/prisma-client/enums.js";
 
 const TEST_PREFIX = `orderCancelTest-${Date.now()}`;
 let userId: number;
@@ -113,6 +113,9 @@ afterEach(async () => {
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
     createdOrderIds.length = 0;
   }
+  if (productListingIds.length) {
+    await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: productListingIds } } });
+  }
 });
 
 describe("Order Cancellation Domain Tests", () => {
@@ -127,9 +130,46 @@ describe("Order Cancellation Domain Tests", () => {
 
   it("customer can cancel own CONFIRMED order", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[1], quantity: 1 }] });
+    const before = (await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))!.currentStock;
+    await prisma.productListing.update({ where: { id: productListingIds[1] }, data: { currentStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
     const cancelled = await cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE);
     assert.strictEqual(cancelled.status, "CANCELLED");
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))!.currentStock, before);
+    const movement = await prisma.inventoryMovement.findFirstOrThrow({ where: { listingId: productListingIds[1], type: InventoryMovementType.ORDER_CANCELLATION_RETURN } });
+    assert.strictEqual(movement.quantityChange, 1);
+  });
+
+  it("restores multiple confirmed order items and never restores twice", async () => {
+    const order = await recordOrder({ items: [
+      { productListingId: productListingIds[0], quantity: 2 },
+      { productListingId: productListingIds[1], quantity: 3 },
+    ] });
+    const before = await prisma.productListing.findMany({ where: { id: { in: productListingIds } }, select: { id: true, currentStock: true } });
+    for (const item of [{ id: productListingIds[0], quantity: 2 }, { id: productListingIds[1], quantity: 3 }]) {
+      await prisma.productListing.update({ where: { id: item.id }, data: { currentStock: { decrement: item.quantity } } });
+    }
+    await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
+    await cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
+    await assert.rejects(() => cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE), OrderNotCancellableError);
+    for (const listing of before) {
+      assert.strictEqual((await prisma.productListing.findUnique({ where: { id: listing.id } }))!.currentStock, listing.currentStock);
+    }
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: { in: productListingIds }, type: InventoryMovementType.ORDER_CANCELLATION_RETURN } }), 2);
+  });
+
+  it("concurrent confirmed cancellations restore inventory only once", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const before = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))!.currentStock;
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: { decrement: 1 } } });
+    await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
+    const results = await Promise.allSettled([
+      cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND),
+      cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE),
+    ]);
+    assert.strictEqual(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))!.currentStock, before);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: productListingIds[0], type: InventoryMovementType.ORDER_CANCELLATION_RETURN } }), 1);
   });
 
   it("cannot cancel another customer's order", async () => {

@@ -122,7 +122,7 @@ export const cancelOrderBySellerHandler = async (req: Request, res: Response) =>
     return res.status(400).json({ error: "Invalid order id" });
   }
   try {
-    const order = await cancelOrderByAdmin(orderId, parseResult.data.reason);
+    const order = await cancelOrderByAdmin(orderId, parseResult.data.reason, (req.user as { id: number }).id);
     return res.status(200).json(order);
   } catch (err: unknown) {
     if (err instanceof OrderNotFoundErrorCancel) {
