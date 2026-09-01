@@ -44,6 +44,7 @@ async function makeUser() {
     data: {
       email: `${randomUUID()}@example.com`,
       passwordHash: "secret-hash",
+      emailVerified: true,
       role: "CUSTOMER",
       addresses: { create: { recipientName: "Customer", line1: "1 Test Street", city: "Testville", postcode: "T1", countryCode: "GB", isDefaultBilling: true } },
     },

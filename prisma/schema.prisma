@@ -163,24 +163,34 @@ model BusinessExpense {
 }
 
 model User {
-  id                    Int                 @id @default(autoincrement())
-  email                 String              @unique
-  passwordHash          String
-  emailVerified         Boolean             @default(false)
-  role                  UserRole            @default(CUSTOMER)
-  firstName             String?
-  lastName              String?
-  phone                 String?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  addresses             Address[]
-  inventoryMovements    InventoryMovement[]
-  purchaseDocuments     PurchaseDocument[]
-  orders                Order[]
-  orderReturns          OrderReturn[]
-  inspectedOrderReturns OrderReturn[]       @relation("OrderReturnInspectedBy")
-  refunds               Refund[]
-  inventoryAudits       InventoryAudit[]    @relation("InventoryAuditPerformedBy")
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  passwordHash           String
+  emailVerified          Boolean                 @default(false)
+  role                   UserRole                @default(CUSTOMER)
+  firstName              String?
+  lastName               String?
+  phone                  String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  addresses              Address[]
+  inventoryMovements     InventoryMovement[]
+  purchaseDocuments      PurchaseDocument[]
+  orders                 Order[]
+  orderReturns           OrderReturn[]
+  inspectedOrderReturns  OrderReturn[]           @relation("OrderReturnInspectedBy")
+  refunds                Refund[]
+  inventoryAudits        InventoryAudit[]        @relation("InventoryAuditPerformedBy")
+  emailVerificationToken EmailVerificationToken?
+}
+
+model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Address {

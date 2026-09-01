@@ -33,6 +33,10 @@ export const passwordSchema = z
     password: passwordSchema,
   });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().trim().min(1),
+});
+
 /**
  * Login request validation schema.
  */

@@ -17,7 +17,7 @@ const orderIds: number[] = [];
 
 async function fixture(quantity = 2) {
   const user = await prisma.user.create({ data: {
-    email: `expiry-${randomUUID()}@example.com`, passwordHash: "hash", role: "CUSTOMER",
+    email: `expiry-${randomUUID()}@example.com`, passwordHash: "hash", role: "CUSTOMER", emailVerified: true,
     addresses: { create: { recipientName: "Expiry", line1: "1 Test Street", city: "Testville", postcode: "T1", countryCode: "GB", isDefaultBilling: true } },
   } });
   userIds.push(user.id);

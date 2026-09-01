@@ -39,11 +39,12 @@ after(async () => {
   server.close();
 });
 
-async function makeCustomer() {
+async function makeCustomer(emailVerified = true) {
   const user = await prisma.user.create({
     data: {
       email: `${randomUUID()}@example.com`,
       passwordHash: "test-hash",
+      emailVerified,
       role: "CUSTOMER",
       addresses: {
         create: {
@@ -105,5 +106,36 @@ describe("order creation HTTP integration", () => {
   it("rejects unauthenticated order creation", async () => {
     const response = await fetch(`${url}/orders`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: [] }) });
     assert.strictEqual(response.status, 401);
+  });
+
+  it("rejects unverified customers before any order or inventory side effect", async () => {
+    const customer = await makeCustomer(false);
+    const listing = await makeListing();
+    const before = await prisma.productListing.findUnique({ where: { id: listing.id } });
+    const response = await fetch(`${url}/orders`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${customer.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [{ productListingId: listing.id, quantity: 1 }] }),
+    });
+    assert.strictEqual(response.status, 403);
+    assert.match((await response.json()).error, /Email verification is required/);
+    assert.strictEqual(await prisma.order.count({ where: { userId: customer.id } }), 0);
+    assert.deepStrictEqual(await prisma.productListing.findUnique({ where: { id: listing.id } }), before);
+  });
+
+  it("uses current database verification state with the same JWT", async () => {
+    const customer = await makeCustomer(false);
+    const listing = await makeListing();
+    const request = () => fetch(`${url}/orders`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${customer.token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ items: [{ productListingId: listing.id, quantity: 1 }] }),
+    });
+    assert.strictEqual((await request()).status, 403);
+    await prisma.user.update({ where: { id: customer.id }, data: { emailVerified: true } });
+    const response = await request();
+    assert.strictEqual(response.status, 201);
+    const body = await response.json();
+    orderIds.push(body.id);
   });
 });

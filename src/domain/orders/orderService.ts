@@ -13,6 +13,8 @@ import {
   ProductListingNotFoundError,
   DuplicateProductListingError,
   InsufficientAvailableStockError,
+  EmailVerificationRequiredError,
+  OrderUserNotFoundError,
 } from "./orderErrors.js";
 import { OrderStatus } from "../../generated/prisma-client/enums.js";
 import { expireOrderReservation } from "./orderExpiryService.js";
@@ -57,6 +59,13 @@ export async function createOrder(
 
   // --- 2. Perform all authoritative reads/writes in one transaction
   return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { id: true, emailVerified: true },
+    });
+    if (!user) throw new OrderUserNotFoundError();
+    if (!user.emailVerified) throw new EmailVerificationRequiredError();
+
     // 2a. Billing address
     const defaultBillingAddrs = await tx.address.findMany({
       where: { userId, isDefaultBilling: true },

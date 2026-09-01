@@ -264,6 +264,7 @@ export type UserWhereInput = {
   inspectedOrderReturns?: Prisma.OrderReturnListRelationFilter
   refunds?: Prisma.RefundListRelationFilter
   inventoryAudits?: Prisma.InventoryAuditListRelationFilter
+  emailVerificationToken?: Prisma.XOR<Prisma.EmailVerificationTokenNullableScalarRelationFilter, Prisma.EmailVerificationTokenWhereInput> | null
 }
 
 export type UserOrderByWithRelationInput = {
@@ -285,6 +286,7 @@ export type UserOrderByWithRelationInput = {
   inspectedOrderReturns?: Prisma.OrderReturnOrderByRelationAggregateInput
   refunds?: Prisma.RefundOrderByRelationAggregateInput
   inventoryAudits?: Prisma.InventoryAuditOrderByRelationAggregateInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenOrderByWithRelationInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -309,6 +311,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   inspectedOrderReturns?: Prisma.OrderReturnListRelationFilter
   refunds?: Prisma.RefundListRelationFilter
   inventoryAudits?: Prisma.InventoryAuditListRelationFilter
+  emailVerificationToken?: Prisma.XOR<Prisma.EmailVerificationTokenNullableScalarRelationFilter, Prisma.EmailVerificationTokenWhereInput> | null
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -363,6 +366,7 @@ export type UserCreateInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -384,6 +388,7 @@ export type UserUncheckedCreateInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -404,6 +409,7 @@ export type UserUpdateInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -425,6 +431,7 @@ export type UserUncheckedUpdateInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -532,6 +539,20 @@ export type BoolFieldUpdateOperationsInput = {
 
 export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
+}
+
+export type UserCreateNestedOneWithoutEmailVerificationTokenInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedCreateWithoutEmailVerificationTokenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEmailVerificationTokenInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutEmailVerificationTokenNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedCreateWithoutEmailVerificationTokenInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutEmailVerificationTokenInput
+  upsert?: Prisma.UserUpsertWithoutEmailVerificationTokenInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEmailVerificationTokenInput, Prisma.UserUpdateWithoutEmailVerificationTokenInput>, Prisma.UserUncheckedUpdateWithoutEmailVerificationTokenInput>
 }
 
 export type UserCreateNestedOneWithoutAddressesInput = {
@@ -648,6 +669,104 @@ export type UserUpdateOneRequiredWithoutPurchaseDocumentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPurchaseDocumentsInput, Prisma.UserUpdateWithoutPurchaseDocumentsInput>, Prisma.UserUncheckedUpdateWithoutPurchaseDocumentsInput>
 }
 
+export type UserCreateWithoutEmailVerificationTokenInput = {
+  email: string
+  passwordHash: string
+  emailVerified?: boolean
+  role?: $Enums.UserRole
+  firstName?: string | null
+  lastName?: string | null
+  phone?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressCreateNestedManyWithoutUserInput
+  inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutPerformedByUserInput
+  purchaseDocuments?: Prisma.PurchaseDocumentCreateNestedManyWithoutImportedByUserInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  orderReturns?: Prisma.OrderReturnCreateNestedManyWithoutPerformedByUserInput
+  inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
+  refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
+  inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+}
+
+export type UserUncheckedCreateWithoutEmailVerificationTokenInput = {
+  id?: number
+  email: string
+  passwordHash: string
+  emailVerified?: boolean
+  role?: $Enums.UserRole
+  firstName?: string | null
+  lastName?: string | null
+  phone?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  addresses?: Prisma.AddressUncheckedCreateNestedManyWithoutUserInput
+  inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutPerformedByUserInput
+  purchaseDocuments?: Prisma.PurchaseDocumentUncheckedCreateNestedManyWithoutImportedByUserInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  orderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutPerformedByUserInput
+  inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
+  refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
+  inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+}
+
+export type UserCreateOrConnectWithoutEmailVerificationTokenInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedCreateWithoutEmailVerificationTokenInput>
+}
+
+export type UserUpsertWithoutEmailVerificationTokenInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedUpdateWithoutEmailVerificationTokenInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedCreateWithoutEmailVerificationTokenInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutEmailVerificationTokenInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutEmailVerificationTokenInput, Prisma.UserUncheckedUpdateWithoutEmailVerificationTokenInput>
+}
+
+export type UserUpdateWithoutEmailVerificationTokenInput = {
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUpdateManyWithoutUserNestedInput
+  inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutPerformedByUserNestedInput
+  purchaseDocuments?: Prisma.PurchaseDocumentUpdateManyWithoutImportedByUserNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  orderReturns?: Prisma.OrderReturnUpdateManyWithoutPerformedByUserNestedInput
+  inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
+  refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
+  inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutEmailVerificationTokenInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  firstName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  lastName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  addresses?: Prisma.AddressUncheckedUpdateManyWithoutUserNestedInput
+  inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  purchaseDocuments?: Prisma.PurchaseDocumentUncheckedUpdateManyWithoutImportedByUserNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  orderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
+  refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+}
+
 export type UserCreateWithoutAddressesInput = {
   email: string
   passwordHash: string
@@ -665,6 +784,7 @@ export type UserCreateWithoutAddressesInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAddressesInput = {
@@ -685,6 +805,7 @@ export type UserUncheckedCreateWithoutAddressesInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAddressesInput = {
@@ -720,6 +841,7 @@ export type UserUpdateWithoutAddressesInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAddressesInput = {
@@ -740,6 +862,7 @@ export type UserUncheckedUpdateWithoutAddressesInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInventoryMovementsInput = {
@@ -759,6 +882,7 @@ export type UserCreateWithoutInventoryMovementsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInventoryMovementsInput = {
@@ -779,6 +903,7 @@ export type UserUncheckedCreateWithoutInventoryMovementsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInventoryMovementsInput = {
@@ -814,6 +939,7 @@ export type UserUpdateWithoutInventoryMovementsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInventoryMovementsInput = {
@@ -834,6 +960,7 @@ export type UserUncheckedUpdateWithoutInventoryMovementsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutInventoryAuditsInput = {
@@ -853,6 +980,7 @@ export type UserCreateWithoutInventoryAuditsInput = {
   orderReturns?: Prisma.OrderReturnCreateNestedManyWithoutPerformedByUserInput
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInventoryAuditsInput = {
@@ -873,6 +1001,7 @@ export type UserUncheckedCreateWithoutInventoryAuditsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutPerformedByUserInput
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInventoryAuditsInput = {
@@ -908,6 +1037,7 @@ export type UserUpdateWithoutInventoryAuditsInput = {
   orderReturns?: Prisma.OrderReturnUpdateManyWithoutPerformedByUserNestedInput
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInventoryAuditsInput = {
@@ -928,6 +1058,7 @@ export type UserUncheckedUpdateWithoutInventoryAuditsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrdersInput = {
@@ -947,6 +1078,7 @@ export type UserCreateWithoutOrdersInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrdersInput = {
@@ -967,6 +1099,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrdersInput = {
@@ -1002,6 +1135,7 @@ export type UserUpdateWithoutOrdersInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -1022,6 +1156,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRefundsInput = {
@@ -1041,6 +1176,7 @@ export type UserCreateWithoutRefundsInput = {
   orderReturns?: Prisma.OrderReturnCreateNestedManyWithoutPerformedByUserInput
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRefundsInput = {
@@ -1061,6 +1197,7 @@ export type UserUncheckedCreateWithoutRefundsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutPerformedByUserInput
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRefundsInput = {
@@ -1096,6 +1233,7 @@ export type UserUpdateWithoutRefundsInput = {
   orderReturns?: Prisma.OrderReturnUpdateManyWithoutPerformedByUserNestedInput
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRefundsInput = {
@@ -1116,6 +1254,7 @@ export type UserUncheckedUpdateWithoutRefundsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrderReturnsInput = {
@@ -1135,6 +1274,7 @@ export type UserCreateWithoutOrderReturnsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrderReturnsInput = {
@@ -1155,6 +1295,7 @@ export type UserUncheckedCreateWithoutOrderReturnsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrderReturnsInput = {
@@ -1179,6 +1320,7 @@ export type UserCreateWithoutInspectedOrderReturnsInput = {
   orderReturns?: Prisma.OrderReturnCreateNestedManyWithoutPerformedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutInspectedOrderReturnsInput = {
@@ -1199,6 +1341,7 @@ export type UserUncheckedCreateWithoutInspectedOrderReturnsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutPerformedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutInspectedOrderReturnsInput = {
@@ -1234,6 +1377,7 @@ export type UserUpdateWithoutOrderReturnsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrderReturnsInput = {
@@ -1254,6 +1398,7 @@ export type UserUncheckedUpdateWithoutOrderReturnsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutInspectedOrderReturnsInput = {
@@ -1284,6 +1429,7 @@ export type UserUpdateWithoutInspectedOrderReturnsInput = {
   orderReturns?: Prisma.OrderReturnUpdateManyWithoutPerformedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutInspectedOrderReturnsInput = {
@@ -1304,6 +1450,7 @@ export type UserUncheckedUpdateWithoutInspectedOrderReturnsInput = {
   orderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutPerformedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPurchaseDocumentsInput = {
@@ -1323,6 +1470,7 @@ export type UserCreateWithoutPurchaseDocumentsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenCreateNestedOneWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPurchaseDocumentsInput = {
@@ -1343,6 +1491,7 @@ export type UserUncheckedCreateWithoutPurchaseDocumentsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedCreateNestedManyWithoutInspectedByUserInput
   refunds?: Prisma.RefundUncheckedCreateNestedManyWithoutPerformedByUserInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutPerformedByUserInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedCreateNestedOneWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPurchaseDocumentsInput = {
@@ -1378,6 +1527,7 @@ export type UserUpdateWithoutPurchaseDocumentsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUpdateOneWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPurchaseDocumentsInput = {
@@ -1398,6 +1548,7 @@ export type UserUncheckedUpdateWithoutPurchaseDocumentsInput = {
   inspectedOrderReturns?: Prisma.OrderReturnUncheckedUpdateManyWithoutInspectedByUserNestedInput
   refunds?: Prisma.RefundUncheckedUpdateManyWithoutPerformedByUserNestedInput
   inventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutPerformedByUserNestedInput
+  emailVerificationToken?: Prisma.EmailVerificationTokenUncheckedUpdateOneWithoutUserNestedInput
 }
 
 
@@ -1513,6 +1664,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   inspectedOrderReturns?: boolean | Prisma.User$inspectedOrderReturnsArgs<ExtArgs>
   refunds?: boolean | Prisma.User$refundsArgs<ExtArgs>
   inventoryAudits?: boolean | Prisma.User$inventoryAuditsArgs<ExtArgs>
+  emailVerificationToken?: boolean | Prisma.User$emailVerificationTokenArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1565,6 +1717,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   inspectedOrderReturns?: boolean | Prisma.User$inspectedOrderReturnsArgs<ExtArgs>
   refunds?: boolean | Prisma.User$refundsArgs<ExtArgs>
   inventoryAudits?: boolean | Prisma.User$inventoryAuditsArgs<ExtArgs>
+  emailVerificationToken?: boolean | Prisma.User$emailVerificationTokenArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1581,6 +1734,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     inspectedOrderReturns: Prisma.$OrderReturnPayload<ExtArgs>[]
     refunds: Prisma.$RefundPayload<ExtArgs>[]
     inventoryAudits: Prisma.$InventoryAuditPayload<ExtArgs>[]
+    emailVerificationToken: Prisma.$EmailVerificationTokenPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1995,6 +2149,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   inspectedOrderReturns<T extends Prisma.User$inspectedOrderReturnsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$inspectedOrderReturnsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderReturnPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   refunds<T extends Prisma.User$refundsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$refundsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RefundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inventoryAudits<T extends Prisma.User$inventoryAuditsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$inventoryAuditsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InventoryAuditPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  emailVerificationToken<T extends Prisma.User$emailVerificationTokenArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$emailVerificationTokenArgs<ExtArgs>>): Prisma.Prisma__EmailVerificationTokenClient<runtime.Types.Result.GetResult<Prisma.$EmailVerificationTokenPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2616,6 +2771,25 @@ export type User$inventoryAuditsArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.InventoryAuditScalarFieldEnum | Prisma.InventoryAuditScalarFieldEnum[]
+}
+
+/**
+ * User.emailVerificationToken
+ */
+export type User$emailVerificationTokenArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the EmailVerificationToken
+   */
+  select?: Prisma.EmailVerificationTokenSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the EmailVerificationToken
+   */
+  omit?: Prisma.EmailVerificationTokenOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.EmailVerificationTokenInclude<ExtArgs> | null
+  where?: Prisma.EmailVerificationTokenWhereInput
 }
 
 /**

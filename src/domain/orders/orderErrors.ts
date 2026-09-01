@@ -18,6 +18,20 @@ export class MultipleDefaultBillingAddressesError extends Error {
   }
 }
 
+export class EmailVerificationRequiredError extends Error {
+  constructor() {
+    super("Email verification is required before creating an order");
+    this.name = "EmailVerificationRequiredError";
+  }
+}
+
+export class OrderUserNotFoundError extends Error {
+  constructor() {
+    super("User not found");
+    this.name = "OrderUserNotFoundError";
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Product listing related errors
 // -----------------------------------------------------------------------------

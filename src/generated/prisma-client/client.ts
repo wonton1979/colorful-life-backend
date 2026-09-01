@@ -52,6 +52,11 @@ export type BusinessExpense = Prisma.BusinessExpenseModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model EmailVerificationToken
+ * 
+ */
+export type EmailVerificationToken = Prisma.EmailVerificationTokenModel
+/**
  * Model Address
  * 
  */
