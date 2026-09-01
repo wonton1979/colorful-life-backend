@@ -4,7 +4,7 @@ import { describe, it, before, after, afterEach } from "node:test";
 import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createOrder } from "../domain/orders/orderService.js";
-import { CancellationReason } from "../generated/prisma-client/enums.js";
+import { CancellationReason, InventoryMovementType } from "../generated/prisma-client/enums.js";
 import app from "../app.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
@@ -121,6 +121,7 @@ describe("Seller Order Cancellation HTTP Integration", () => {
 
   after(async () => {
     await prisma.order.deleteMany({ where: { id: { in: orderIdsForCleanup } } });
+    await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: listingIdsForCleanup } } });
     await prisma.productListing.deleteMany({ where: { id: { in: listingIdsForCleanup } } });
     await prisma.legoProduct.deleteMany({ where: { id: { in: legoProductIdsForCleanup } } });
     await prisma.user.deleteMany({ where: { id: { in: userIdsForCleanup } } });
@@ -176,6 +177,8 @@ describe("Seller Order Cancellation HTTP Integration", () => {
     listingIdsForCleanup.push(listingId);
     legoProductIdsForCleanup.push(legoProductId);
     const order = await createTestOrder(customerId, listingId);
+    const stockBeforeConfirmation = (await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock;
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
 
     const res = await fetch(`${url}/orders/${order.id}/seller-cancel`, {
@@ -192,6 +195,8 @@ describe("Seller Order Cancellation HTTP Integration", () => {
     assert.strictEqual(cancelledOrder?.status, "CANCELLED");
     assert.strictEqual(cancelledOrder?.cancelledBy, "SELLER");
     assert.strictEqual(cancelledOrder?.cancellationReason, CancellationReason.OUT_OF_STOCK);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock, stockBeforeConfirmation);
+    assert.strictEqual((await prisma.inventoryMovement.findMany({ where: { listingId, type: InventoryMovementType.ORDER_CANCELLATION_RETURN } })).length, 1);
   });
 
   it("CUSTOMER receives 403 from seller cancel endpoint", async () => {

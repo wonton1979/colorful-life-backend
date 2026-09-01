@@ -79,6 +79,9 @@ afterEach(async () => {
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
     createdOrderIds.length = 0;
   }
+  if (productListingIds.length) {
+    await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: productListingIds } } });
+  }
 });
 
 after(async () => {
@@ -91,7 +94,7 @@ after(async () => {
 describe("Seller Order Cancellation Domain Tests", () => {
   it("seller can cancel a customer's PENDING order", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
-    const cancelled = await cancelOrderByAdmin(order.id, CancellationReason.OUT_OF_STOCK);
+    const cancelled = await cancelOrderByAdmin(order.id, CancellationReason.OUT_OF_STOCK, buyerId);
     assert.strictEqual(cancelled.status, "CANCELLED");
     assert.ok(cancelled.cancelledAt);
     assert.strictEqual(cancelled.cancelledBy, "SELLER");
@@ -101,15 +104,15 @@ describe("Seller Order Cancellation Domain Tests", () => {
   it("seller can cancel a customer's CONFIRMED order", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
-    const cancelled = await cancelOrderByAdmin(order.id, CancellationReason.PRICING_ERROR);
+    const cancelled = await cancelOrderByAdmin(order.id, CancellationReason.PRICING_ERROR, buyerId);
     assert.strictEqual(cancelled.status, "CANCELLED");
   });
 
   it("cannot cancel an already CANCELLED order", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
-    await cancelOrderByAdmin(order.id, CancellationReason.FULFILMENT_ISSUE);
+    await cancelOrderByAdmin(order.id, CancellationReason.FULFILMENT_ISSUE, buyerId);
     await assert.rejects(
-      async () => cancelOrderByAdmin(order.id, CancellationReason.PRODUCT_UNAVAILABLE),
+      async () => cancelOrderByAdmin(order.id, CancellationReason.PRODUCT_UNAVAILABLE, buyerId),
       (err) => err instanceof OrderNotCancellableError,
     );
   });
@@ -120,7 +123,7 @@ describe("Seller Order Cancellation Domain Tests", () => {
       const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
       await prisma.order.update({ where: { id: order.id }, data: { status } });
       await assert.rejects(
-        async () => cancelOrderByAdmin(order.id, CancellationReason.OTHER),
+        async () => cancelOrderByAdmin(order.id, CancellationReason.OTHER, buyerId),
         (err) => err instanceof OrderNotCancellableError,
       );
     });
@@ -129,7 +132,7 @@ describe("Seller Order Cancellation Domain Tests", () => {
   it("no InventoryMovement and stock unchanged on seller cancellation", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
     const initialStock = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))?.currentStock;
-    await cancelOrderByAdmin(order.id, CancellationReason.OTHER);
+    await cancelOrderByAdmin(order.id, CancellationReason.OTHER, buyerId);
     const afterStock = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))?.currentStock;
     assert.strictEqual(afterStock, initialStock);
     const movements = await prisma.inventoryMovement.findMany({ where: { listingId: productListingIds[0] } });
@@ -138,8 +141,8 @@ describe("Seller Order Cancellation Domain Tests", () => {
 
   it("concurrent seller cancellation: exactly one succeeds", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
-    const promise1 = cancelOrderByAdmin(order.id, CancellationReason.OTHER);
-    const promise2 = cancelOrderByAdmin(order.id, CancellationReason.FULFILMENT_ISSUE);
+    const promise1 = cancelOrderByAdmin(order.id, CancellationReason.OTHER, buyerId);
+    const promise2 = cancelOrderByAdmin(order.id, CancellationReason.FULFILMENT_ISSUE, buyerId);
     const results = await Promise.allSettled([promise1, promise2]);
     const fulfilled = results.filter((r) => r.status === "fulfilled");
     const rejected = results.filter((r) => r.status === "rejected");
@@ -152,7 +155,7 @@ describe("Seller Order Cancellation Domain Tests", () => {
   it("non‑existent order triggers OrderNotFoundError", async () => {
     const fakeId = 999999;
     await assert.rejects(
-      async () => cancelOrderByAdmin(fakeId, CancellationReason.OTHER),
+      async () => cancelOrderByAdmin(fakeId, CancellationReason.OTHER, buyerId),
       (err) => err instanceof OrderNotFoundError,
     );
   });
