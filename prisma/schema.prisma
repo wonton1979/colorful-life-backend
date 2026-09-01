@@ -384,18 +384,19 @@ model Refund {
 }
 
 model OrderItem {
-  id               Int            @id @default(autoincrement())
-  orderId          Int
-  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productListingId Int
-  productListing   ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
-  quantity         Int
-  returnedQuantity Int            @default(0)
-  unitPrice        Decimal        @db.Decimal(10, 2)
-  lineTotal        Decimal        @db.Decimal(12, 2)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  returns          OrderReturn[]
+  id                     Int            @id @default(autoincrement())
+  orderId                Int
+  order                  Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productListingId       Int
+  productListing         ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
+  quantity               Int
+  returnedQuantity       Int            @default(0)
+  reservedReturnQuantity Int            @default(0)
+  unitPrice              Decimal        @db.Decimal(10, 2)
+  lineTotal              Decimal        @db.Decimal(12, 2)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  returns                OrderReturn[]
 
   @@index([orderId])
   @@index([productListingId])

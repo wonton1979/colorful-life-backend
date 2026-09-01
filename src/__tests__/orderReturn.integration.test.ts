@@ -155,6 +155,12 @@ async function completeReturn(url: string, orderId: number | string, returnId: n
   return fetch(`${url}/orders/${orderId}/returns/${returnId}/complete`, { method: "POST", headers });
 }
 
+async function cancelReturn(url: string, orderId: number | string, returnId: number | string, token: string | undefined) {
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return fetch(`${url}/orders/${orderId}/returns/${returnId}/cancel`, { method: "POST", headers });
+}
+
 describe("Order Return HTTP Integration", () => {
   let server: Server;
   let url: string;
@@ -639,8 +645,23 @@ describe("Order Return HTTP Integration", () => {
   it("returns 409 for invalid lifecycle and cumulative completion", async () => {
     const customer = await createUser("CUSTOMER"); const fixture = await createOrderFixture(customer.id); const r = await (await postReturn(url, fixture.order.id, admin.token, { orderItemId: fixture.orderItem.id, quantity: 1, reason: ReturnReason.OTHER, shippingPayer: ReturnShippingPayer.CUSTOMER })).json(); returnIdsForCleanup.push(r.id); assert.strictEqual((await completeReturn(url, fixture.order.id, r.id, admin.token)).status, 409); await authorizeReturn(url, fixture.order.id, r.id, admin.token); assert.strictEqual((await completeReturn(url, fixture.order.id, r.id, admin.token)).status, 409); await receiveReturn(url, fixture.order.id, r.id, admin.token); assert.strictEqual((await completeReturn(url, fixture.order.id, r.id, admin.token)).status, 409);
     const shared = await createOrderFixture(customer.id, 3);
-    const createInspectedForItem = async () => { const returned = await (await postReturn(url, shared.order.id, admin.token, { orderItemId: shared.orderItem.id, quantity: 2, reason: ReturnReason.OTHER, shippingPayer: ReturnShippingPayer.CUSTOMER })).json(); returnIdsForCleanup.push(returned.id); await authorizeReturn(url, shared.order.id, returned.id, admin.token); await receiveReturn(url, shared.order.id, returned.id, admin.token); await inspectReturn(url, shared.order.id, returned.id, admin.token, { condition: "AS_NEW", restockQuantity: 2 }); return returned.id; };
-    const firstReturnId = await createInspectedForItem(); const secondReturnId = await createInspectedForItem(); assert.strictEqual((await completeReturn(url, shared.order.id, firstReturnId, admin.token)).status, 200); const stockAfterFirst = (await prisma.productListing.findUnique({ where: { id: shared.listing.id } }))!.currentStock; const movementsAfterFirst = await prisma.inventoryMovement.count({ where: { listingId: shared.listing.id, type: InventoryMovementType.ORDER_RETURN } }); assert.strictEqual((await completeReturn(url, shared.order.id, secondReturnId, admin.token)).status, 409); const itemAfter = await prisma.orderItem.findUnique({ where: { id: shared.orderItem.id } }); const listingAfter = await prisma.productListing.findUnique({ where: { id: shared.listing.id } }); assert.strictEqual(itemAfter?.returnedQuantity, 2); assert.strictEqual(listingAfter?.currentStock, stockAfterFirst); assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: shared.listing.id, type: InventoryMovementType.ORDER_RETURN } }), movementsAfterFirst); assert.strictEqual((await prisma.orderReturn.findUnique({ where: { id: secondReturnId } }))?.status, "INSPECTED");
+    const first = await (await postReturn(url, shared.order.id, admin.token, { orderItemId: shared.orderItem.id, quantity: 2, reason: ReturnReason.OTHER, shippingPayer: ReturnShippingPayer.CUSTOMER })).json(); returnIdsForCleanup.push(first.id); assert.strictEqual((await postReturn(url, shared.order.id, admin.token, { orderItemId: shared.orderItem.id, quantity: 2, reason: ReturnReason.OTHER, shippingPayer: ReturnShippingPayer.CUSTOMER })).status, 400); assert.strictEqual((await prisma.orderItem.findUnique({ where: { id: shared.orderItem.id } }))?.reservedReturnQuantity, 2);
+  });
+
+  it("rejects overlapping requests and releases cancelled reservations", async () => {
+    const customer = await createUser("CUSTOMER");
+    const fixture = await createOrderFixture(customer.id, 3);
+    const body = { orderItemId: fixture.orderItem.id, quantity: 2, reason: ReturnReason.OTHER, shippingPayer: ReturnShippingPayer.CUSTOMER };
+    const firstResponse = await postReturn(url, fixture.order.id, admin.token, body);
+    const first = await firstResponse.json();
+    returnIdsForCleanup.push(first.id);
+    assert.strictEqual(firstResponse.status, 201);
+    assert.strictEqual((await postReturn(url, fixture.order.id, admin.token, body)).status, 400);
+    assert.strictEqual((await cancelReturn(url, fixture.order.id, first.id, undefined)).status, 401);
+    const authCustomer = await createUser("CUSTOMER");
+    assert.strictEqual((await cancelReturn(url, fixture.order.id, first.id, authCustomer.token)).status, 403);
+    assert.strictEqual((await cancelReturn(url, fixture.order.id, first.id, admin.token)).status, 200);
+    assert.strictEqual((await postReturn(url, fixture.order.id, admin.token, { ...body, quantity: 3 })).status, 201);
   });
 
   it("returns 404 for missing or wrong-order resources and 400 for invalid params", async () => {

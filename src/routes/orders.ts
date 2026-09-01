@@ -12,6 +12,7 @@ import {
   receiveOrderReturnHandler,
   inspectOrderReturnHandler,
   completeOrderReturnHandler,
+  cancelOrderReturnHandler,
   listCustomerOrdersHandler,
   getCustomerOrderHandler,
 } from "../controllers/orders.js";
@@ -54,6 +55,11 @@ router.post(
   "/:orderId/returns/:returnId/complete",
   authMiddleware,
   completeOrderReturnHandler,
+);
+router.post(
+  "/:orderId/returns/:returnId/cancel",
+  authMiddleware,
+  cancelOrderReturnHandler,
 );
 // Payment routes
 router.post("/:orderId/payments", authMiddleware, createPaymentHandler);

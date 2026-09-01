@@ -19,7 +19,9 @@ import {
   InvalidInspectionRestockConditionError,
   OrderReturnNotInspectableError,
   OrderReturnNotCompletableError,
+  OrderReturnNotCancellableError,
   OrderReturnQuantityExceededError,
+  cancelOrderReturn,
   authorizeOrderReturn,
   inspectOrderReturn,
   completeOrderReturn,
@@ -484,7 +486,7 @@ describe("Order return domain service", () => {
   });
 
   it("enforces the AS_NEW restock rule", async () => {
-    const { customer, order, orderItem } = await createFixture(3);
+    const { customer, order, orderItem } = await createFixture(6);
     const opened = await createReceivedReturn(order.id, orderItem.id, customer.id);
     await assert.rejects(inspectOrderReturn(order.id, opened.id, ReturnCondition.OPENED_COMPLETE, 1, undefined, customer.id), InvalidInspectionRestockConditionError);
     const damaged = await createReceivedReturn(order.id, orderItem.id, customer.id);
@@ -591,17 +593,16 @@ describe("Order return domain service", () => {
   it("guards cumulative quantity across returns", async () => {
     const { customer, listing, order, orderItem } = await createFixture(3);
     const first = await createInspectedReturn(order.id, orderItem.id, customer.id, 2, 2);
-    const second = await createInspectedReturn(order.id, orderItem.id, customer.id, 2, 2);
     await completeOrderReturn(order.id, first.id, customer.id);
     const stock = (await prisma.productListing.findUnique({ where: { id: listing.id } }))!.currentStock;
     const movements = await prisma.inventoryMovement.count({ where: { listingId: listing.id, type: InventoryMovementType.ORDER_RETURN } });
-    await assert.rejects(completeOrderReturn(order.id, second.id, customer.id), OrderReturnQuantityExceededError);
+    await assert.rejects(requestReturn(order.id, orderItem.id, 2, customer.id), OrderReturnQuantityExceededError);
     const item = await prisma.orderItem.findUnique({ where: { id: orderItem.id } });
     const listingAfter = await prisma.productListing.findUnique({ where: { id: listing.id } });
     assert.ok((item?.returnedQuantity ?? 0) <= item!.quantity);
     assert.strictEqual(listingAfter?.currentStock, stock);
     assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: listing.id, type: InventoryMovementType.ORDER_RETURN } }), movements);
-    assert.strictEqual((await prisma.orderReturn.findUnique({ where: { id: second.id } }))?.status, OrderReturnStatus.INSPECTED);
+    assert.strictEqual((await prisma.orderItem.findUnique({ where: { id: orderItem.id } }))?.reservedReturnQuantity, 0);
   });
 
   it("allows only one concurrent completion of the same return", async () => {
@@ -619,15 +620,33 @@ describe("Order return domain service", () => {
 
   it("protects cumulative quantity across concurrent returns", async () => {
     const { customer, listing, order, orderItem } = await createFixture(3);
-    const first = await createInspectedReturn(order.id, orderItem.id, customer.id, 2, 2);
-    const second = await createInspectedReturn(order.id, orderItem.id, customer.id, 2, 2);
-    const results = await Promise.allSettled([completeOrderReturn(order.id, first.id, customer.id), completeOrderReturn(order.id, second.id, customer.id)]);
+    const results = await Promise.allSettled([requestReturn(order.id, orderItem.id, 2, customer.id), requestReturn(order.id, orderItem.id, 2, customer.id)]);
     assert.strictEqual(results.filter((result) => result.status === "fulfilled").length, 1);
     assert.strictEqual(results.filter((result) => result.status === "rejected" && result.reason instanceof OrderReturnQuantityExceededError).length, 1);
-    const failedId = results[0].status === "rejected" ? first.id : second.id;
     const item = await prisma.orderItem.findUnique({ where: { id: orderItem.id } });
     assert.ok((item?.returnedQuantity ?? 0) <= item!.quantity);
-    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: listing.id, type: InventoryMovementType.ORDER_RETURN } }), 1);
-    assert.strictEqual((await prisma.orderReturn.findUnique({ where: { id: failedId } }))?.status, OrderReturnStatus.INSPECTED);
+    assert.strictEqual(item?.reservedReturnQuantity, 2);
+  });
+
+  it("cancels a REQUESTED return and releases its reservation", async () => {
+    const { customer, order, orderItem } = await createFixture(3);
+    const requested = await requestReturn(order.id, orderItem.id, 2, customer.id);
+    const cancelled = await cancelOrderReturn(order.id, requested.id);
+    assert.strictEqual(cancelled.status, OrderReturnStatus.CANCELLED);
+    assert.strictEqual((await prisma.orderItem.findUnique({ where: { id: orderItem.id } }))?.reservedReturnQuantity, 0);
+    const later = await requestReturn(order.id, orderItem.id, 3, customer.id);
+    assert.strictEqual(later.quantity, 3);
+  });
+
+  it("allows only one concurrent cancellation and releases once", async () => {
+    const { customer, order, orderItem } = await createFixture(3);
+    const requested = await requestReturn(order.id, orderItem.id, 2, customer.id);
+    const results = await Promise.allSettled([
+      cancelOrderReturn(order.id, requested.id),
+      cancelOrderReturn(order.id, requested.id),
+    ]);
+    assert.strictEqual(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.strictEqual(results.filter((result) => result.status === "rejected" && result.reason instanceof OrderReturnNotCancellableError).length, 1);
+    assert.strictEqual((await prisma.orderItem.findUnique({ where: { id: orderItem.id } }))?.reservedReturnQuantity, 0);
   });
 });

@@ -23,6 +23,7 @@ import {
   receiveOrderReturn,
   inspectOrderReturn,
   completeOrderReturn,
+  cancelOrderReturn,
   InvalidReturnQuantityError,
   InvalidReturnReasonError,
   InvalidReturnShippingPayerError,
@@ -38,6 +39,7 @@ import {
   InvalidInspectionRestockConditionError,
   OrderReturnNotInspectableError,
   OrderReturnNotCompletableError,
+  OrderReturnNotCancellableError,
   ProductListingMissingError as OrderReturnProductListingMissingError,
 } from "../domain/orders/orderReturnService.js";
 import { OrderReturnSchema } from "../domain/orders/orderReturnValidator.js";
@@ -305,6 +307,23 @@ export const authorizeOrderReturnHandler = async (req: Request, res: Response) =
       return res.status(409).json({ error: err.message });
     }
     console.error("Authorize order return error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const cancelOrderReturnHandler = async (req: Request, res: Response) => {
+  const userRole = (req.user as { role: string }).role;
+  if (userRole !== "ADMIN") return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  const orderId = Number(req.params.orderId);
+  const returnId = Number(req.params.returnId);
+  if (!Number.isInteger(orderId) || orderId < 1) return res.status(400).json({ error: "Invalid order id" });
+  if (!Number.isInteger(returnId) || returnId < 1) return res.status(400).json({ error: "Invalid return id" });
+  try {
+    return res.status(200).json(await cancelOrderReturn(orderId, returnId));
+  } catch (err: unknown) {
+    if (err instanceof OrderReturnOrderNotFoundError || err instanceof OrderReturnNotFoundError) return res.status(404).json({ error: err.message });
+    if (err instanceof OrderReturnNotCancellableError || err instanceof OrderReturnQuantityExceededError) return res.status(409).json({ error: err.message });
+    console.error("Cancel order return error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
