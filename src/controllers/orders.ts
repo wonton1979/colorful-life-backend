@@ -52,6 +52,7 @@ import {
   InsufficientStockError,
 } from "../domain/orders/orderConfirmationErrors.js";
 import { OrderNotFoundError as OrderNotFoundErrorDispatch, OrderNotDispatchableError } from "../domain/orders/orderDispatchErrors.js";
+import { sendDispatchNotification } from "../services/emailService.js";
 
 export const createOrderHandler = async (req: Request, res: Response) => {
   const parseResult = CreateOrderSchema.safeParse(req.body);
@@ -433,8 +434,22 @@ export const completeOrderReturnHandler = async (req: Request, res: Response) =>
         parseResult.data.shippingCarrier,
         parseResult.data.trackingNumber,
       );
+      try {
+        await sendDispatchNotification({
+          customerEmail: order.user.email,
+          orderId: order.id,
+          shippingCarrier: order.shippingCarrier!,
+          trackingNumber: order.trackingNumber,
+          dispatchedAt: order.dispatchedAt!,
+        });
+      } catch (notificationError) {
+        console.error(
+          "Dispatch notification error",
+          notificationError instanceof Error ? notificationError.message : "Unknown notification failure",
+        );
+      }
       // Omit actualShippingCost from the response as it's an internal field
-      const { actualShippingCost, ...rest } = order;
+      const { actualShippingCost, user: _user, ...rest } = order;
       return res.status(200).json(rest);
     } catch (err: unknown) {
       if (err instanceof OrderNotFoundErrorDispatch) {
