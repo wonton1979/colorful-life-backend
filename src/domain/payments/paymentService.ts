@@ -5,6 +5,7 @@ import { Decimal } from "@prisma/client/runtime/client"
 import { CreatePaymentInput } from "./paymentValidator.js"
 import {
   PaymentConflictError,
+  PaymentAlreadySucceededError,
   PaymentNotFoundError,
 } from "./paymentErrors.js"
 import { PaymentProvider, PaymentStatus } from "../../generated/prisma-client/enums.js"
@@ -86,11 +87,18 @@ export async function createPayment(
       const conflict = await prisma.payment.findFirst({
         where: { provider: PaymentProvider.MANUAL, providerReference },
       })
-      if (!conflict) throw err // unexpected – rethrow
-      if (conflict.orderId !== orderId) {
+      if (conflict && conflict.orderId !== orderId) {
         throw new PaymentConflictError(orderId, conflict.orderId)
       }
-      payment = conflict
+      if (conflict) {
+        payment = conflict
+      } else {
+        const existingForOrder = await prisma.payment.findUnique({ where: { orderId } })
+        if (existingForOrder) {
+          throw new PaymentAlreadySucceededError(orderId)
+        }
+        throw err
+      }
     } else {
       throw err
     }

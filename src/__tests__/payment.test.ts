@@ -1,7 +1,7 @@
 import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createPayment } from "../domain/payments/paymentService.js";
-import { PaymentConflictError, PaymentNotFoundError } from "../domain/payments/paymentErrors.js";
+import { PaymentAlreadySucceededError, PaymentConflictError, PaymentNotFoundError } from "../domain/payments/paymentErrors.js";
 import { createOrder } from "../domain/orders/orderService.js";
 import { strict as assert } from "node:assert";
 import { describe, it, before, after, beforeEach, afterEach } from "node:test";
@@ -150,6 +150,31 @@ describe("Payment Service", () => {
     assert.strictEqual(first.id, second.id);
     const count = await prisma.payment.count({ where: { providerReference: providerRef } });
     assert.strictEqual(count, 1);
+  })
+
+  it("rejects a distinct reference after the order is paid", async () => {
+    const order = await createTestOrder();
+    const first = await createPayment(order.id, { providerReference: "first-payment" });
+    createdPaymentIds.push(first.id);
+    await assert.rejects(
+      () => createPayment(order.id, { providerReference: "second-payment" }),
+      (e) => e instanceof PaymentAlreadySucceededError,
+    );
+    assert.strictEqual(await prisma.payment.count({ where: { orderId: order.id } }), 1);
+  })
+
+  it("concurrent distinct references create only one payment", async () => {
+    const order = await createTestOrder();
+    const results = await Promise.allSettled([
+      createPayment(order.id, { providerReference: "concurrent-first" }),
+      createPayment(order.id, { providerReference: "concurrent-second" }),
+    ]);
+    const fulfilled = results.filter((result) => result.status === "fulfilled");
+    const rejected = results.filter((result) => result.status === "rejected");
+    assert.strictEqual(fulfilled.length, 1);
+    assert.strictEqual(rejected.length, 1);
+    if (fulfilled[0].status === "fulfilled") createdPaymentIds.push(fulfilled[0].value.id);
+    assert.strictEqual(await prisma.payment.count({ where: { orderId: order.id } }), 1);
   })
 
   it("cross-order providerReference conflict throws PaymentConflictError", async () => {

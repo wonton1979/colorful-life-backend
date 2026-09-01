@@ -355,6 +355,7 @@ model Payment {
   refunds           Refund[]
 
   @@unique([provider, providerReference])
+  @@unique([orderId])
   @@index([orderId])
 }
 
