@@ -3,31 +3,20 @@ import { Prisma } from "../generated/prisma-client/client.js";
 import { ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
 import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
+import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
+import { listCatalogueProducts } from "../domain/products/productCatalogueService.js";
 
 /**
  * GET /products
  * Returns all active product listings with related LegoProduct and ordered listing images.
  */
-export const getProducts = async (_req: Request, res: Response) => {
+export const getProducts = async (req: Request, res: Response) => {
+  const parseResult = ProductCatalogueQuerySchema.safeParse(req.query);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
   try {
-    const listings = await prisma.productListing.findMany({
-      where: { active: true },
-      select: {
-        id: true,
-        legoProductId: true,
-        condition: true,
-        originalPrice: true,
-        salePrice: true,
-        currentStock: true,
-        createdAt: true,
-        updatedAt: true,
-        legoProduct: true,
-        listingImages: {
-          orderBy: { sortOrder: "asc" },
-        },
-      },
-    });
-    res.json(listings);
+    res.json(await listCatalogueProducts(parseResult.data));
   } catch (err) {
     console.error("Get products error", err);
     res.status(500).json({ error: "Internal server error" });
