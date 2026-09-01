@@ -244,6 +244,21 @@ describe("inventory adjustment domain service", () => {
     assert.strictEqual(await prisma.inventoryAudit.count({ where: { sourceProductListingId: sourceId } }), 1);
   });
 
+  it("does not consume stock reserved for pending orders", async () => {
+    const { sourceId, userId } = await createPair(5);
+    await prisma.productListing.update({ where: { id: sourceId }, data: { reservedStock: 3 } });
+
+    await assert.rejects(
+      () => writeOffInventory({ sourceProductListingId: sourceId, quantity: 3, reason: baseReason, performedByUserId: userId }),
+      InventoryInsufficientStockError,
+    );
+    const listing = await prisma.productListing.findUnique({ where: { id: sourceId } });
+    assert.strictEqual(listing?.currentStock, 5);
+    assert.strictEqual(listing?.reservedStock, 3);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: sourceId } }), 0);
+    assert.strictEqual(await prisma.inventoryAudit.count({ where: { sourceProductListingId: sourceId } }), 0);
+  });
+
   it("rejects invalid write-off quantities", async () => {
     const { sourceId, userId } = await createPair();
     await assert.rejects(() => writeOffInventory({ sourceProductListingId: sourceId, quantity: 0, reason: baseReason, performedByUserId: userId }), InvalidInventoryAdjustmentQuantityError);

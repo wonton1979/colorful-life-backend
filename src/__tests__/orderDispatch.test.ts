@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { describe, it, before, after } from "node:test";
+import { describe, it, before, after, afterEach } from "node:test";
 import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createOrder } from "../domain/orders/orderService.js";
@@ -78,6 +78,10 @@ before(async () => {
     await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: createdListingIds } } });
     // Then delete orders (cascades orderItems)
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
+    await prisma.productListing.updateMany({
+      where: { id: { in: createdListingIds } },
+      data: { reservedStock: 0 },
+    });
     // Delete product listings
     await prisma.productListing.deleteMany({ where: { id: { in: createdListingIds } } });
     // Delete lego products
@@ -87,6 +91,13 @@ before(async () => {
   });
 
 describe("orderDispatchService", () => {
+  afterEach(async () => {
+    await prisma.productListing.updateMany({
+      where: { id: { in: createdListingIds } },
+      data: { reservedStock: 0 },
+    });
+  });
+
   it("dispatches a CONFIRMED order and records shipping details", async () => {
     const order = await createOrder(userId, {
       items: [{ productListingId, quantity: 1 }],

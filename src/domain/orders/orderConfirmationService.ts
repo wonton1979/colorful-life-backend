@@ -4,6 +4,7 @@ import {
   OrderNotFoundError,
   OrderNotConfirmableError,
   InsufficientStockError,
+  ProductListingNotFoundError,
 } from "./orderConfirmationErrors.js";
 
 /**
@@ -39,26 +40,17 @@ export async function confirmOrder(adminUserId: number,orderId: number,) {
 
     // Validate stock and perform deductions
     for (const item of order.orderItems) {
-      const listing = await tx.productListing.findUnique({
-        where: { id: item.productListingId },
-        select: { currentStock: true },
-      });
-      if (!listing) {
-        throw new Error(`Listing ${item.productListingId} not found`);
-      }
-      if (listing.currentStock < item.quantity) {
-        throw new InsufficientStockError(item.productListingId, listing.currentStock, item.quantity);
-      }
-      // Deduct stock atomically
-      const updateResult = await tx.productListing.updateMany({
-        where: {
-          id: item.productListingId,
-          currentStock: { gte: item.quantity },
-        },
-        data: { currentStock: { decrement: item.quantity } },
-      });
-      if (updateResult.count === 0) {
-        // Another concurrent transaction changed the stock
+      const conversionResult = await tx.$executeRaw`
+        UPDATE "ProductListing"
+        SET "currentStock" = "currentStock" - ${item.quantity},
+            "reservedStock" = "reservedStock" - ${item.quantity}
+        WHERE id = ${item.productListingId}
+          AND "currentStock" >= ${item.quantity}
+          AND "reservedStock" >= ${item.quantity}
+      `;
+      if (conversionResult === 0) {
+        const listing = await tx.productListing.findUnique({ where: { id: item.productListingId }, select: { currentStock: true } });
+        if (!listing) throw new ProductListingNotFoundError(item.productListingId);
         throw new InsufficientStockError(item.productListingId, listing.currentStock, item.quantity);
       }
       // Create inventory movement
@@ -76,7 +68,7 @@ export async function confirmOrder(adminUserId: number,orderId: number,) {
     // Update order status to CONFIRMED
     const updatedOrder = await tx.order.update({
       where: { id: orderId, status: OrderStatus.PENDING },
-      data: { status: OrderStatus.CONFIRMED },
+      data: { status: OrderStatus.CONFIRMED, reservationExpiresAt: null },
     });
     return updatedOrder;
   });

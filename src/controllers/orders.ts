@@ -11,6 +11,7 @@ import {
   ProductListingNotFoundError,
   ProductListingInactiveError,
   DuplicateProductListingError,
+  InsufficientAvailableStockError,
 } from "../domain/orders/orderErrors.js";
 import { CancelOrderSchema, SellerCancelOrderSchema } from "../domain/orders/orderCancellationValidator.js";
 import { DispatchOrderSchema } from "../domain/orders/orderDispatchValidator.js";
@@ -47,11 +48,13 @@ import { OrderReturnInspectionSchema } from "../domain/orders/orderReturnInspect
 import {
   OrderNotFoundError as OrderNotFoundErrorCancel,
   OrderNotCancellableError,
+  InsufficientReservedStockError,
 } from "../domain/orders/orderCancellationErrors.js";
 import {
   OrderNotFoundError as OrderNotFoundErrorConfirm,
   OrderNotConfirmableError,
   InsufficientStockError,
+  ProductListingNotFoundError as ConfirmationProductListingNotFoundError,
 } from "../domain/orders/orderConfirmationErrors.js";
 import { OrderNotFoundError as OrderNotFoundErrorDispatch, OrderNotDispatchableError } from "../domain/orders/orderDispatchErrors.js";
 import { sendDispatchNotification } from "../services/emailService.js";
@@ -99,6 +102,7 @@ export const createOrderHandler = async (req: Request, res: Response) => {
         err instanceof ProductListingNotFoundError ||
         err instanceof ProductListingInactiveError ||
         err instanceof DuplicateProductListingError
+        || err instanceof InsufficientAvailableStockError
     ) {
       return res.status(400).json({ error: err.message });
     }
@@ -130,7 +134,7 @@ export const cancelOrderBySellerHandler = async (req: Request, res: Response) =>
     if (err instanceof OrderNotFoundErrorCancel) {
       return res.status(404).json({ error: err.message });
     }
-    if (err instanceof OrderNotCancellableError) {
+      if (err instanceof OrderNotCancellableError || err instanceof InsufficientReservedStockError) {
       return res.status(400).json({ error: err.message });
     }
     console.error("Seller order cancellation error", err);
@@ -154,6 +158,9 @@ export const confirmOrderHandler = async (req: Request, res: Response) => {
     return res.status(200).json(order);
   } catch (err: unknown) {
     if (err instanceof OrderNotFoundErrorConfirm) {
+      return res.status(404).json({ error: err.message });
+    }
+    if (err instanceof ConfirmationProductListingNotFoundError) {
       return res.status(404).json({ error: err.message });
     }
     if (err instanceof OrderNotConfirmableError) {
@@ -208,7 +215,7 @@ export const cancelOrderHandler = async (req: Request, res: Response) => {
     if (err instanceof OrderNotFoundErrorCancel) {
       return res.status(404).json({ error: err.message });
     }
-    if (err instanceof OrderNotCancellableError) {
+      if (err instanceof OrderNotCancellableError || err instanceof InsufficientReservedStockError) {
       return res.status(400).json({ error: err.message });
     }
     console.error("Order cancellation error", err);

@@ -178,7 +178,7 @@ describe("Seller Order Cancellation HTTP Integration", () => {
     legoProductIdsForCleanup.push(legoProductId);
     const order = await createTestOrder(customerId, listingId);
     const stockBeforeConfirmation = (await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock;
-    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 } } });
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 }, reservedStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
 
     const res = await fetch(`${url}/orders/${order.id}/seller-cancel`, {

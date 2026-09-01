@@ -7,8 +7,9 @@ import {
   PaymentConflictError,
   PaymentAlreadySucceededError,
   PaymentNotFoundError,
+  PaymentExpiredError,
 } from "./paymentErrors.js"
-import { PaymentProvider, PaymentStatus } from "../../generated/prisma-client/enums.js"
+import { OrderStatus, PaymentProvider, PaymentStatus } from "../../generated/prisma-client/enums.js"
 
 /**
  * Create a manual payment for an existing order.
@@ -34,26 +35,30 @@ export async function createPayment(
 > {
   const { providerReference } = input
 
-  // 1️⃣ Validate order exists and fetch its total amount
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { totalAmount: true },
-  })
-  if (!order) {
-    throw new PaymentNotFoundError(orderId)
-  }
-  const amount = order.totalAmount
-  if (amount.lte(new Decimal(0))) {
-    // Defensive check – an order should never have a non‑positive total.
-    throw new Error(`Order total amount must be positive`) // Domain error could be added if desired
-  }
-
   let payment:
     | Awaited<ReturnType<typeof prisma.payment.create>>
     | Awaited<ReturnType<typeof prisma.payment.findFirst>>
   try {
     payment = await prisma.$transaction(async (tx) => {
-      // 2️⃣ Check for existing payment with same provider & reference
+      // Serialize payment decisions with expiry on the order row.
+      const lockedOrders = await tx.$queryRaw<Array<{ id: number; status: OrderStatus; totalAmount: Decimal; reservationExpiresAt: Date | null }>>`
+        SELECT id, status, "totalAmount", "reservationExpiresAt"
+        FROM "Order"
+        WHERE id = ${orderId}
+        FOR UPDATE
+      `
+      const order = lockedOrders[0]
+      if (!order) {
+        throw new PaymentNotFoundError(orderId)
+      }
+
+      const amount = order.totalAmount
+      if (amount.lte(new Decimal(0))) {
+        throw new Error(`Order total amount must be positive`)
+      }
+
+      // Replay detection precedes the deadline check so an existing successful
+      // payment remains idempotent after the reservation deadline.
       const existing = await tx.payment.findFirst({
         where: { provider: PaymentProvider.MANUAL, providerReference },
       })
@@ -63,6 +68,15 @@ export async function createPayment(
         }
         return existing
       }
+
+      if (order.status === OrderStatus.EXPIRED) {
+        throw new PaymentExpiredError(orderId)
+      }
+
+      if (order.reservationExpiresAt !== null && order.reservationExpiresAt <= new Date()) {
+        throw new PaymentExpiredError(orderId)
+      }
+
       // 3️⃣ Create the new payment – let any P2002 bubble up to the outer catch
       return await tx.payment.create({
         data: {

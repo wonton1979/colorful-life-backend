@@ -265,9 +265,9 @@ describe("Order Confirmation HTTP Integration", () => {
     const { listingId, legoProductId } = await createListing();
     listingIdsForCleanup.push(listingId);
     legoProductIdsForCleanup.push(legoProductId);
-    // Deplete stock
-    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: 0 } });
     const order = await createTestOrder(userId, listingId);
+    // Make the reserved order inconsistent so confirmation must fail.
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: 0 } });
     const res = await fetch(`${url}/orders/${order.id}/confirm`, {
       method: "POST",
       headers: { Authorization: `Bearer ${adminToken}` },

@@ -12,7 +12,10 @@ import {
   ProductListingInactiveError,
   ProductListingNotFoundError,
   DuplicateProductListingError,
+  InsufficientAvailableStockError,
 } from "./orderErrors.js";
+import { OrderStatus } from "../../generated/prisma-client/enums.js";
+import { expireOrderReservation } from "./orderExpiryService.js";
 
 /**
  * Creates a new order for the supplied user.
@@ -32,6 +35,24 @@ export async function createOrder(
       throw new DuplicateProductListingError(item.productListingId);
     }
     listingIdsSet.add(item.productListingId);
+  }
+
+  const now = new Date();
+  const requestedListingIds = Array.from(listingIdsSet);
+  const expiredCandidates = await prisma.order.findMany({
+    where: {
+      status: OrderStatus.PENDING,
+      reservationExpiresAt: { not: null, lte: now },
+      orderItems: { some: { productListingId: { in: requestedListingIds } } },
+    },
+    select: { id: true },
+  });
+
+  // Expiry owns the eligibility, locking, payment protection, and release
+  // rules. A candidate can become ineligible between discovery and processing;
+  // expireOrderReservation treats that as a normal no-op.
+  for (const candidate of expiredCandidates) {
+    await expireOrderReservation(candidate.id, now);
   }
 
   // --- 2. Perform all authoritative reads/writes in one transaction
@@ -98,6 +119,19 @@ export async function createOrder(
       };
     });
 
+    const createdAt = now;
+    for (const item of orderItemCreateData) {
+      const reservationResult = await tx.$executeRaw`
+        UPDATE "ProductListing"
+        SET "reservedStock" = "reservedStock" + ${item.quantity}
+        WHERE id = ${item.productListingId}
+          AND "reservedStock" <= "currentStock" - ${item.quantity}
+      `;
+      if (reservationResult === 0) {
+        throw new InsufficientAvailableStockError(item.productListingId, item.quantity);
+      }
+    }
+
     // 2e. Persist the order with items
     const order = await tx.order.create({
       data: {
@@ -119,6 +153,8 @@ export async function createOrder(
         deliveryCountryCode: delivery.countryCode,
         deliveryPhone: delivery.phone ?? undefined,
         totalAmount,
+        createdAt,
+        reservationExpiresAt: new Date(createdAt.getTime() + 30 * 60 * 1000),
         orderItems: {
           create: orderItemCreateData,
         },

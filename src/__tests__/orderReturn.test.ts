@@ -81,7 +81,7 @@ async function createListing() {
           condition: "NEW",
           originalPrice: new Decimal("20.00"),
           salePrice: new Decimal("15.00"),
-          currentStock: 3,
+          currentStock: 10,
           active: true,
         },
       },
@@ -164,6 +164,7 @@ describe("Order return domain service", () => {
     }
     if (listingIds.length) {
       await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: listingIds } } });
+      await prisma.productListing.updateMany({ where: { id: { in: listingIds } }, data: { reservedStock: 0 } });
       await prisma.productListing.deleteMany({ where: { id: { in: listingIds } } });
       listingIds.length = 0;
     }
@@ -614,7 +615,7 @@ describe("Order return domain service", () => {
     const item = await prisma.orderItem.findUnique({ where: { id: orderItem.id } });
     const listingAfter = await prisma.productListing.findUnique({ where: { id: listing.id } });
     assert.strictEqual(item?.returnedQuantity, 1);
-    assert.strictEqual(listingAfter?.currentStock, 4);
+    assert.strictEqual(listingAfter?.currentStock, 11);
     assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: listing.id, type: InventoryMovementType.ORDER_RETURN } }), 1);
   });
 

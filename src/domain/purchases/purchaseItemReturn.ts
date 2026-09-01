@@ -120,16 +120,14 @@ export async function returnPurchaseItem(
     }
 
     // Attempt atomic stock decrement. Insufficient stock is signalled by count === 0.
-    const stockUpdate = await tx.productListing.updateMany({
-      where: {
-        id: listingId,
-        currentStock: { gte: quantity },
-      },
-      data: {
-        currentStock: { decrement: quantity },
-      },
-    });
-    if (stockUpdate.count === 0) {
+    const stockUpdate = await tx.$executeRaw`
+      UPDATE "ProductListing"
+      SET "currentStock" = "currentStock" - ${quantity}
+      WHERE id = ${listingId}
+        AND "currentStock" >= ${quantity}
+        AND "currentStock" - ${quantity} >= "reservedStock"
+    `;
+    if (stockUpdate === 0) {
       throw new InsufficientStockError();
     }
 

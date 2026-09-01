@@ -10,7 +10,9 @@ import {
   ProductListingNotFoundError,
   ProductListingInactiveError,
   DuplicateProductListingError,
+  InsufficientAvailableStockError,
 } from "../domain/orders/orderErrors.js";
+import { writeOffInventory } from "../domain/inventory/inventoryAdjustmentService.js";
 
 const TEST_PREFIX = `orderTest-${Date.now()}`;
 let userId: number;
@@ -100,6 +102,10 @@ afterEach(async () => {
     await prisma.order.deleteMany({ where: { id: { in: createdOrderIds } } });
     createdOrderIds.length = 0;
   }
+  await prisma.productListing.updateMany({ where: { id: { in: productListingIds } }, data: { reservedStock: 0 } });
+  await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: productListingIds } } });
+  await prisma.inventoryAudit.deleteMany({ where: { sourceProductListingId: { in: productListingIds } } });
+  await prisma.productListing.updateMany({ where: { id: { in: productListingIds } }, data: { currentStock: 10 } });
   if (extraAddressIds.length) {
     await prisma.address.deleteMany({ where: { id: { in: extraAddressIds } } });
     extraAddressIds.length = 0;
@@ -269,6 +275,42 @@ describe("Order Creation Domain Integration Tests", () => {
     });
   });
 
+  it("reserves available stock without changing physical stock and sets a 30-minute expiry", async () => {
+    const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    const before = new Date();
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 2 }] });
+    const after = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    assert.strictEqual(after?.currentStock, listing?.currentStock);
+    assert.strictEqual(after?.reservedStock, 2);
+    assert.ok(order.reservationExpiresAt);
+    assert.ok(order.reservationExpiresAt.getTime() >= before.getTime() + 30 * 60 * 1000 - 1000);
+    assert.ok(order.reservationExpiresAt.getTime() <= Date.now() + 30 * 60 * 1000 + 1000);
+  });
+
+  it("rejects insufficient available stock and rolls back a multi-line reservation", async () => {
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: 2, reservedStock: 1 } });
+    await prisma.productListing.update({ where: { id: productListingIds[1] }, data: { currentStock: 10, reservedStock: 0 } });
+    await assert.rejects(
+      () => recordOrder({ items: [{ productListingId: productListingIds[1], quantity: 2 }, { productListingId: productListingIds[0], quantity: 2 }] }),
+      InsufficientAvailableStockError,
+    );
+    assert.strictEqual((await prisma.order.count({ where: { userId } })), 0);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))?.reservedStock, 0);
+  });
+
+  it("allows only one concurrent order to reserve the final unit", async () => {
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: 1, reservedStock: 0 } });
+    const results = await Promise.allSettled([
+      createOrder(userId, { items: [{ productListingId: productListingIds[0], quantity: 1 }] }),
+      createOrder(userId, { items: [{ productListingId: productListingIds[0], quantity: 1 }] }),
+    ]);
+    assert.strictEqual(results.filter((result) => result.status === "fulfilled").length, 1);
+    assert.strictEqual(results.filter((result) => result.status === "rejected" && result.reason instanceof InsufficientAvailableStockError).length, 1);
+    const successful = results.find((result) => result.status === "fulfilled");
+    if (successful && successful.status === "fulfilled") createdOrderIds.push(successful.value.id);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))?.reservedStock, 1);
+  });
+
   it("productListing currentStock remains unchanged", async () => {
     const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
     const stockBefore = listing!.currentStock;
@@ -308,5 +350,32 @@ describe("Order Creation Domain Integration Tests", () => {
     );
     const after = await prisma.order.count({ where: { userId } });
     assert.strictEqual(after, before);
+  });
+
+  it("lazily releases an expired reservation before a new reservation", async () => {
+    const stockBefore = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))!.currentStock;
+    const oldOrder = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    await prisma.order.update({ where: { id: oldOrder.id }, data: { reservationExpiresAt: new Date(Date.now() - 1000) } });
+
+    const newOrder = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    const oldState = await prisma.order.findUnique({ where: { id: oldOrder.id } });
+    const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    assert.strictEqual(oldState?.status, "EXPIRED");
+    assert.strictEqual(listing?.currentStock, stockBefore);
+    assert.strictEqual(listing?.reservedStock, 1);
+    assert.ok(newOrder.reservationExpiresAt!.getTime() > Date.now() + 29 * 60 * 1000);
+  });
+
+  it("serializes reservation against a physical stock reduction", async () => {
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: 1, reservedStock: 0 } });
+    const results = await Promise.allSettled([
+      createOrder(userId, { items: [{ productListingId: productListingIds[0], quantity: 1 }] }),
+      writeOffInventory({ sourceProductListingId: productListingIds[0], quantity: 1, reason: "WAREHOUSE_DAMAGE", performedByUserId: userId }),
+    ]);
+    const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    assert.ok((listing?.reservedStock ?? 0) >= 0);
+    assert.ok((listing?.currentStock ?? 0) >= 0);
+    assert.ok((listing?.reservedStock ?? 0) <= (listing?.currentStock ?? 0));
+    assert.ok(results.filter((result) => result.status === "fulfilled").length === 1);
   });
 });

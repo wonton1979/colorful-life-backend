@@ -59,7 +59,7 @@ async function makeOrder(userId: number, status: "PENDING" | "DISPATCHED" = "PEN
     data: { setNumber: `CANCEL-${randomUUID()}`, title: "Cancellation Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 },
   });
   productIds.push(product.id);
-  const listing = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), currentStock: 4, active: true } });
+  const listing = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), currentStock: 4, reservedStock: 1, active: true } });
   listingIds.push(listing.id);
   const order = await prisma.order.create({
     data: {
@@ -118,7 +118,7 @@ describe("customer order cancellation HTTP integration", () => {
     const order = await makeOrder(customer.id);
     const listingId = (await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id } })).productListingId;
     const before = (await prisma.productListing.findUnique({ where: { id: listingId } }))!.currentStock;
-    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 } } });
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: { decrement: 1 }, reservedStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
     const response = await cancel(order.id, customer.token);
     assert.strictEqual(response.status, 200);
