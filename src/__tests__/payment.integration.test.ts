@@ -271,8 +271,7 @@ describe("Payment HTTP integration", () => {
       headers: { Authorization: `Bearer ${admin.token}` },
       body: JSON.stringify({ providerReference: secondReference }),
     });
-    const second = await secondResponse.json();
-    paymentIds.push(second.id);
+    assert.strictEqual(secondResponse.status, 409);
 
     const otherResponse = await jsonFetch(url, `/orders/${otherOrder.id}/payments`, {
       method: "POST",
@@ -288,7 +287,7 @@ describe("Payment HTTP integration", () => {
     assert.strictEqual(listedResponse.status, 200);
     const listed = await listedResponse.json();
     assert.ok(Array.isArray(listed));
-    assert.deepStrictEqual(listed.map((payment: { id: number }) => payment.id), [second.id, first.id]);
+    assert.deepStrictEqual(listed.map((payment: { id: number }) => payment.id), [first.id]);
     assert.ok(listed.every((payment: { orderId: number }) => payment.orderId === order.id));
     assert.ok(!listed.some((payment: { id: number }) => payment.id === other.id));
   });

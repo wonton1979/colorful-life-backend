@@ -298,11 +298,11 @@ export type PaymentOrderByWithRelationInput = {
 
 export type PaymentWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  orderId?: number
   provider_providerReference?: Prisma.PaymentProviderProviderReferenceCompoundUniqueInput
   AND?: Prisma.PaymentWhereInput | Prisma.PaymentWhereInput[]
   OR?: Prisma.PaymentWhereInput[]
   NOT?: Prisma.PaymentWhereInput | Prisma.PaymentWhereInput[]
-  orderId?: Prisma.IntFilter<"Payment"> | number
   amount?: Prisma.DecimalFilter<"Payment"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   currency?: Prisma.StringFilter<"Payment"> | string
   provider?: Prisma.EnumPaymentProviderFilter<"Payment"> | $Enums.PaymentProvider
@@ -314,7 +314,7 @@ export type PaymentWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Payment"> | Date | string
   order?: Prisma.XOR<Prisma.OrderScalarRelationFilter, Prisma.OrderWhereInput>
   refunds?: Prisma.RefundListRelationFilter
-}, "id" | "provider_providerReference">
+}, "id" | "provider_providerReference" | "orderId">
 
 export type PaymentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
