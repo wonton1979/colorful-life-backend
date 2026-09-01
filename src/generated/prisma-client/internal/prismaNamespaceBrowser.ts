@@ -58,6 +58,7 @@ export const ModelName = {
   ProductListing: 'ProductListing',
   ListingImage: 'ListingImage',
   InventoryMovement: 'InventoryMovement',
+  InventoryAudit: 'InventoryAudit',
   Order: 'Order',
   Payment: 'Payment',
   Refund: 'Refund',
@@ -189,6 +190,21 @@ export const InventoryMovementScalarFieldEnum = {
 } as const
 
 export type InventoryMovementScalarFieldEnum = (typeof InventoryMovementScalarFieldEnum)[keyof typeof InventoryMovementScalarFieldEnum]
+
+
+export const InventoryAuditScalarFieldEnum = {
+  id: 'id',
+  sourceProductListingId: 'sourceProductListingId',
+  targetProductListingId: 'targetProductListingId',
+  action: 'action',
+  quantity: 'quantity',
+  reason: 'reason',
+  reasonNote: 'reasonNote',
+  performedByUserId: 'performedByUserId',
+  createdAt: 'createdAt'
+} as const
+
+export type InventoryAuditScalarFieldEnum = (typeof InventoryAuditScalarFieldEnum)[keyof typeof InventoryAuditScalarFieldEnum]
 
 
 export const OrderScalarFieldEnum = {

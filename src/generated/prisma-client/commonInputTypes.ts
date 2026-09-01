@@ -316,6 +316,40 @@ export type EnumInventoryMovementTypeWithAggregatesFilter<$PrismaModel = never> 
   _max?: Prisma.NestedEnumInventoryMovementTypeFilter<$PrismaModel>
 }
 
+export type EnumInventoryAuditActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAuditAction | Prisma.EnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel> | $Enums.InventoryAuditAction
+}
+
+export type EnumInventoryAdjustmentReasonFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAdjustmentReason | Prisma.EnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel> | $Enums.InventoryAdjustmentReason
+}
+
+export type EnumInventoryAuditActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAuditAction | Prisma.EnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAuditActionWithAggregatesFilter<$PrismaModel> | $Enums.InventoryAuditAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel>
+}
+
+export type EnumInventoryAdjustmentReasonWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAdjustmentReason | Prisma.EnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAdjustmentReasonWithAggregatesFilter<$PrismaModel> | $Enums.InventoryAdjustmentReason
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel>
+}
+
 export type EnumOrderStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.OrderStatus | Prisma.EnumOrderStatusFieldRefInput<$PrismaModel>
   in?: $Enums.OrderStatus[] | Prisma.ListEnumOrderStatusFieldRefInput<$PrismaModel>
@@ -841,6 +875,40 @@ export type NestedEnumInventoryMovementTypeWithAggregatesFilter<$PrismaModel = n
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumInventoryMovementTypeFilter<$PrismaModel>
   _max?: Prisma.NestedEnumInventoryMovementTypeFilter<$PrismaModel>
+}
+
+export type NestedEnumInventoryAuditActionFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAuditAction | Prisma.EnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel> | $Enums.InventoryAuditAction
+}
+
+export type NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAdjustmentReason | Prisma.EnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel> | $Enums.InventoryAdjustmentReason
+}
+
+export type NestedEnumInventoryAuditActionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAuditAction | Prisma.EnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAuditAction[] | Prisma.ListEnumInventoryAuditActionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAuditActionWithAggregatesFilter<$PrismaModel> | $Enums.InventoryAuditAction
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryAuditActionFilter<$PrismaModel>
+}
+
+export type NestedEnumInventoryAdjustmentReasonWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.InventoryAdjustmentReason | Prisma.EnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  in?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  notIn?: $Enums.InventoryAdjustmentReason[] | Prisma.ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumInventoryAdjustmentReasonWithAggregatesFilter<$PrismaModel> | $Enums.InventoryAdjustmentReason
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumInventoryAdjustmentReasonFilter<$PrismaModel>
 }
 
 export type NestedEnumOrderStatusFilter<$PrismaModel = never> = {

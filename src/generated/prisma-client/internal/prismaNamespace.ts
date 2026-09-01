@@ -404,6 +404,7 @@ export const ModelName = {
   ProductListing: 'ProductListing',
   ListingImage: 'ListingImage',
   InventoryMovement: 'InventoryMovement',
+  InventoryAudit: 'InventoryAudit',
   Order: 'Order',
   Payment: 'Payment',
   Refund: 'Refund',
@@ -427,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "businessExpense" | "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "order" | "payment" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "address" | "legoProduct" | "productListing" | "listingImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -946,6 +947,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.InventoryMovementCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.InventoryMovementCountAggregateOutputType> | number
+        }
+      }
+    }
+    InventoryAudit: {
+      payload: Prisma.$InventoryAuditPayload<ExtArgs>
+      fields: Prisma.InventoryAuditFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.InventoryAuditFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.InventoryAuditFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        findFirst: {
+          args: Prisma.InventoryAuditFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.InventoryAuditFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        findMany: {
+          args: Prisma.InventoryAuditFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>[]
+        }
+        create: {
+          args: Prisma.InventoryAuditCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        createMany: {
+          args: Prisma.InventoryAuditCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.InventoryAuditCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>[]
+        }
+        delete: {
+          args: Prisma.InventoryAuditDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        update: {
+          args: Prisma.InventoryAuditUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        deleteMany: {
+          args: Prisma.InventoryAuditDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.InventoryAuditUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.InventoryAuditUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>[]
+        }
+        upsert: {
+          args: Prisma.InventoryAuditUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$InventoryAuditPayload>
+        }
+        aggregate: {
+          args: Prisma.InventoryAuditAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateInventoryAudit>
+        }
+        groupBy: {
+          args: Prisma.InventoryAuditGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InventoryAuditGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.InventoryAuditCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.InventoryAuditCountAggregateOutputType> | number
         }
       }
     }
@@ -1687,6 +1762,21 @@ export const InventoryMovementScalarFieldEnum = {
 export type InventoryMovementScalarFieldEnum = (typeof InventoryMovementScalarFieldEnum)[keyof typeof InventoryMovementScalarFieldEnum]
 
 
+export const InventoryAuditScalarFieldEnum = {
+  id: 'id',
+  sourceProductListingId: 'sourceProductListingId',
+  targetProductListingId: 'targetProductListingId',
+  action: 'action',
+  quantity: 'quantity',
+  reason: 'reason',
+  reasonNote: 'reasonNote',
+  performedByUserId: 'performedByUserId',
+  createdAt: 'createdAt'
+} as const
+
+export type InventoryAuditScalarFieldEnum = (typeof InventoryAuditScalarFieldEnum)[keyof typeof InventoryAuditScalarFieldEnum]
+
+
 export const OrderScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -2020,6 +2110,34 @@ export type ListEnumInventoryMovementTypeFieldRefInput<$PrismaModel> = FieldRefI
 
 
 /**
+ * Reference to a field of type 'InventoryAuditAction'
+ */
+export type EnumInventoryAuditActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryAuditAction'>
+    
+
+
+/**
+ * Reference to a field of type 'InventoryAuditAction[]'
+ */
+export type ListEnumInventoryAuditActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryAuditAction[]'>
+    
+
+
+/**
+ * Reference to a field of type 'InventoryAdjustmentReason'
+ */
+export type EnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryAdjustmentReason'>
+    
+
+
+/**
+ * Reference to a field of type 'InventoryAdjustmentReason[]'
+ */
+export type ListEnumInventoryAdjustmentReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InventoryAdjustmentReason[]'>
+    
+
+
+/**
  * Reference to a field of type 'OrderStatus'
  */
 export type EnumOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OrderStatus'>
@@ -2344,6 +2462,7 @@ export type GlobalOmitConfig = {
   productListing?: Prisma.ProductListingOmit
   listingImage?: Prisma.ListingImageOmit
   inventoryMovement?: Prisma.InventoryMovementOmit
+  inventoryAudit?: Prisma.InventoryAuditOmit
   order?: Prisma.OrderOmit
   payment?: Prisma.PaymentOmit
   refund?: Prisma.RefundOmit
