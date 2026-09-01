@@ -45,7 +45,10 @@ export async function dispatchOrder(
       }
       throw new OrderNotDispatchableError(orderId, order.status as string);
     }
-    const order = await tx.order.findUnique({ where: { id: orderId } });
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      include: { user: { select: { email: true } } },
+    });
     if (!order) {
       throw new OrderNotFoundError(orderId);
     }
