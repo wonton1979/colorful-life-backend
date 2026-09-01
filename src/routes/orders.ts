@@ -12,6 +12,8 @@ import {
   receiveOrderReturnHandler,
   inspectOrderReturnHandler,
   completeOrderReturnHandler,
+  listCustomerOrdersHandler,
+  getCustomerOrderHandler,
 } from "../controllers/orders.js";
 import {
   createPaymentHandler,
@@ -24,6 +26,9 @@ import {
 
 const router = Router();
 
+router.post("/", authMiddleware, createOrderHandler);
+router.get("/", authMiddleware, listCustomerOrdersHandler);
+router.get("/:orderId", authMiddleware, getCustomerOrderHandler);
 router.post("/:orderId/dispatch", authMiddleware, dispatchOrderHandler);
 router.post("/:orderId/cancel", authMiddleware, cancelOrderHandler);
 router.post("/:orderId/seller-cancel", authMiddleware, cancelOrderBySellerHandler);

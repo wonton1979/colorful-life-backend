@@ -53,6 +53,33 @@ import {
 } from "../domain/orders/orderConfirmationErrors.js";
 import { OrderNotFoundError as OrderNotFoundErrorDispatch, OrderNotDispatchableError } from "../domain/orders/orderDispatchErrors.js";
 import { sendDispatchNotification } from "../services/emailService.js";
+import { getCustomerOrder, listCustomerOrders } from "../domain/orders/orderReadService.js";
+
+export const listCustomerOrdersHandler = async (req: Request, res: Response) => {
+  const userId = (req.user as { id: number }).id;
+  try {
+    return res.status(200).json(await listCustomerOrders(userId));
+  } catch (err) {
+    console.error("Customer order listing error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getCustomerOrderHandler = async (req: Request, res: Response) => {
+  const orderId = Number(req.params.orderId);
+  if (!Number.isInteger(orderId) || orderId < 1) {
+    return res.status(400).json({ error: "Invalid order id" });
+  }
+  const userId = (req.user as { id: number }).id;
+  try {
+    const order = await getCustomerOrder(userId, orderId);
+    if (!order) return res.status(404).json({ error: "Order not found" });
+    return res.status(200).json(order);
+  } catch (err) {
+    console.error("Customer order read error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const createOrderHandler = async (req: Request, res: Response) => {
   const parseResult = CreateOrderSchema.safeParse(req.body);
