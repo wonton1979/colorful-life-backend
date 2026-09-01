@@ -132,6 +132,7 @@ beforeEach(async () => {
       },
       data: {
         currentStock: 10,
+        reservedStock: 0,
       },
     });
   }
@@ -154,6 +155,7 @@ describe("Order Confirmation Domain Service", () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 2 }] });
     const confirmed = await confirmOrder(adminUserId, order.id);
     assert.strictEqual(confirmed.status, OrderStatus.CONFIRMED);
+    assert.strictEqual(confirmed.reservationExpiresAt, null);
   });
 
   it("stock is deducted correctly", async () => {
@@ -174,6 +176,15 @@ describe("Order Confirmation Domain Service", () => {
     assert.strictEqual(movements[0].quantityChange, -1);
   });
 
+  it("rejects a PENDING order whose reservation is missing", async () => {
+    const listingId = productListingIds[0];
+    const order = await recordOrder({ items: [{ productListingId: listingId, quantity: 1 }] });
+    await prisma.productListing.update({ where: { id: listingId }, data: { reservedStock: 0 } });
+    await assert.rejects(() => confirmOrder(adminUserId, order.id), InsufficientStockError);
+    const persisted = await prisma.order.findUnique({ where: { id: order.id } });
+    assert.strictEqual(persisted?.status, OrderStatus.PENDING);
+  });
+
   it("multiple items deduct respective listings correctly", async () => {
     const order = await recordOrder({ items: [
       { productListingId: productListingIds[0], quantity: 1 },
@@ -189,15 +200,17 @@ describe("Order Confirmation Domain Service", () => {
   it("insufficient stock rejects confirmation and rolls back", async () => {
     const listingId = productListingIds[0];
     const startingStock = (await prisma.productListing.findUnique({ where: { id: listingId } }))?.currentStock ?? 0;
-    const order = await recordOrder({ items: [{ productListingId: listingId, quantity: startingStock + 1 }] });
+    const order = await recordOrder({ items: [{ productListingId: listingId, quantity: 1 }] });
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: 0, reservedStock: 0 } });
     await assert.rejects(() => confirmOrder(adminUserId, order.id), (err) => err instanceof InsufficientStockError);
     const afterStock = (await prisma.productListing.findUnique({ where: { id: listingId } }))?.currentStock ?? 0;
-    assert.strictEqual(afterStock, startingStock); // no deduction
+    assert.strictEqual(afterStock, 0); // no deduction after the failed conversion
   });
 
   it("insufficient stock creates no WEBSITE_SALE movement", async () => {
     const listingId = productListingIds[0];
-    const order = await recordOrder({ items: [{ productListingId: listingId, quantity: 100 }] });
+    const order = await recordOrder({ items: [{ productListingId: listingId, quantity: 1 }] });
+    await prisma.productListing.update({ where: { id: listingId }, data: { currentStock: 0, reservedStock: 0 } });
     await assert.rejects(() => confirmOrder(adminUserId, order.id), (err) => err instanceof InsufficientStockError);
     const movements = await prisma.inventoryMovement.findMany({ where: { listingId, type: InventoryMovementType.WEBSITE_SALE } });
     assert.strictEqual(movements.length, 0);
@@ -231,24 +244,16 @@ describe("Order Confirmation Domain Service", () => {
     assert(rejected[0].reason instanceof OrderNotConfirmableError || rejected[0].reason instanceof InsufficientStockError);
   });
 
-  it("two different PENDING orders competing for limited stock cannot oversell", async () => {
+  it("two reserved PENDING orders can consume their reservations without overselling", async () => {
     const listingId = productListingIds[0];
     const order1 = await recordOrder({ items: [{ productListingId: listingId, quantity: 5 }] });
-    const order2 = await recordOrder({ items: [{ productListingId: listingId, quantity: 6 }] });
+    const order2 = await recordOrder({ items: [{ productListingId: listingId, quantity: 5 }] });
     const results = await Promise.allSettled([confirmOrder(adminUserId, order1.id), confirmOrder(adminUserId, order2.id)]);
     const fulfilled = results.filter((r) => r.status === "fulfilled");
-    const rejected = results.filter((r) => r.status === "rejected");
-    assert.strictEqual(fulfilled.length, 1);
-    assert.strictEqual(rejected.length, 1);
+    assert.strictEqual(fulfilled.length, 2);
     const afterStock = (await prisma.productListing.findUnique({ where: { id: listingId } }))?.currentStock ?? 0;
-    // initial stock 10, one order succeeds reducing stock by its quantity
-    const successfulOrderId = (fulfilled[0].value as { id: number }).id;
-
-    const expectedStock =
-      successfulOrderId === order1.id
-        ? 5
-        : 4;
-
-    assert.strictEqual(afterStock, expectedStock);
+    const afterListing = await prisma.productListing.findUnique({ where: { id: listingId } });
+    assert.strictEqual(afterStock, 0);
+    assert.strictEqual(afterListing?.reservedStock, 0);
       });
 });

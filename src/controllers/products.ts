@@ -381,10 +381,14 @@ export const adjustInventory = async (req: Request, res: Response) => {
       const updatedRows = await tx.$executeRaw`
         UPDATE "ProductListing"
         SET "currentStock" = "currentStock" + ${quantity}
-        WHERE "id" = ${listingId} AND "currentStock" + ${quantity} >= 0
+        WHERE "id" = ${listingId}
+          AND "currentStock" + ${quantity} >= 0
+          AND "currentStock" + ${quantity} >= "reservedStock"
       `;
       if (updatedRows === 0) {
-        throw new Error("negative_stock");
+        throw new Error(listing.currentStock < Math.max(0, -quantity)
+          ? "negative_stock"
+          : "insufficient_available_stock");
       }
       const movement = await tx.inventoryMovement.create({
         data: {
@@ -414,6 +418,11 @@ export const adjustInventory = async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ error: "Adjustment would make stock negative" });
+    }
+    if (err.message === "insufficient_available_stock") {
+      return res
+        .status(400)
+        .json({ error: "Adjustment would consume reserved stock" });
     }
     if (err.message === "listing_not_found") {
       return res.status(404).json({ error: "Listing not found" });

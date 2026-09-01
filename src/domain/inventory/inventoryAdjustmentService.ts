@@ -121,14 +121,14 @@ export async function conditionAdjustInventory(input: ConditionAdjustmentInput) 
       throw new InvalidConditionAdjustmentError();
     }
 
-    const sourceUpdate = await tx.productListing.updateMany({
-      where: {
-        id: source.id,
-        currentStock: { gte: input.quantity },
-      },
-      data: { currentStock: { decrement: input.quantity } },
-    });
-    if (sourceUpdate.count === 0) {
+    const sourceUpdate = await tx.$executeRaw`
+      UPDATE "ProductListing"
+      SET "currentStock" = "currentStock" - ${input.quantity}
+      WHERE id = ${source.id}
+        AND "currentStock" >= ${input.quantity}
+        AND "currentStock" - ${input.quantity} >= "reservedStock"
+    `;
+    if (sourceUpdate === 0) {
       throw new InventoryInsufficientStockError(source.id);
     }
 
@@ -183,14 +183,14 @@ export async function writeOffInventory(input: WriteOffInput) {
     });
     if (!source) throw new InventoryListingNotFoundError(input.sourceProductListingId);
 
-    const sourceUpdate = await tx.productListing.updateMany({
-      where: {
-        id: source.id,
-        currentStock: { gte: input.quantity },
-      },
-      data: { currentStock: { decrement: input.quantity } },
-    });
-    if (sourceUpdate.count === 0) {
+    const sourceUpdate = await tx.$executeRaw`
+      UPDATE "ProductListing"
+      SET "currentStock" = "currentStock" - ${input.quantity}
+      WHERE id = ${source.id}
+        AND "currentStock" >= ${input.quantity}
+        AND "currentStock" - ${input.quantity} >= "reservedStock"
+    `;
+    if (sourceUpdate === 0) {
       throw new InventoryInsufficientStockError(source.id);
     }
 

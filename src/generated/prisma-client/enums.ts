@@ -27,6 +27,7 @@ export type ListingCondition = (typeof ListingCondition)[keyof typeof ListingCon
 
 export const OrderStatus = {
   PENDING: 'PENDING',
+  EXPIRED: 'EXPIRED',
   CONFIRMED: 'CONFIRMED',
   DISPATCHED: 'DISPATCHED',
   COMPLETED: 'COMPLETED',

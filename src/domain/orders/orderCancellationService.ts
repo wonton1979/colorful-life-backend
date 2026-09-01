@@ -7,6 +7,7 @@ import {
 import {
   OrderNotFoundError,
   OrderNotCancellableError,
+  InsufficientReservedStockError,
 } from "./orderCancellationErrors.js";
 
 /**
@@ -44,6 +45,7 @@ export async function cancelOrder(
         cancelledAt: new Date(),
         cancelledBy: CancellationInitiator.CUSTOMER,
         cancellationReason: reason,
+        reservationExpiresAt: order.status === OrderStatus.PENDING ? null : undefined,
       },
     });
 
@@ -51,7 +53,16 @@ export async function cancelOrder(
       throw new OrderNotCancellableError(orderId, order.status);
     }
 
-    if (order.status === OrderStatus.CONFIRMED) {
+    if (order.status === OrderStatus.PENDING) {
+      const orderItems = await tx.orderItem.findMany({ where: { orderId }, select: { productListingId: true, quantity: true } });
+      for (const item of orderItems) {
+        const released = await tx.productListing.updateMany({
+          where: { id: item.productListingId, reservedStock: { gte: item.quantity } },
+          data: { reservedStock: { decrement: item.quantity } },
+        });
+        if (released.count === 0) throw new InsufficientReservedStockError(item.productListingId, item.quantity);
+      }
+    } else if (order.status === OrderStatus.CONFIRMED) {
       const orderItems = await tx.orderItem.findMany({
         where: { orderId },
         select: { productListingId: true, quantity: true },
@@ -116,6 +127,7 @@ export async function cancelOrderByAdmin(
         cancelledAt: new Date(),
         cancelledBy: CancellationInitiator.SELLER,
         cancellationReason: reason,
+        reservationExpiresAt: order.status === OrderStatus.PENDING ? null : undefined,
       },
     });
 
@@ -123,7 +135,16 @@ export async function cancelOrderByAdmin(
       throw new OrderNotCancellableError(orderId, order.status);
     }
 
-    if (order.status === OrderStatus.CONFIRMED) {
+    if (order.status === OrderStatus.PENDING) {
+      const orderItems = await tx.orderItem.findMany({ where: { orderId }, select: { productListingId: true, quantity: true } });
+      for (const item of orderItems) {
+        const released = await tx.productListing.updateMany({
+          where: { id: item.productListingId, reservedStock: { gte: item.quantity } },
+          data: { reservedStock: { decrement: item.quantity } },
+        });
+        if (released.count === 0) throw new InsufficientReservedStockError(item.productListingId, item.quantity);
+      }
+    } else if (order.status === OrderStatus.CONFIRMED) {
       const orderItems = await tx.orderItem.findMany({
         where: { orderId },
         select: { productListingId: true, quantity: true },

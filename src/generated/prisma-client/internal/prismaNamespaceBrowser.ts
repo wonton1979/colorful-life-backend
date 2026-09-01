@@ -158,6 +158,7 @@ export const ProductListingScalarFieldEnum = {
   originalPrice: 'originalPrice',
   salePrice: 'salePrice',
   currentStock: 'currentStock',
+  reservedStock: 'reservedStock',
   active: 'active',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -232,6 +233,7 @@ export const OrderScalarFieldEnum = {
   shippingCarrier: 'shippingCarrier',
   trackingNumber: 'trackingNumber',
   dispatchedAt: 'dispatchedAt',
+  reservationExpiresAt: 'reservationExpiresAt',
   createdAt: 'createdAt',
   cancelledAt: 'cancelledAt',
   cancelledBy: 'cancelledBy',

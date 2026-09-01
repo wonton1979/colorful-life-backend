@@ -35,6 +35,13 @@ export class ProductListingInactiveError extends Error {
   }
 }
 
+export class InsufficientAvailableStockError extends Error {
+  constructor(productListingId: number, requestedQuantity: number) {
+    super(`Insufficient available stock for product listing ${productListingId} (requested ${requestedQuantity})`);
+    this.name = "InsufficientAvailableStockError";
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Order item duplicate error
 // -----------------------------------------------------------------------------

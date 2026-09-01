@@ -14,7 +14,7 @@
 import { Request, Response } from "express";
 import { createPayment } from "../domain/payments/paymentService.js";
 import { CreatePaymentSchema } from "../domain/payments/paymentValidator.js";
-import { PaymentNotFoundError, PaymentConflictError, PaymentAlreadySucceededError } from "../domain/payments/paymentErrors.js";
+import { PaymentNotFoundError, PaymentConflictError, PaymentAlreadySucceededError, PaymentExpiredError } from "../domain/payments/paymentErrors.js";
 import { prisma } from "../prisma/runtime.js";
 
 /**
@@ -51,6 +51,9 @@ export const createPaymentHandler = async (req: Request, res: Response) => {
       return res.status(409).json({ error: err.message });
     }
     if (err instanceof PaymentAlreadySucceededError) {
+      return res.status(409).json({ error: err.message });
+    }
+    if (err instanceof PaymentExpiredError) {
       return res.status(409).json({ error: err.message });
     }
     console.error("Create payment error", err);

@@ -21,3 +21,10 @@ export class InsufficientStockError extends Error {
     this.name = "InsufficientStockError";
   }
 }
+
+export class ProductListingNotFoundError extends Error {
+  constructor(listingId: number) {
+    super(`Product listing ${listingId} not found`);
+    this.name = "ProductListingNotFoundError";
+  }
+}

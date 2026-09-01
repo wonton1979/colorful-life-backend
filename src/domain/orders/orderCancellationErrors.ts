@@ -14,3 +14,10 @@ export class OrderNotCancellableError extends Error {
     this.name = "OrderNotCancellableError";
   }
 }
+
+export class InsufficientReservedStockError extends Error {
+  constructor(productListingId: number, quantity: number) {
+    super(`Insufficient reserved stock for product listing ${productListingId}: required ${quantity}`);
+    this.name = "InsufficientReservedStockError";
+  }
+}

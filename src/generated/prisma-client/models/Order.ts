@@ -65,6 +65,7 @@ export type OrderMinAggregateOutputType = {
   shippingCarrier: string | null
   trackingNumber: string | null
   dispatchedAt: Date | null
+  reservationExpiresAt: Date | null
   createdAt: Date | null
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
@@ -98,6 +99,7 @@ export type OrderMaxAggregateOutputType = {
   shippingCarrier: string | null
   trackingNumber: string | null
   dispatchedAt: Date | null
+  reservationExpiresAt: Date | null
   createdAt: Date | null
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
@@ -131,6 +133,7 @@ export type OrderCountAggregateOutputType = {
   shippingCarrier: number
   trackingNumber: number
   dispatchedAt: number
+  reservationExpiresAt: number
   createdAt: number
   cancelledAt: number
   cancelledBy: number
@@ -180,6 +183,7 @@ export type OrderMinAggregateInputType = {
   shippingCarrier?: true
   trackingNumber?: true
   dispatchedAt?: true
+  reservationExpiresAt?: true
   createdAt?: true
   cancelledAt?: true
   cancelledBy?: true
@@ -213,6 +217,7 @@ export type OrderMaxAggregateInputType = {
   shippingCarrier?: true
   trackingNumber?: true
   dispatchedAt?: true
+  reservationExpiresAt?: true
   createdAt?: true
   cancelledAt?: true
   cancelledBy?: true
@@ -246,6 +251,7 @@ export type OrderCountAggregateInputType = {
   shippingCarrier?: true
   trackingNumber?: true
   dispatchedAt?: true
+  reservationExpiresAt?: true
   createdAt?: true
   cancelledAt?: true
   cancelledBy?: true
@@ -366,6 +372,7 @@ export type OrderGroupByOutputType = {
   shippingCarrier: string | null
   trackingNumber: string | null
   dispatchedAt: Date | null
+  reservationExpiresAt: Date | null
   createdAt: Date
   cancelledAt: Date | null
   cancelledBy: $Enums.CancellationInitiator | null
@@ -422,6 +429,7 @@ export type OrderWhereInput = {
   shippingCarrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   dispatchedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  reservationExpiresAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
@@ -459,6 +467,7 @@ export type OrderOrderByWithRelationInput = {
   shippingCarrier?: Prisma.SortOrderInput | Prisma.SortOrder
   trackingNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   dispatchedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -499,6 +508,7 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   shippingCarrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   dispatchedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  reservationExpiresAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
@@ -536,6 +546,7 @@ export type OrderOrderByWithAggregationInput = {
   shippingCarrier?: Prisma.SortOrderInput | Prisma.SortOrder
   trackingNumber?: Prisma.SortOrderInput | Prisma.SortOrder
   dispatchedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reservationExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledBy?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -577,6 +588,7 @@ export type OrderScalarWhereWithAggregatesInput = {
   shippingCarrier?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   dispatchedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
+  reservationExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Order"> | Date | string
   cancelledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableWithAggregatesFilter<"Order"> | $Enums.CancellationInitiator | null
@@ -608,6 +620,7 @@ export type OrderCreateInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -645,6 +658,7 @@ export type OrderUncheckedCreateInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -679,6 +693,7 @@ export type OrderUpdateInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -716,6 +731,7 @@ export type OrderUncheckedUpdateInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -752,6 +768,7 @@ export type OrderCreateManyInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -783,6 +800,7 @@ export type OrderUpdateManyMutationInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -816,6 +834,7 @@ export type OrderUncheckedUpdateManyInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -859,6 +878,7 @@ export type OrderCountOrderByAggregateInput = {
   shippingCarrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   dispatchedAt?: Prisma.SortOrder
+  reservationExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
@@ -899,6 +919,7 @@ export type OrderMaxOrderByAggregateInput = {
   shippingCarrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   dispatchedAt?: Prisma.SortOrder
+  reservationExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
@@ -932,6 +953,7 @@ export type OrderMinOrderByAggregateInput = {
   shippingCarrier?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
   dispatchedAt?: Prisma.SortOrder
+  reservationExpiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
   cancelledBy?: Prisma.SortOrder
@@ -1075,6 +1097,7 @@ export type OrderCreateWithoutUserInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1110,6 +1133,7 @@ export type OrderUncheckedCreateWithoutUserInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1175,6 +1199,7 @@ export type OrderScalarWhereInput = {
   shippingCarrier?: Prisma.StringNullableFilter<"Order"> | string | null
   trackingNumber?: Prisma.StringNullableFilter<"Order"> | string | null
   dispatchedAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
+  reservationExpiresAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Order"> | Date | string
   cancelledAt?: Prisma.DateTimeNullableFilter<"Order"> | Date | string | null
   cancelledBy?: Prisma.EnumCancellationInitiatorNullableFilter<"Order"> | $Enums.CancellationInitiator | null
@@ -1206,6 +1231,7 @@ export type OrderCreateWithoutPaymentsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1242,6 +1268,7 @@ export type OrderUncheckedCreateWithoutPaymentsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1291,6 +1318,7 @@ export type OrderUpdateWithoutPaymentsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1327,6 +1355,7 @@ export type OrderUncheckedUpdateWithoutPaymentsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1360,6 +1389,7 @@ export type OrderCreateWithoutRefundsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1396,6 +1426,7 @@ export type OrderUncheckedCreateWithoutRefundsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1445,6 +1476,7 @@ export type OrderUpdateWithoutRefundsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1481,6 +1513,7 @@ export type OrderUncheckedUpdateWithoutRefundsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1514,6 +1547,7 @@ export type OrderCreateWithoutOrderItemsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1550,6 +1584,7 @@ export type OrderUncheckedCreateWithoutOrderItemsInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1599,6 +1634,7 @@ export type OrderUpdateWithoutOrderItemsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1635,6 +1671,7 @@ export type OrderUncheckedUpdateWithoutOrderItemsInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1669,6 +1706,7 @@ export type OrderCreateManyUserInput = {
   shippingCarrier?: string | null
   trackingNumber?: string | null
   dispatchedAt?: Date | string | null
+  reservationExpiresAt?: Date | string | null
   createdAt?: Date | string
   cancelledAt?: Date | string | null
   cancelledBy?: $Enums.CancellationInitiator | null
@@ -1700,6 +1738,7 @@ export type OrderUpdateWithoutUserInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1735,6 +1774,7 @@ export type OrderUncheckedUpdateWithoutUserInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1770,6 +1810,7 @@ export type OrderUncheckedUpdateManyWithoutUserInput = {
   shippingCarrier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   trackingNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dispatchedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reservationExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledBy?: Prisma.NullableEnumCancellationInitiatorFieldUpdateOperationsInput | $Enums.CancellationInitiator | null
@@ -1852,6 +1893,7 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   shippingCarrier?: boolean
   trackingNumber?: boolean
   dispatchedAt?: boolean
+  reservationExpiresAt?: boolean
   createdAt?: boolean
   cancelledAt?: boolean
   cancelledBy?: boolean
@@ -1890,6 +1932,7 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   shippingCarrier?: boolean
   trackingNumber?: boolean
   dispatchedAt?: boolean
+  reservationExpiresAt?: boolean
   createdAt?: boolean
   cancelledAt?: boolean
   cancelledBy?: boolean
@@ -1924,6 +1967,7 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   shippingCarrier?: boolean
   trackingNumber?: boolean
   dispatchedAt?: boolean
+  reservationExpiresAt?: boolean
   createdAt?: boolean
   cancelledAt?: boolean
   cancelledBy?: boolean
@@ -1958,6 +2002,7 @@ export type OrderSelectScalar = {
   shippingCarrier?: boolean
   trackingNumber?: boolean
   dispatchedAt?: boolean
+  reservationExpiresAt?: boolean
   createdAt?: boolean
   cancelledAt?: boolean
   cancelledBy?: boolean
@@ -1966,7 +2011,7 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "completedAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "reservationExpiresAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "completedAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   orderItems?: boolean | Prisma.Order$orderItemsArgs<ExtArgs>
@@ -2014,6 +2059,7 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     shippingCarrier: string | null
     trackingNumber: string | null
     dispatchedAt: Date | null
+    reservationExpiresAt: Date | null
     createdAt: Date
     cancelledAt: Date | null
     cancelledBy: $Enums.CancellationInitiator | null
@@ -2471,6 +2517,7 @@ export interface OrderFieldRefs {
   readonly shippingCarrier: Prisma.FieldRef<"Order", 'String'>
   readonly trackingNumber: Prisma.FieldRef<"Order", 'String'>
   readonly dispatchedAt: Prisma.FieldRef<"Order", 'DateTime'>
+  readonly reservationExpiresAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly cancelledAt: Prisma.FieldRef<"Order", 'DateTime'>
   readonly cancelledBy: Prisma.FieldRef<"Order", 'CancellationInitiator'>

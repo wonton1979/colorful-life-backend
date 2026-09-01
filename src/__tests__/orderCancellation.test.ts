@@ -4,7 +4,7 @@ import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createOrder } from "../domain/orders/orderService.js";
 import { cancelOrder, cancelOrderByAdmin } from "../domain/orders/orderCancellationService.js";
-import { OrderNotFoundError, OrderNotCancellableError } from "../domain/orders/orderCancellationErrors.js";
+import { OrderNotFoundError, OrderNotCancellableError, InsufficientReservedStockError } from "../domain/orders/orderCancellationErrors.js";
 import { CancellationReason, InventoryMovementType } from "../generated/prisma-client/enums.js";
 
 const TEST_PREFIX = `orderCancelTest-${Date.now()}`;
@@ -126,16 +126,21 @@ describe("Order Cancellation Domain Tests", () => {
     assert.ok(cancelled.cancelledAt);
     assert.strictEqual(cancelled.cancelledBy, "CUSTOMER");
     assert.strictEqual(cancelled.cancellationReason, CancellationReason.CHANGED_MIND);
+    const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    assert.strictEqual(listing?.currentStock, 10);
+    assert.strictEqual(listing?.reservedStock, 0);
+    assert.strictEqual(cancelled.reservationExpiresAt, null);
   });
 
   it("customer can cancel own CONFIRMED order", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[1], quantity: 1 }] });
     const before = (await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))!.currentStock;
-    await prisma.productListing.update({ where: { id: productListingIds[1] }, data: { currentStock: { decrement: 1 } } });
+    await prisma.productListing.update({ where: { id: productListingIds[1] }, data: { currentStock: { decrement: 1 }, reservedStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
     const cancelled = await cancelOrder(userId, order.id, CancellationReason.ORDERED_BY_MISTAKE);
     assert.strictEqual(cancelled.status, "CANCELLED");
     assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))!.currentStock, before);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: productListingIds[1] } }))!.reservedStock, 0);
     const movement = await prisma.inventoryMovement.findFirstOrThrow({ where: { listingId: productListingIds[1], type: InventoryMovementType.ORDER_CANCELLATION_RETURN } });
     assert.strictEqual(movement.quantityChange, 1);
   });
@@ -147,7 +152,7 @@ describe("Order Cancellation Domain Tests", () => {
     ] });
     const before = await prisma.productListing.findMany({ where: { id: { in: productListingIds } }, select: { id: true, currentStock: true } });
     for (const item of [{ id: productListingIds[0], quantity: 2 }, { id: productListingIds[1], quantity: 3 }]) {
-      await prisma.productListing.update({ where: { id: item.id }, data: { currentStock: { decrement: item.quantity } } });
+      await prisma.productListing.update({ where: { id: item.id }, data: { currentStock: { decrement: item.quantity }, reservedStock: { decrement: item.quantity } } });
     }
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
     await cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND);
@@ -161,7 +166,7 @@ describe("Order Cancellation Domain Tests", () => {
   it("concurrent confirmed cancellations restore inventory only once", async () => {
     const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
     const before = (await prisma.productListing.findUnique({ where: { id: productListingIds[0] } }))!.currentStock;
-    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: { decrement: 1 } } });
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { currentStock: { decrement: 1 }, reservedStock: { decrement: 1 } } });
     await prisma.order.update({ where: { id: order.id }, data: { status: "CONFIRMED" } });
     const results = await Promise.allSettled([
       cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND),
@@ -242,6 +247,17 @@ describe("Order Cancellation Domain Tests", () => {
     assert.strictEqual(afterStock, initialStock);
     const movements = await prisma.inventoryMovement.findMany({ where: { listingId: productListingIds[0] } });
     assert.strictEqual(movements.length, 0);
+  });
+
+  it("fails atomically when a PENDING reservation is missing", async () => {
+    const order = await recordOrder({ items: [{ productListingId: productListingIds[0], quantity: 1 }] });
+    await prisma.productListing.update({ where: { id: productListingIds[0] }, data: { reservedStock: 0 } });
+    await assert.rejects(() => cancelOrder(userId, order.id, CancellationReason.CHANGED_MIND), InsufficientReservedStockError);
+    const persisted = await prisma.order.findUnique({ where: { id: order.id } });
+    const listing = await prisma.productListing.findUnique({ where: { id: productListingIds[0] } });
+    assert.strictEqual(persisted?.status, "PENDING");
+    assert.strictEqual(listing?.currentStock, 10);
+    assert.strictEqual(listing?.reservedStock, 0);
   });
 
   it("concurrent cancellation: exactly one succeeds", async () => {

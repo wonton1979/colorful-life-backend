@@ -12,6 +12,13 @@ export class PaymentAlreadySucceededError extends Error {
   }
 }
 
+export class PaymentExpiredError extends Error {
+  constructor(orderId: number) {
+    super(`Payment for order ${orderId} cannot be created after its reservation expired`)
+    this.name = "PaymentExpiredError"
+  }
+}
+
 export class PaymentConflictError extends Error {
   constructor(orderId: number, conflictingOrderId: number) {
     super(

@@ -1,7 +1,7 @@
 import { prisma } from "../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
 import { createPayment } from "../domain/payments/paymentService.js";
-import { PaymentAlreadySucceededError, PaymentConflictError, PaymentNotFoundError } from "../domain/payments/paymentErrors.js";
+import { PaymentAlreadySucceededError, PaymentConflictError, PaymentExpiredError, PaymentNotFoundError } from "../domain/payments/paymentErrors.js";
 import { createOrder } from "../domain/orders/orderService.js";
 import { strict as assert } from "node:assert";
 import { describe, it, before, after, beforeEach, afterEach } from "node:test";
@@ -150,6 +150,42 @@ describe("Payment Service", () => {
     assert.strictEqual(first.id, second.id);
     const count = await prisma.payment.count({ where: { providerReference: providerRef } });
     assert.strictEqual(count, 1);
+  })
+
+  it("rejects a new payment after the reservation deadline without releasing stock", async () => {
+    const order = await createTestOrder();
+    const reservedBefore = (await prisma.productListing.findUnique({ where: { id: productListingId } }))?.reservedStock;
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { reservationExpiresAt: new Date(Date.now() - 1_000) },
+    });
+
+    await assert.rejects(
+      () => createPayment(order.id, { providerReference: "late-payment" }),
+      (error) => error instanceof PaymentExpiredError,
+    );
+    assert.strictEqual(await prisma.payment.count({ where: { orderId: order.id } }), 0);
+    const persistedOrder = await prisma.order.findUnique({ where: { id: order.id } });
+    assert.strictEqual(persistedOrder?.status, "PENDING");
+    assert.strictEqual(
+      (await prisma.productListing.findUnique({ where: { id: productListingId } }))?.reservedStock,
+      reservedBefore,
+    );
+  })
+
+  it("replays an existing successful payment after the deadline", async () => {
+    const order = await createTestOrder();
+    const providerReference = "late-replay";
+    const first = await createPayment(order.id, { providerReference });
+    createdPaymentIds.push(first.id);
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { reservationExpiresAt: new Date(Date.now() - 1_000) },
+    });
+
+    const replay = await createPayment(order.id, { providerReference });
+    assert.strictEqual(replay.id, first.id);
+    assert.strictEqual(await prisma.payment.count({ where: { orderId: order.id } }), 1);
   })
 
   it("rejects a distinct reference after the order is paid", async () => {
