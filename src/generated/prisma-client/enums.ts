@@ -99,10 +99,34 @@ export const InventoryMovementType = {
   FBA_OUTBOUND: 'FBA_OUTBOUND',
   DAMAGE_ADJUSTMENT: 'DAMAGE_ADJUSTMENT',
   MANUAL_ADJUSTMENT: 'MANUAL_ADJUSTMENT',
-  PURCHASE_RETURN_OUT: 'PURCHASE_RETURN_OUT'
+  PURCHASE_RETURN_OUT: 'PURCHASE_RETURN_OUT',
+  CONDITION_ADJUSTMENT_SOURCE: 'CONDITION_ADJUSTMENT_SOURCE',
+  CONDITION_ADJUSTMENT_TARGET: 'CONDITION_ADJUSTMENT_TARGET',
+  WRITE_OFF: 'WRITE_OFF'
 } as const
 
 export type InventoryMovementType = (typeof InventoryMovementType)[keyof typeof InventoryMovementType]
+
+
+export const InventoryAuditAction = {
+  CONDITION_ADJUSTMENT: 'CONDITION_ADJUSTMENT',
+  WRITE_OFF: 'WRITE_OFF'
+} as const
+
+export type InventoryAuditAction = (typeof InventoryAuditAction)[keyof typeof InventoryAuditAction]
+
+
+export const InventoryAdjustmentReason = {
+  CUSTOMER_RETURN_DAMAGED: 'CUSTOMER_RETURN_DAMAGED',
+  OPENED_BOX: 'OPENED_BOX',
+  PACKAGING_DAMAGE: 'PACKAGING_DAMAGE',
+  MISSING_PARTS: 'MISSING_PARTS',
+  WAREHOUSE_DAMAGE: 'WAREHOUSE_DAMAGE',
+  QUALITY_ISSUE: 'QUALITY_ISSUE',
+  OTHER: 'OTHER'
+} as const
+
+export type InventoryAdjustmentReason = (typeof InventoryAdjustmentReason)[keyof typeof InventoryAdjustmentReason]
 
 
 export const OrderReturnStatus = {

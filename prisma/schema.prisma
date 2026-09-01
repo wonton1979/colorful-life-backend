@@ -78,6 +78,24 @@ enum InventoryMovementType {
   DAMAGE_ADJUSTMENT
   MANUAL_ADJUSTMENT
   PURCHASE_RETURN_OUT
+  CONDITION_ADJUSTMENT_SOURCE
+  CONDITION_ADJUSTMENT_TARGET
+  WRITE_OFF
+}
+
+enum InventoryAuditAction {
+  CONDITION_ADJUSTMENT
+  WRITE_OFF
+}
+
+enum InventoryAdjustmentReason {
+  CUSTOMER_RETURN_DAMAGED
+  OPENED_BOX
+  PACKAGING_DAMAGE
+  MISSING_PARTS
+  WAREHOUSE_DAMAGE
+  QUALITY_ISSUE
+  OTHER
 }
 
 enum OrderReturnStatus {
@@ -161,6 +179,7 @@ model User {
   orderReturns          OrderReturn[]
   inspectedOrderReturns OrderReturn[]       @relation("OrderReturnInspectedBy")
   refunds               Refund[]
+  inventoryAudits       InventoryAudit[]    @relation("InventoryAuditPerformedBy")
 }
 
 model Address {
@@ -200,20 +219,22 @@ model LegoProduct {
 }
 
 model ProductListing {
-  id                 Int                 @id @default(autoincrement())
-  legoProductId      Int
-  legoProduct        LegoProduct         @relation(fields: [legoProductId], references: [id])
-  condition          ListingCondition
-  originalPrice      Decimal             @db.Decimal(10, 2)
-  salePrice          Decimal?            @db.Decimal(10, 2)
-  currentStock       Int                 @default(0)
-  active             Boolean             @default(true)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  listingImages      ListingImage[]
-  inventoryMovements InventoryMovement[]
-  purchaseItems      PurchaseItem[]
-  orderItems         OrderItem[]
+  id                    Int                 @id @default(autoincrement())
+  legoProductId         Int
+  legoProduct           LegoProduct         @relation(fields: [legoProductId], references: [id])
+  condition             ListingCondition
+  originalPrice         Decimal             @db.Decimal(10, 2)
+  salePrice             Decimal?            @db.Decimal(10, 2)
+  currentStock          Int                 @default(0)
+  active                Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  listingImages         ListingImage[]
+  inventoryMovements    InventoryMovement[]
+  purchaseItems         PurchaseItem[]
+  orderItems            OrderItem[]
+  sourceInventoryAudits InventoryAudit[]    @relation("InventoryAuditSourceListing")
+  targetInventoryAudits InventoryAudit[]    @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
   @@index([condition])
@@ -249,6 +270,26 @@ model InventoryMovement {
   @@index([performedByUserId])
   @@index([createdAt])
   @@index([type])
+}
+
+model InventoryAudit {
+  id                     Int                       @id @default(autoincrement())
+  sourceProductListingId Int
+  sourceProductListing   ProductListing            @relation("InventoryAuditSourceListing", fields: [sourceProductListingId], references: [id], onDelete: Restrict)
+  targetProductListingId Int?
+  targetProductListing   ProductListing?           @relation("InventoryAuditTargetListing", fields: [targetProductListingId], references: [id], onDelete: Restrict)
+  action                 InventoryAuditAction
+  quantity               Int
+  reason                 InventoryAdjustmentReason
+  reasonNote             String?
+  performedByUserId      Int
+  performedByUser        User                      @relation("InventoryAuditPerformedBy", fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt              DateTime                  @default(now())
+
+  @@index([sourceProductListingId])
+  @@index([targetProductListingId])
+  @@index([performedByUserId])
+  @@index([createdAt])
 }
 
 model Order {
