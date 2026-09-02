@@ -16,7 +16,8 @@ const configSchema = z.object({
     AWS_REGION: z.string().nonempty().default("eu-west-2"),
     SES_FROM_EMAIL: z.string().email().default("noreply@example.com"),
     FRONTEND_URL: z.string().url().default("http://localhost:3000"),
-});
+    IDEAL_POSTCODES_API_KEY: z.string().nonempty().optional(),
+  });
 
 const parsed = configSchema.safeParse(process.env);
 if (!parsed.success) {
