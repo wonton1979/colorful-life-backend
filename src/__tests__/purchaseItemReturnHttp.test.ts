@@ -75,6 +75,7 @@ beforeEach(async () => {
     data: {
       email: `user-${randomUUID()}@example.com`,
       passwordHash: "test",
+      emailVerified: true,
     },
   });
   userId = user.id;

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
+import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import {
   createOrderHandler,
   cancelOrderHandler,
@@ -27,15 +28,15 @@ import {
 
 const router = Router();
 
-router.post("/", authMiddleware, createOrderHandler);
-router.get("/", authMiddleware, listCustomerOrdersHandler);
-router.get("/:orderId", authMiddleware, getCustomerOrderHandler);
+router.post("/", authMiddleware, requireVerifiedEmail, createOrderHandler);
+router.get("/", authMiddleware, requireVerifiedEmail, listCustomerOrdersHandler);
+router.get("/:orderId", authMiddleware, requireVerifiedEmail, getCustomerOrderHandler);
 router.post("/:orderId/dispatch", authMiddleware, dispatchOrderHandler);
-router.post("/:orderId/cancel", authMiddleware, cancelOrderHandler);
+router.post("/:orderId/cancel", authMiddleware, requireVerifiedEmail, cancelOrderHandler);
 router.post("/:orderId/seller-cancel", authMiddleware, cancelOrderBySellerHandler);
 router.post("/:orderId/confirm", authMiddleware, confirmOrderHandler);
 router.post("/:orderId/complete", authMiddleware, completeOrderHandler);
-router.post("/:orderId/returns", authMiddleware, processOrderReturnHandler);
+router.post("/:orderId/returns", authMiddleware, requireVerifiedEmail, processOrderReturnHandler);
 router.post(
   "/:orderId/returns/:returnId/authorize",
   authMiddleware,

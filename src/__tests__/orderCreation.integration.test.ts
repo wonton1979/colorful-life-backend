@@ -118,7 +118,7 @@ describe("order creation HTTP integration", () => {
       body: JSON.stringify({ items: [{ productListingId: listing.id, quantity: 1 }] }),
     });
     assert.strictEqual(response.status, 403);
-    assert.match((await response.json()).error, /Email verification is required/);
+    assert.strictEqual((await response.json()).error, "Email verification required");
     assert.strictEqual(await prisma.order.count({ where: { userId: customer.id } }), 0);
     assert.deepStrictEqual(await prisma.productListing.findUnique({ where: { id: listing.id } }), before);
   });

@@ -65,6 +65,8 @@ describe("Address API", () => {
     const body = await res.json();
     if (res.status === 201 && body.token) {
       recordUserIdFromToken(body.token, userIdsForCleanup);
+      const userId = (jwt.decode(body.token) as { id: number }).id;
+      await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
     }
     return { res, body };
   }
