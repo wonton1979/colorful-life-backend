@@ -11,6 +11,7 @@
 export type * from './models/BusinessExpense.js'
 export type * from './models/User.js'
 export type * from './models/EmailVerificationToken.js'
+export type * from './models/PasswordResetToken.js'
 export type * from './models/Address.js'
 export type * from './models/LegoProduct.js'
 export type * from './models/ProductListing.js'
