@@ -7,6 +7,7 @@ import {
   createAddress,
   updateAddress,
   deleteAddress,
+  lookupAddresses,
 } from "../controllers/addressController.js";
 
 const router = Router();
@@ -14,6 +15,7 @@ const router = Router();
 router.get("/me", authMiddleware, requireVerifiedEmail, getCurrentUserProfile);
 router.patch("/me", authMiddleware, requireVerifiedEmail, updateCurrentUserProfile);
 // Address management endpoints
+router.get("/me/addresses/lookup", authMiddleware, requireVerifiedEmail, lookupAddresses);
 router.get("/me/addresses", authMiddleware, requireVerifiedEmail, getAddresses);
 router.post("/me/addresses", authMiddleware, requireVerifiedEmail, createAddress);
 router.patch("/me/addresses/:addressId", authMiddleware, requireVerifiedEmail, updateAddress);

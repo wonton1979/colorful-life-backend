@@ -2,6 +2,9 @@ import { Request, Response } from "express";
 import { prisma } from "../prisma/runtime.js";
 import { Prisma } from "../generated/prisma-client/client.js";
 import { z } from "zod";
+import { lookupUkAddresses, AddressLookupProviderError } from "../services/addressLookupService.js";
+import { AddressLookupQuerySchema } from "../utils/addressValidation.js";
+import { consumeAddressLookupAllowance } from "../services/addressLookupRateLimiter.js";
 
 // ---------------------------------------------------------------------------
 // Address API shapes and helpers
@@ -79,6 +82,28 @@ const PatchAddressSchema = z.object({
 }).refine((data) => Object.keys(data).length > 0, {
   message: "No fields provided for update",
 });
+
+export const lookupAddresses = async (req: Request, res: Response) => {
+  const parseResult = AddressLookupQuerySchema.safeParse(req.query);
+  if (!parseResult.success) {
+    return res.status(400).json({ error: parseResult.error.format() });
+  }
+  const userId = req.user?.id;
+  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!consumeAddressLookupAllowance(userId)) {
+    return res.status(429).json({ error: "Address lookup rate limit exceeded" });
+  }
+  try {
+    const addresses = await lookupUkAddresses(parseResult.data.postcode);
+    return res.json({ addresses });
+  } catch (error) {
+    if (error instanceof AddressLookupProviderError) {
+      return res.status(503).json({ error: "Address lookup service unavailable" });
+    }
+    console.error("Address lookup error");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 // ---------------------------------------------------------------------------
 // GET /users/me/addresses
