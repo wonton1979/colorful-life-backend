@@ -12,6 +12,8 @@ export type DispatchNotification = {
 type EmailSender = (notification: DispatchNotification) => Promise<void>;
 export type VerificationEmail = { recipientEmail: string; verificationUrl: string };
 type VerificationEmailSender = (email: VerificationEmail) => Promise<void>;
+export type PasswordResetEmail = { recipientEmail: string; resetUrl: string };
+type PasswordResetEmailSender = (email: PasswordResetEmail) => Promise<void>;
 
 const sesClient = new SESClient({ region: config.AWS_REGION });
 
@@ -54,8 +56,24 @@ const sesVerificationEmailSender: VerificationEmailSender = async (email) => {
   }));
 };
 
+const sesPasswordResetEmailSender: PasswordResetEmailSender = async (email) => {
+  await sesClient.send(new SendEmailCommand({
+    Source: config.SES_FROM_EMAIL,
+    Destination: { ToAddresses: [email.recipientEmail] },
+    Message: {
+      Subject: { Data: "Reset your Colorful Life password", Charset: "UTF-8" },
+      Body: { Text: { Data: [
+        "Use the link below to reset your Colorful Life password:",
+        email.resetUrl,
+        "This link expires in 1 hour.",
+      ].join("\\n"), Charset: "UTF-8" } },
+    },
+  }));
+};
+
 let sender: EmailSender = sesEmailSender;
 let verificationSender: VerificationEmailSender = sesVerificationEmailSender;
+let passwordResetSender: PasswordResetEmailSender = sesPasswordResetEmailSender;
 
 export function setDispatchNotificationSenderForTests(testSender: EmailSender): () => void {
   const previous = sender;
@@ -77,4 +95,14 @@ export function setVerificationEmailSenderForTests(testSender: VerificationEmail
 
 export function sendVerificationEmail(email: VerificationEmail): Promise<void> {
   return verificationSender(email);
+}
+
+export function setPasswordResetEmailSenderForTests(testSender: PasswordResetEmailSender): () => void {
+  const previous = passwordResetSender;
+  passwordResetSender = testSender;
+  return () => { passwordResetSender = previous; };
+}
+
+export function sendPasswordResetEmail(email: PasswordResetEmail): Promise<void> {
+  return passwordResetSender(email);
 }

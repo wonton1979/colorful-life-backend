@@ -182,9 +182,19 @@ model User {
   refunds                Refund[]
   inventoryAudits        InventoryAudit[]        @relation("InventoryAuditPerformedBy")
   emailVerificationToken EmailVerificationToken?
+  passwordResetToken     PasswordResetToken?
 }
 
 model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
   id        Int      @id @default(autoincrement())
   userId    Int      @unique
   tokenHash String   @unique

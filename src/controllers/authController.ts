@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { signupSchema, loginSchema, verifyEmailSchema } from "../utils/authValidation.js";
+import { signupSchema, loginSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema } from "../utils/authValidation.js";
 import bcrypt from "bcrypt";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { Prisma } from "../generated/prisma-client/client.js";
@@ -8,6 +8,10 @@ import { config } from "../config/index.js";
 import { createOrReplaceEmailVerificationToken, verifyEmailVerificationToken } from "../domain/auth/emailVerificationService.js";
 import { InvalidOrExpiredVerificationTokenError } from "../domain/auth/emailVerificationErrors.js";
 import { sendVerificationEmail } from "../services/emailService.js";
+import { sendPasswordResetEmail } from "../services/emailService.js";
+import { createOrReplacePasswordResetToken } from "../domain/auth/passwordResetService.js";
+import { resetPassword } from "../domain/auth/passwordResetService.js";
+import { InvalidOrExpiredPasswordResetTokenError } from "../domain/auth/passwordResetErrors.js";
 
 
 export const signup = async (req: Request, res: Response) => {
@@ -131,6 +135,46 @@ export const resendVerification = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "If verification is required, a verification email has been sent" });
   } catch (err) {
     console.error("Verification resend error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const parseResult = forgotPasswordSchema.safeParse(req.body);
+  if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
+  const genericResponse = { message: "If an account exists, a password reset email has been sent" };
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: parseResult.data.email },
+      select: { id: true, email: true },
+    });
+    if (!user) return res.status(200).json(genericResponse);
+
+    const reset = await createOrReplacePasswordResetToken(user.id);
+    const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${encodeURIComponent(reset.rawToken)}`;
+    try {
+      await sendPasswordResetEmail({ recipientEmail: user.email, resetUrl });
+    } catch (emailError) {
+      console.error("Password reset email delivery failed");
+    }
+    return res.status(200).json(genericResponse);
+  } catch (err) {
+    console.error("Forgot password error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const resetPasswordHandler = async (req: Request, res: Response) => {
+  const parseResult = resetPasswordSchema.safeParse(req.body);
+  if (!parseResult.success) return res.status(400).json({ error: parseResult.error.format() });
+  try {
+    await resetPassword(parseResult.data.token, parseResult.data.newPassword);
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (err) {
+    if (err instanceof InvalidOrExpiredPasswordResetTokenError) {
+      return res.status(400).json({ error: "Invalid or expired password reset token" });
+    }
+    console.error("Password reset error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
