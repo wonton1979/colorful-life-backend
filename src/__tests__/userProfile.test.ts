@@ -65,6 +65,8 @@ describe("User Profile API", () => {
     assert.strictEqual(signupRes.status, 201);
     assert.ok(signupBody.token);
     recordUserIdFromToken(signupBody.token, userIdsForCleanup);
+    const userId = (jwt.decode(signupBody.token) as { id: number }).id;
+    await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
     const loginRes = await fetch(`${url}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

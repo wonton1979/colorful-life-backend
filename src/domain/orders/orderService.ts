@@ -40,6 +40,16 @@ export async function createOrder(
   }
 
   const now = new Date();
+  // Reject unverified users before lazy expiry discovery can perform any
+  // reservation side effects. The transaction below repeats this check to
+  // preserve the domain-level current-state invariant at persistence time.
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, emailVerified: true },
+  });
+  if (!currentUser) throw new OrderUserNotFoundError();
+  if (!currentUser.emailVerified) throw new EmailVerificationRequiredError();
+
   const requestedListingIds = Array.from(listingIdsSet);
   const expiredCandidates = await prisma.order.findMany({
     where: {

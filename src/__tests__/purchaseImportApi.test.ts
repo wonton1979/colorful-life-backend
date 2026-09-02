@@ -39,6 +39,7 @@ async function createTestUser(url: string): Promise<{ token: string; userId: num
     Buffer.from(token.split(".")[1], "base64url").toString("utf8")
   );
   const userId = payload.id as number;
+  await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
   return { token, userId };
 }
 

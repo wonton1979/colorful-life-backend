@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import type { Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../middleware/auth.js";
+import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import { importPurchaseInvoice, listPurchases, getPurchaseById, createManualPurchase } from "../controllers/purchases.js";
 
 const router = Router();
@@ -30,9 +31,9 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-router.post("/import", authMiddleware, uploadMiddleware, importPurchaseInvoice);
-router.get("/", authMiddleware, listPurchases);
-router.get("/:id", authMiddleware, getPurchaseById);
-router.post("/manual", authMiddleware, createManualPurchase);
+router.post("/import", authMiddleware, requireVerifiedEmail, uploadMiddleware, importPurchaseInvoice);
+router.get("/", authMiddleware, requireVerifiedEmail, listPurchases);
+router.get("/:id", authMiddleware, requireVerifiedEmail, getPurchaseById);
+router.post("/manual", authMiddleware, requireVerifiedEmail, createManualPurchase);
 
 export default router;

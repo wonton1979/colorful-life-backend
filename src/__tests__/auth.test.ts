@@ -229,6 +229,7 @@ describe("Auth API", () => {
     const email = `profile-${randomUUID()}@example.com`;
     const password = "Abcdef1!";
     await signup(url, email, password);
+    await prisma.user.update({ where: { email: email.toLowerCase() }, data: { emailVerified: true } });
     const { body: loginBody } = await login(url, email, password);
     const token = loginBody.token;
     const res = await fetch(`${url}/profile`, {

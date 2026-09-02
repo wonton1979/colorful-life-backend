@@ -85,8 +85,9 @@ describe("receivePurchaseItem integration tests", () => {
   beforeEach(async () => {
     const user = await prisma.user.create({
       data: {
-        email: `user-${randomUUID()}@example.com`,
-        passwordHash: "test",
+      email: `user-${randomUUID()}@example.com`,
+      passwordHash: "test",
+      emailVerified: true,
       },
     });
 

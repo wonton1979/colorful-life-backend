@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
+import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import { prisma } from "../prisma/runtime.js";
 
 const router = Router();
 
-router.get("/profile", authMiddleware, async (req, res) => {
+router.get("/profile", authMiddleware, requireVerifiedEmail, async (req, res) => {
   const userId = req.user?.id;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
