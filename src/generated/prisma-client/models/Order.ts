@@ -1020,10 +1020,6 @@ export type EnumOrderStatusFieldUpdateOperationsInput = {
   set?: $Enums.OrderStatus
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type NullableEnumCancellationInitiatorFieldUpdateOperationsInput = {
   set?: $Enums.CancellationInitiator | null
 }

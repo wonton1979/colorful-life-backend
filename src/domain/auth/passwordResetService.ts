@@ -58,6 +58,8 @@ export async function resetPassword(
     });
     if (consumed.count !== 1) throw new InvalidOrExpiredPasswordResetTokenError();
 
+    const user = await tx.user.findUnique({ where: { id: token.userId }, select: { deletedAt: true } });
+    if (!user || user.deletedAt !== null) throw new InvalidOrExpiredPasswordResetTokenError();
     await tx.user.update({ where: { id: token.userId }, data: { passwordHash } });
     return { reset: true as const };
   });

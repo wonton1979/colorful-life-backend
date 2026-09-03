@@ -77,7 +77,7 @@ export const login = async (req: Request, res: Response) => {
   const { email, password } = parseResult.data;
   const normalizedEmail = email;
   try {
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail, deletedAt: null } });
     if (!user) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -117,7 +117,7 @@ export const resendVerification = async (req: Request, res: Response) => {
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
   try {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: userId, deletedAt: null },
       select: { id: true, email: true, emailVerified: true },
     });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -145,7 +145,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
   const genericResponse = { message: "If an account exists, a password reset email has been sent" };
   try {
     const user = await prisma.user.findUnique({
-      where: { email: parseResult.data.email },
+      where: { email: parseResult.data.email, deletedAt: null },
       select: { id: true, email: true },
     });
     if (!user) return res.status(200).json(genericResponse);
