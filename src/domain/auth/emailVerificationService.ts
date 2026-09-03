@@ -60,10 +60,10 @@ export async function verifyEmailVerificationToken(rawToken: string, decisionTim
     // Serialize verification with future email changes on the owning User row.
     // The token is deliberately re-read after the lock: the initial lookup is
     // discovery only and may have become stale while waiting for the lock.
-    const lockedUser = await tx.$queryRaw<Array<{ id: number }>>`
-      SELECT "id" FROM "User" WHERE "id" = ${token.userId} FOR UPDATE
+    const lockedUser = await tx.$queryRaw<Array<{ id: number; deletedAt: Date | null }>>`
+      SELECT "id", "deletedAt" FROM "User" WHERE "id" = ${token.userId} FOR UPDATE
     `;
-    if (lockedUser.length !== 1) {
+    if (lockedUser.length !== 1 || lockedUser[0].deletedAt !== null) {
       throw new InvalidOrExpiredVerificationTokenError();
     }
     const currentToken = await tx.emailVerificationToken.findUnique({
@@ -79,7 +79,7 @@ export async function verifyEmailVerificationToken(rawToken: string, decisionTim
     if (consumed.count !== 1) throw new InvalidOrExpiredVerificationTokenError();
 
     const updatedUser = await tx.user.updateMany({
-      where: { id: token.userId, emailVerified: false },
+      where: { id: token.userId, emailVerified: false, deletedAt: null },
       data: { emailVerified: true },
     });
     if (updatedUser.count !== 1) throw new InvalidOrExpiredVerificationTokenError();
