@@ -51,13 +51,30 @@ export async function verifyEmailVerificationToken(rawToken: string, decisionTim
   return prisma.$transaction(async (tx) => {
     const token = await tx.emailVerificationToken.findUnique({
       where: { tokenHash },
+      select: { userId: true },
+    });
+    if (!token) {
+      throw new InvalidOrExpiredVerificationTokenError();
+    }
+
+    // Serialize verification with future email changes on the owning User row.
+    // The token is deliberately re-read after the lock: the initial lookup is
+    // discovery only and may have become stale while waiting for the lock.
+    const lockedUser = await tx.$queryRaw<Array<{ id: number }>>`
+      SELECT "id" FROM "User" WHERE "id" = ${token.userId} FOR UPDATE
+    `;
+    if (lockedUser.length !== 1) {
+      throw new InvalidOrExpiredVerificationTokenError();
+    }
+    const currentToken = await tx.emailVerificationToken.findUnique({
+      where: { tokenHash },
       select: { id: true, userId: true, expiresAt: true },
     });
-    if (!token || token.expiresAt <= decisionTime) {
+    if (!currentToken || currentToken.userId !== token.userId || currentToken.expiresAt <= decisionTime) {
       throw new InvalidOrExpiredVerificationTokenError();
     }
     const consumed = await tx.emailVerificationToken.deleteMany({
-      where: { id: token.id, tokenHash, expiresAt: { gt: decisionTime } },
+      where: { id: currentToken.id, userId: token.userId, tokenHash, expiresAt: { gt: decisionTime } },
     });
     if (consumed.count !== 1) throw new InvalidOrExpiredVerificationTokenError();
 
