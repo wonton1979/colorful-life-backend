@@ -1,0 +1,4 @@
+ALTER TYPE "RefundStatus" ADD VALUE 'PROCESSING';
+
+ALTER TABLE "Payment"
+ADD COLUMN "reservedRefundAmount" DECIMAL(10,2) NOT NULL DEFAULT 0;

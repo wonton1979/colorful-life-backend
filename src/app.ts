@@ -8,10 +8,14 @@ import purchaseItemsRouter from "./routes/purchaseItems.js";
 import ordersRouter from "./routes/orders.js";
 import businessExpensesRouter from "./routes/businessExpenses.js";
 import inventoryRouter from "./routes/inventory.js";
+import stripeWebhookRouter from "./routes/stripeWebhook.js";
+import paypalWebhookRouter from "./routes/paypalWebhook.js";
 
 // Construct the Express application without starting the HTTP server.
 const app = express();
 
+app.use("/payments", stripeWebhookRouter);
+app.use("/payments", paypalWebhookRouter);
 app.use(express.json());
 // Mount routers
 app.use("/auth", authRouter);

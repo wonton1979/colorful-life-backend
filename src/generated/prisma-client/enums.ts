@@ -39,7 +39,9 @@ export type OrderStatus = (typeof OrderStatus)[keyof typeof OrderStatus]
 
 
 export const PaymentProvider = {
-  MANUAL: 'MANUAL'
+  MANUAL: 'MANUAL',
+  STRIPE: 'STRIPE',
+  PAYPAL: 'PAYPAL'
 } as const
 
 export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider]
@@ -48,14 +50,18 @@ export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvi
 export const PaymentStatus = {
   PENDING: 'PENDING',
   SUCCEEDED: 'SUCCEEDED',
-  FAILED: 'FAILED'
+  PROCESSING: 'PROCESSING',
+  FAILED: 'FAILED',
+  CANCELED: 'CANCELED'
 } as const
 
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 
 export const RefundProvider = {
-  MANUAL: 'MANUAL'
+  MANUAL: 'MANUAL',
+  STRIPE: 'STRIPE',
+  PAYPAL: 'PAYPAL'
 } as const
 
 export type RefundProvider = (typeof RefundProvider)[keyof typeof RefundProvider]
@@ -63,7 +69,8 @@ export type RefundProvider = (typeof RefundProvider)[keyof typeof RefundProvider
 
 export const RefundStatus = {
   SUCCEEDED: 'SUCCEEDED',
-  FAILED: 'FAILED'
+  FAILED: 'FAILED',
+  PROCESSING: 'PROCESSING'
 } as const
 
 export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus]

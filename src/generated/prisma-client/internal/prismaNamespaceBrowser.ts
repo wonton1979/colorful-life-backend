@@ -63,6 +63,7 @@ export const ModelName = {
   InventoryAudit: 'InventoryAudit',
   Order: 'Order',
   Payment: 'Payment',
+  PaymentWebhookEvent: 'PaymentWebhookEvent',
   Refund: 'Refund',
   OrderItem: 'OrderItem',
   OrderReturn: 'OrderReturn',
@@ -277,14 +278,31 @@ export const PaymentScalarFieldEnum = {
   currency: 'currency',
   provider: 'provider',
   providerReference: 'providerReference',
+  idempotencyKey: 'idempotencyKey',
+  providerCaptureReference: 'providerCaptureReference',
+  captureIdempotencyKey: 'captureIdempotencyKey',
   status: 'status',
   paidAt: 'paidAt',
   refundedAmount: 'refundedAmount',
+  reservedRefundAmount: 'reservedRefundAmount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const PaymentWebhookEventScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  providerEventId: 'providerEventId',
+  eventType: 'eventType',
+  receivedAt: 'receivedAt',
+  processedAt: 'processedAt',
+  processingError: 'processingError'
+} as const
+
+export type PaymentWebhookEventScalarFieldEnum = (typeof PaymentWebhookEventScalarFieldEnum)[keyof typeof PaymentWebhookEventScalarFieldEnum]
 
 
 export const RefundScalarFieldEnum = {
@@ -296,6 +314,7 @@ export const RefundScalarFieldEnum = {
   status: 'status',
   provider: 'provider',
   providerReference: 'providerReference',
+  refundIdempotencyKey: 'refundIdempotencyKey',
   reason: 'reason',
   performedByUserId: 'performedByUserId',
   createdAt: 'createdAt',

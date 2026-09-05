@@ -35,21 +35,28 @@ enum OrderStatus {
 // -----------------------------------------------------------------------------
 enum PaymentProvider {
   MANUAL
+  STRIPE
+  PAYPAL
 }
 
 enum PaymentStatus {
   PENDING
   SUCCEEDED
+  PROCESSING
   FAILED
+  CANCELED
 }
 
 enum RefundProvider {
   MANUAL
+  STRIPE
+  PAYPAL
 }
 
 enum RefundStatus {
   SUCCEEDED
   FAILED
+  PROCESSING
 }
 
 // Cancellation metadata enums
@@ -364,41 +371,60 @@ model Order {
 // Payment domain model
 // -----------------------------------------------------------------------------
 model Payment {
-  id                Int             @id @default(autoincrement())
-  orderId           Int
-  order             Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  amount            Decimal         @db.Decimal(12, 2)
-  currency          String          @default("GBP") @db.VarChar(3)
-  provider          PaymentProvider @default(MANUAL)
-  providerReference String
-  status            PaymentStatus   @default(PENDING)
-  paidAt            DateTime?
-  refundedAmount    Decimal         @default(0) @db.Decimal(12, 2)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  refunds           Refund[]
+  id                       Int             @id @default(autoincrement())
+  orderId                  Int
+  order                    Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount                   Decimal         @db.Decimal(12, 2)
+  currency                 String          @default("GBP") @db.VarChar(3)
+  provider                 PaymentProvider @default(MANUAL)
+  providerReference        String
+  idempotencyKey           String?         @unique
+  providerCaptureReference String?
+  captureIdempotencyKey    String?         @unique
+  status                   PaymentStatus   @default(PENDING)
+  paidAt                   DateTime?
+  refundedAmount           Decimal         @default(0) @db.Decimal(12, 2)
+  reservedRefundAmount     Decimal         @default(0) @db.Decimal(12, 2)
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  refunds                  Refund[]
 
   @@unique([provider, providerReference])
+  @@unique([provider, providerCaptureReference])
   @@unique([orderId])
   @@index([orderId])
 }
 
+model PaymentWebhookEvent {
+  id              Int             @id @default(autoincrement())
+  provider        PaymentProvider
+  providerEventId String
+  eventType       String
+  receivedAt      DateTime        @default(now())
+  processedAt     DateTime?
+  processingError String?
+
+  @@unique([provider, providerEventId])
+  @@index([receivedAt])
+}
+
 model Refund {
-  id                Int            @id @default(autoincrement())
-  orderId           Int
-  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  paymentId         Int
-  payment           Payment        @relation(fields: [paymentId], references: [id], onDelete: Restrict)
-  amount            Decimal        @db.Decimal(12, 2)
-  currency          String         @db.VarChar(3)
-  status            RefundStatus   @default(SUCCEEDED)
-  provider          RefundProvider @default(MANUAL)
-  providerReference String
-  reason            String?
-  performedByUserId Int
-  performedByUser   User           @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id                   Int            @id @default(autoincrement())
+  orderId              Int
+  order                Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentId            Int
+  payment              Payment        @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  amount               Decimal        @db.Decimal(12, 2)
+  currency             String         @db.VarChar(3)
+  status               RefundStatus   @default(SUCCEEDED)
+  provider             RefundProvider @default(MANUAL)
+  providerReference    String
+  refundIdempotencyKey String?        @unique
+  reason               String?
+  performedByUserId    Int
+  performedByUser      User           @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
 
   @@unique([provider, providerReference])
   @@index([orderId])

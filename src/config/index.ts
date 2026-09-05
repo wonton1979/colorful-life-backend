@@ -17,6 +17,12 @@ const configSchema = z.object({
     SES_FROM_EMAIL: z.string().email().default("noreply@example.com"),
     FRONTEND_URL: z.string().url().default("http://localhost:3000"),
     IDEAL_POSTCODES_API_KEY: z.string().nonempty().optional(),
+    STRIPE_SECRET_KEY: z.string().nonempty().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().nonempty().optional(),
+    PAYPAL_CLIENT_ID: z.string().nonempty().optional(),
+    PAYPAL_CLIENT_SECRET: z.string().nonempty().optional(),
+  PAYPAL_BASE_URL: z.string().url().default("https://api-m.sandbox.paypal.com"),
+  PAYPAL_WEBHOOK_ID: z.string().optional(),
   });
 
 const parsed = configSchema.safeParse(process.env);

@@ -102,6 +102,11 @@ export type Order = Prisma.OrderModel
  */
 export type Payment = Prisma.PaymentModel
 /**
+ * Model PaymentWebhookEvent
+ * 
+ */
+export type PaymentWebhookEvent = Prisma.PaymentWebhookEventModel
+/**
  * Model Refund
  * 
  */

@@ -25,6 +25,8 @@ import {
   createRefundHandler,
   listRefundsHandler,
 } from "../controllers/refunds.js";
+import { createStripePaymentIntentHandler } from "../controllers/stripePaymentController.js";
+import { createPayPalOrderHandler, capturePayPalOrderHandler } from "../controllers/paypalPaymentController.js";
 
 const router = Router();
 
@@ -64,6 +66,9 @@ router.post(
 );
 // Payment routes
 router.post("/:orderId/payments", authMiddleware, createPaymentHandler);
+router.post("/:orderId/payments/stripe", authMiddleware, requireVerifiedEmail, createStripePaymentIntentHandler);
+router.post("/:orderId/payments/paypal", authMiddleware, requireVerifiedEmail, createPayPalOrderHandler);
+router.post("/:orderId/payments/paypal/capture", authMiddleware, requireVerifiedEmail, capturePayPalOrderHandler);
 router.get("/:orderId/payments", authMiddleware, listPaymentsHandler);
 router.post("/:orderId/refunds", authMiddleware, createRefundHandler);
 router.get("/:orderId/refunds", authMiddleware, listRefundsHandler);
