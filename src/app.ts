@@ -10,9 +10,14 @@ import businessExpensesRouter from "./routes/businessExpenses.js";
 import inventoryRouter from "./routes/inventory.js";
 import stripeWebhookRouter from "./routes/stripeWebhook.js";
 import paypalWebhookRouter from "./routes/paypalWebhook.js";
+import cors from "cors";
 
 // Construct the Express application without starting the HTTP server.
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:5173",
+}));
 
 app.use("/payments", stripeWebhookRouter);
 app.use("/payments", paypalWebhookRouter);
