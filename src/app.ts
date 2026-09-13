@@ -10,6 +10,7 @@ import businessExpensesRouter from "./routes/businessExpenses.js";
 import inventoryRouter from "./routes/inventory.js";
 import stripeWebhookRouter from "./routes/stripeWebhook.js";
 import paypalWebhookRouter from "./routes/paypalWebhook.js";
+import cartRouter from "./routes/cart.js";
 import cors from "cors";
 
 // Construct the Express application without starting the HTTP server.
@@ -30,6 +31,7 @@ app.use("/products", productsRouter);
 app.use("/purchases", purchasesRouter);
 app.use("/purchase-items", purchaseItemsRouter);
 app.use("/orders", ordersRouter);
+app.use("/cart", cartRouter);
 app.use("/business-expenses", businessExpensesRouter);
 app.use("/inventory", inventoryRouter);
 

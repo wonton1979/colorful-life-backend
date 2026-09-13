@@ -77,6 +77,16 @@ export type LegoProduct = Prisma.LegoProductModel
  */
 export type ProductListing = Prisma.ProductListingModel
 /**
+ * Model Cart
+ * 
+ */
+export type Cart = Prisma.CartModel
+/**
+ * Model CartItem
+ * 
+ */
+export type CartItem = Prisma.CartItemModel
+/**
  * Model ListingImage
  * 
  */
