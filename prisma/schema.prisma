@@ -191,6 +191,7 @@ model User {
   inventoryAudits        InventoryAudit[]        @relation("InventoryAuditPerformedBy")
   emailVerificationToken EmailVerificationToken?
   passwordResetToken     PasswordResetToken?
+  cart                   Cart?
 }
 
 model EmailVerificationToken {
@@ -263,12 +264,37 @@ model ProductListing {
   inventoryMovements    InventoryMovement[]
   purchaseItems         PurchaseItem[]
   orderItems            OrderItem[]
+  cartItems             CartItem[]
   sourceInventoryAudits InventoryAudit[]    @relation("InventoryAuditSourceListing")
   targetInventoryAudits InventoryAudit[]    @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
   @@index([condition])
   @@index([active])
+}
+
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id               Int            @id @default(autoincrement())
+  cartId           Int
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productListingId Int
+  productListing   ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
+  quantity         Int
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([cartId, productListingId])
+  @@index([cartId])
+  @@index([productListingId])
 }
 
 model ListingImage {

@@ -58,6 +58,8 @@ export const ModelName = {
   Address: 'Address',
   LegoProduct: 'LegoProduct',
   ProductListing: 'ProductListing',
+  Cart: 'Cart',
+  CartItem: 'CartItem',
   ListingImage: 'ListingImage',
   InventoryMovement: 'InventoryMovement',
   InventoryAudit: 'InventoryAudit',
@@ -191,6 +193,28 @@ export const ProductListingScalarFieldEnum = {
 } as const
 
 export type ProductListingScalarFieldEnum = (typeof ProductListingScalarFieldEnum)[keyof typeof ProductListingScalarFieldEnum]
+
+
+export const CartScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CartScalarFieldEnum = (typeof CartScalarFieldEnum)[keyof typeof CartScalarFieldEnum]
+
+
+export const CartItemScalarFieldEnum = {
+  id: 'id',
+  cartId: 'cartId',
+  productListingId: 'productListingId',
+  quantity: 'quantity',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CartItemScalarFieldEnum = (typeof CartItemScalarFieldEnum)[keyof typeof CartItemScalarFieldEnum]
 
 
 export const ListingImageScalarFieldEnum = {
