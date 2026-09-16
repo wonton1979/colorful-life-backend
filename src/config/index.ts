@@ -22,7 +22,10 @@ const configSchema = z.object({
     PAYPAL_CLIENT_ID: z.string().nonempty().optional(),
     PAYPAL_CLIENT_SECRET: z.string().nonempty().optional(),
   PAYPAL_BASE_URL: z.string().url().default("https://api-m.sandbox.paypal.com"),
-  PAYPAL_WEBHOOK_ID: z.string().optional(),
+    PAYPAL_WEBHOOK_ID: z.string().optional(),
+    CLOUDINARY_CLOUD_NAME: z.string().nonempty().optional(),
+    CLOUDINARY_API_KEY: z.string().nonempty().optional(),
+    CLOUDINARY_API_SECRET: z.string().nonempty().optional(),
   });
 
 const parsed = configSchema.safeParse(process.env);
