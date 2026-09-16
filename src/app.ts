@@ -12,32 +12,28 @@ import stripeWebhookRouter from "./routes/stripeWebhook.js";
 import paypalWebhookRouter from "./routes/paypalWebhook.js";
 import cartRouter from "./routes/cart.js";
 import cors from "cors";
+import { createListingImagesRouter } from "./routes/listingImages.js";
+import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
-// Construct the Express application without starting the HTTP server.
-const app = express();
+export function createApp(imageStorage?: ImageStorage) {
+  const app = express();
+  app.use(cors({ origin: "http://localhost:5173" }));
+  app.use("/payments", stripeWebhookRouter);
+  app.use("/payments", paypalWebhookRouter);
+  app.use(express.json());
+  app.use("/auth", authRouter);
+  app.use("/", profileRouter);
+  app.use("/users", usersRouter);
+  app.use("/products", productsRouter);
+  app.use("/products", createListingImagesRouter(imageStorage));
+  app.use("/purchases", purchasesRouter);
+  app.use("/purchase-items", purchaseItemsRouter);
+  app.use("/orders", ordersRouter);
+  app.use("/cart", cartRouter);
+  app.use("/business-expenses", businessExpensesRouter);
+  app.use("/inventory", inventoryRouter);
+  app.get("/health", (_req, res) => { res.json({ status: "ok" }); });
+  return app;
+}
 
-app.use(cors({
-  origin: "http://localhost:5173",
-}));
-
-app.use("/payments", stripeWebhookRouter);
-app.use("/payments", paypalWebhookRouter);
-app.use(express.json());
-// Mount routers
-app.use("/auth", authRouter);
-app.use("/", profileRouter);
-app.use("/users", usersRouter);
-app.use("/products", productsRouter);
-app.use("/purchases", purchasesRouter);
-app.use("/purchase-items", purchaseItemsRouter);
-app.use("/orders", ordersRouter);
-app.use("/cart", cartRouter);
-app.use("/business-expenses", businessExpensesRouter);
-app.use("/inventory", inventoryRouter);
-
-// Health check endpoint
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
-
-export default app;
+export default createApp();
