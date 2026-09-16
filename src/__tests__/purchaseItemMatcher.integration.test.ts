@@ -95,7 +95,8 @@ describe("purchaseItemMatcher persistence integration", () => {
     productIds.push(product.id);
 
     const listing = await prisma.productListing.create({
-      data: { legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
+      data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
     });
     listingIds.push(listing.id);
 
@@ -165,10 +166,12 @@ describe("purchaseItemMatcher persistence integration", () => {
     productIds.push(productA.id, productB.id);
 
     const listingA = await prisma.productListing.create({
-      data: { legoProductId: productA.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
+      data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: productA.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
     });
     const listingB = await prisma.productListing.create({
-      data: { legoProductId: productB.id, condition: "USED_LIKE_NEW", originalPrice: 8.0, currentStock: 3 },
+      data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: productB.id, condition: "USED_LIKE_NEW", originalPrice: 8.0, currentStock: 3 },
     });
     listingIds.push(listingA.id, listingB.id);
 
@@ -206,7 +209,8 @@ describe("purchaseItemMatcher persistence integration", () => {
     });
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
-      data: { legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
+      data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
     });
     listingIds.push(listing.id);
     const beforeStock = listing.currentStock;
@@ -235,7 +239,8 @@ describe("purchaseItemMatcher persistence integration", () => {
     });
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
-      data: { legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
+      data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10.0, currentStock: 5 },
     });
     listingIds.push(listing.id);
     const initialCount = await prisma.inventoryMovement.count({ where: { listingId: listing.id } });

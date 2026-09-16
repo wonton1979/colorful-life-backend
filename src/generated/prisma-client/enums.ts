@@ -25,6 +25,25 @@ export const ListingCondition = {
 export type ListingCondition = (typeof ListingCondition)[keyof typeof ListingCondition]
 
 
+export const ColorfulLifeCategory = {
+  HARRY_POTTER: 'HARRY_POTTER',
+  STAR_WARS: 'STAR_WARS',
+  FRIENDS: 'FRIENDS',
+  CITY: 'CITY',
+  DISNEY: 'DISNEY',
+  MARVEL: 'MARVEL',
+  JURASSIC_WORLD: 'JURASSIC_WORLD',
+  FLOWERS_AND_BOTANICALS: 'FLOWERS_AND_BOTANICALS',
+  NINJAGO: 'NINJAGO',
+  HEROES: 'HEROES',
+  VEHICLES: 'VEHICLES',
+  CREATOR: 'CREATOR',
+  OTHERS: 'OTHERS'
+} as const
+
+export type ColorfulLifeCategory = (typeof ColorfulLifeCategory)[keyof typeof ColorfulLifeCategory]
+
+
 export const OrderStatus = {
   PENDING: 'PENDING',
   EXPIRED: 'EXPIRED',

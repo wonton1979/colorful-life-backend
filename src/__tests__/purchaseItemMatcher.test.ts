@@ -68,6 +68,7 @@ describe("matchProductListingId", () => {
     });
     const listing = await prisma.productListing.create({
       data: {
+        colorfulLifeCategory: "OTHERS",
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,
@@ -94,12 +95,14 @@ describe("matchProductListingId", () => {
       data: [
         {
           legoProductId: product.id,
+          colorfulLifeCategory: "OTHERS",
           condition: "NEW",
           originalPrice: 15.0,
           currentStock: 5,
         },
         {
           legoProductId: product.id,
+          colorfulLifeCategory: "OTHERS",
           condition: "USED_LIKE_NEW",
           originalPrice: 12.0,
           currentStock: 3,

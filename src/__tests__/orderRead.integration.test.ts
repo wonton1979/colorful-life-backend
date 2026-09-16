@@ -56,7 +56,8 @@ async function makeUser() {
 async function makeListing() {
   const product = await prisma.legoProduct.create({ data: { setNumber: `READ-${randomUUID()}`, title: "Read Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 } });
   productIds.push(product.id);
-  const listing = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: 20, salePrice: 15, currentStock: 4 } });
+  const listing = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 20, salePrice: 15, currentStock: 4 } });
   listingIds.push(listing.id);
   return listing;
 }

@@ -23,7 +23,8 @@ const userIds: number[] = [], productIds: number[] = [], listingIds: number[] = 
 async function fixture(quantity = 1) {
   const user = await prisma.user.create({ data: { email: `refund-${randomUUID()}@example.com`, passwordHash: "hashed", emailVerified: true, role: "CUSTOMER", addresses: { create: { recipientName: "Refund User", line1: "1 Test Street", city: "Testville", postcode: "TEST1", countryCode: "GB", isDefaultBilling: true } } } });
   userIds.push(user.id);
-  const product = await prisma.legoProduct.create({ data: { setNumber: `REFUND-${randomUUID()}`, title: "Refund Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100, productListings: { create: { condition: "NEW", originalPrice: new Decimal("50.00"), salePrice: new Decimal("50.00"), currentStock: 10, active: true } } }, include: { productListings: true } });
+  const product = await prisma.legoProduct.create({ data: { setNumber: `REFUND-${randomUUID()}`, title: "Refund Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100, productListings: { create: {
+            colorfulLifeCategory: "OTHERS", condition: "NEW", originalPrice: new Decimal("50.00"), salePrice: new Decimal("50.00"), currentStock: 10, active: true } } }, include: { productListings: true } });
   productIds.push(product.id); const listing = product.productListings[0]; listingIds.push(listing.id);
   const order = await createOrder(user.id, { items: [{ productListingId: listing.id, quantity }] }); orderIds.push(order.id);
   const payment = await createPayment(order.id, { providerReference: `payment-${randomUUID()}` }); paymentIds.push(payment.id);

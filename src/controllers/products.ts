@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Prisma } from "../generated/prisma-client/client.js";
-import { ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
+import { ColorfulLifeCategory, ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
 import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
@@ -32,6 +32,7 @@ export const getProducts = async (req: Request, res: Response) => {
  *   - title: string
  *   - description?: string
  *   - theme: string
+ *   - colorfulLifeCategory: ColorfulLifeCategory
  *   - ageRecommendation: string
  *   - pieceCount: number
  *   - condition: "NEW" | "USED_LIKE_NEW"
@@ -45,6 +46,7 @@ export const createProduct = async (req: Request, res: Response) => {
     title: z.string().nonempty({ message: "title is required" }),
     description: z.string().optional(),
     theme: z.string().nonempty({ message: "theme is required" }),
+    colorfulLifeCategory: z.nativeEnum(ColorfulLifeCategory),
     ageRecommendation: z.string().nonempty({ message: "ageRecommendation is required" }),
     pieceCount: z.number().int().positive({ message: "pieceCount must be a positive integer" }),
     condition: z.nativeEnum(ListingCondition),
@@ -62,6 +64,7 @@ export const createProduct = async (req: Request, res: Response) => {
     title,
     description,
     theme,
+    colorfulLifeCategory,
     ageRecommendation,
     pieceCount,
     condition,
@@ -75,6 +78,7 @@ export const createProduct = async (req: Request, res: Response) => {
     const listing = await prisma.productListing.create({
       data: {
         condition,
+        colorfulLifeCategory,
         originalPrice,
         salePrice,
         currentStock: currentStock ?? 0,
@@ -96,6 +100,7 @@ export const createProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
+        colorfulLifeCategory: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -201,6 +206,7 @@ export const updateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
+        colorfulLifeCategory: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -240,6 +246,7 @@ export const getProductById = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
+        colorfulLifeCategory: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -282,6 +289,7 @@ export const deactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
+        colorfulLifeCategory: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -323,6 +331,7 @@ export const reactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
+        colorfulLifeCategory: true,
         condition: true,
         originalPrice: true,
         salePrice: true,

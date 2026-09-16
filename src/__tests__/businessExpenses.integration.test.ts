@@ -229,6 +229,7 @@ describe("Business Expenses HTTP Integration", () => {
         pieceCount: 1,
         productListings: {
           create: {
+            colorfulLifeCategory: "OTHERS",
             condition: "NEW",
             originalPrice: new Decimal("10.00"),
             salePrice: new Decimal("10.00"),

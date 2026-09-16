@@ -27,13 +27,14 @@ afterEach(async () => {
 
 after(async () => { await prisma.$disconnect(); server.close(); });
 
-async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; salePrice?: number; active?: boolean; createdAt?: Date }) {
+async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date }) {
   const product = await prisma.legoProduct.create({
     data: { setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100 },
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
-    data: { legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(data.originalPrice), salePrice: data.salePrice === undefined ? null : new Decimal(data.salePrice), currentStock: 1, active: data.active ?? true, createdAt: data.createdAt },
+    data: {
+        colorfulLifeCategory: data.category ?? "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(data.originalPrice), salePrice: data.salePrice === undefined ? null : new Decimal(data.salePrice), currentStock: 1, active: data.active ?? true, createdAt: data.createdAt },
   });
   listingIds.push(listing.id);
   return listing;
@@ -56,6 +57,7 @@ describe("Product catalogue HTTP integration", () => {
     assert.strictEqual(body.pagination.pageSize, 20);
     assert.ok(body.pagination.totalItems >= 1);
     assert.ok(body.items.some((item: any) => item.legoProduct.title === "Active"));
+    assert.strictEqual(body.items.find((item: any) => item.legoProduct.title === "Active").colorfulLifeCategory, "OTHERS");
     assert.ok(!body.items.some((item: any) => item.legoProduct.title === "Inactive"));
   });
 
@@ -82,9 +84,23 @@ describe("Product catalogue HTTP integration", () => {
   });
 
   it("rejects invalid pagination and price parameters and ignores empty search filters", async () => {
-    for (const query of ["page=0", "page=1.5", "pageSize=101", "pageSize=0", "minPrice=x", "maxPrice=-1", "minPrice=5&maxPrice=4"]) {
+    for (const query of ["page=0", "page=1.5", "pageSize=101", "pageSize=0", "minPrice=x", "maxPrice=-1", "minPrice=5&maxPrice=4", "category=NOT_A_CATEGORY"]) {
       assert.strictEqual((await get(`/products?${query}`)).response.status, 400, query);
     }
     assert.strictEqual((await get("/products?q=%20%20&theme=%20%20")).response.status, 200);
+  });
+
+  it("filters by colorful life category independently from LEGO theme", async () => {
+    const suffix = randomUUID();
+    await makeListing({ setNumber: `VEHICLE-SC-${suffix}`, title: "Speed Champions Vehicle", theme: "Speed Champions", category: "VEHICLES", originalPrice: 20 });
+    await makeListing({ setNumber: `VEHICLE-TECH-${suffix}`, title: "Technic Vehicle", theme: "Technic", category: "VEHICLES", originalPrice: 20 });
+    await makeListing({ setNumber: `CITY-SC-${suffix}`, title: "Speed Champions City", theme: "Speed Champions", category: "CITY", originalPrice: 20 });
+
+    const vehicles = await get(`/products?category=VEHICLES&q=${suffix}`);
+    assert.deepStrictEqual(vehicles.body.items.map((item: any) => item.legoProduct.setNumber).sort(), [`VEHICLE-SC-${suffix}`, `VEHICLE-TECH-${suffix}`].sort());
+    assert.ok(vehicles.body.items.every((item: any) => item.colorfulLifeCategory === "VEHICLES"));
+
+    const combined = await get(`/products?category=VEHICLES&theme=Technic&q=${suffix}`);
+    assert.deepStrictEqual(combined.body.items.map((item: any) => item.legoProduct.setNumber), [`VEHICLE-TECH-${suffix}`]);
   });
 });

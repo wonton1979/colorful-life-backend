@@ -182,6 +182,7 @@ export type LegoProductScalarFieldEnum = (typeof LegoProductScalarFieldEnum)[key
 export const ProductListingScalarFieldEnum = {
   id: 'id',
   legoProductId: 'legoProductId',
+  colorfulLifeCategory: 'colorfulLifeCategory',
   condition: 'condition',
   originalPrice: 'originalPrice',
   salePrice: 'salePrice',

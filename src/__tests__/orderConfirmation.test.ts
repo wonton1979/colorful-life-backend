@@ -52,6 +52,7 @@ async function createProductAndListings(count: number): Promise<void> {
       pieceCount: 100,
       productListings: {
         create: Array.from({ length: count }, () => ({
+          colorfulLifeCategory: "OTHERS",
           condition: "NEW",
           originalPrice: new Decimal(20),
           salePrice: new Decimal(15),

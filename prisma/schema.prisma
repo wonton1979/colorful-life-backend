@@ -20,6 +20,22 @@ enum ListingCondition {
   USED_LIKE_NEW
 }
 
+enum ColorfulLifeCategory {
+  HARRY_POTTER
+  STAR_WARS
+  FRIENDS
+  CITY
+  DISNEY
+  MARVEL
+  JURASSIC_WORLD
+  FLOWERS_AND_BOTANICALS
+  NINJAGO
+  HEROES
+  VEHICLES
+  CREATOR
+  OTHERS
+}
+
 enum OrderStatus {
   PENDING
   EXPIRED
@@ -252,6 +268,7 @@ model ProductListing {
   id                    Int                 @id @default(autoincrement())
   legoProductId         Int
   legoProduct           LegoProduct         @relation(fields: [legoProductId], references: [id])
+  colorfulLifeCategory  ColorfulLifeCategory
   condition             ListingCondition
   originalPrice         Decimal             @db.Decimal(10, 2)
   salePrice             Decimal?            @db.Decimal(10, 2)
@@ -269,6 +286,7 @@ model ProductListing {
   targetInventoryAudits InventoryAudit[]    @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
+  @@index([colorfulLifeCategory])
   @@index([condition])
   @@index([active])
 }
