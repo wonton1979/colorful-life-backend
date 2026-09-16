@@ -280,6 +280,13 @@ export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type EnumColorfulLifeCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.ColorfulLifeCategory | Prisma.EnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel> | $Enums.ColorfulLifeCategory
+}
+
 export type EnumListingConditionFilter<$PrismaModel = never> = {
   equals?: $Enums.ListingCondition | Prisma.EnumListingConditionFieldRefInput<$PrismaModel>
   in?: $Enums.ListingCondition[] | Prisma.ListEnumListingConditionFieldRefInput<$PrismaModel>
@@ -296,6 +303,16 @@ export type DecimalNullableFilter<$PrismaModel = never> = {
   gt?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   gte?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   not?: Prisma.NestedDecimalNullableFilter<$PrismaModel> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+}
+
+export type EnumColorfulLifeCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ColorfulLifeCategory | Prisma.EnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumColorfulLifeCategoryWithAggregatesFilter<$PrismaModel> | $Enums.ColorfulLifeCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel>
 }
 
 export type EnumListingConditionWithAggregatesFilter<$PrismaModel = never> = {
@@ -841,6 +858,13 @@ export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedDateTimeNullableFilter<$PrismaModel>
 }
 
+export type NestedEnumColorfulLifeCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.ColorfulLifeCategory | Prisma.EnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel> | $Enums.ColorfulLifeCategory
+}
+
 export type NestedEnumListingConditionFilter<$PrismaModel = never> = {
   equals?: $Enums.ListingCondition | Prisma.EnumListingConditionFieldRefInput<$PrismaModel>
   in?: $Enums.ListingCondition[] | Prisma.ListEnumListingConditionFieldRefInput<$PrismaModel>
@@ -857,6 +881,16 @@ export type NestedDecimalNullableFilter<$PrismaModel = never> = {
   gt?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   gte?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel>
   not?: Prisma.NestedDecimalNullableFilter<$PrismaModel> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+}
+
+export type NestedEnumColorfulLifeCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.ColorfulLifeCategory | Prisma.EnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.ColorfulLifeCategory[] | Prisma.ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumColorfulLifeCategoryWithAggregatesFilter<$PrismaModel> | $Enums.ColorfulLifeCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumColorfulLifeCategoryFilter<$PrismaModel>
 }
 
 export type NestedEnumListingConditionWithAggregatesFilter<$PrismaModel = never> = {

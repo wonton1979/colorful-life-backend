@@ -45,6 +45,7 @@ async function createProductAndListings(count: number) {
       pieceCount: 100,
       productListings: {
         create: Array.from({ length: count }, (_, i) => ({
+          colorfulLifeCategory: "OTHERS",
           condition: "NEW",
           originalPrice: new Decimal(20 + i * 5),
           salePrice: i % 2 === 0 ? new Decimal(15 + i * 5) : null,

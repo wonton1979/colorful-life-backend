@@ -62,7 +62,8 @@ async function makeFixture() {
   const admin = await makeUser("ADMIN");
   const product = await prisma.legoProduct.create({ data: { setNumber: randomUUID(), title: "Dispatch notification", theme: "TEST", ageRecommendation: "8+", pieceCount: 10 } });
   products.push(product.id);
-  const listing = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: 2 } });
+  const listing = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: 2 } });
   listings.push(listing.id);
   const order = await createOrder(customer.id, { items: [{ productListingId: listing.id, quantity: 1 }] });
   orders.push(order.id);

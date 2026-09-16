@@ -5,6 +5,7 @@ import type { ProductCatalogueQuery } from "./productCatalogueValidator.js";
 const listingSelect = {
   id: true,
   legoProductId: true,
+  colorfulLifeCategory: true,
   condition: true,
   originalPrice: true,
   salePrice: true,
@@ -25,6 +26,9 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
   }
   if (query.theme) {
     and.push({ legoProduct: { theme: { equals: query.theme, mode: "insensitive" } } });
+  }
+  if (query.category) {
+    and.push({ colorfulLifeCategory: query.category });
   }
   const price: Prisma.ProductListingWhereInput[] = [];
   if (query.minPrice !== undefined) price.push({ OR: [

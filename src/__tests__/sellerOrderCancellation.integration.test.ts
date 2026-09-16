@@ -43,6 +43,7 @@ async function createListing(): Promise<{ legoProductId: number; listingId: numb
       pieceCount: 100,
       productListings: {
         create: {
+            colorfulLifeCategory: "OTHERS",
           condition: "NEW",
           originalPrice: new Decimal(20),
           salePrice: new Decimal(15),

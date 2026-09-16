@@ -90,6 +90,7 @@ async function createPurchaseItem({
 
   const listing = await prisma.productListing.create({
     data: {
+        colorfulLifeCategory: "OTHERS",
       legoProductId: product.id,
       condition: "NEW",
       originalPrice: 10.0,
@@ -244,6 +245,7 @@ describe("returnPurchaseItem integration tests", () => {
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
       data: {
+        colorfulLifeCategory: "OTHERS",
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,

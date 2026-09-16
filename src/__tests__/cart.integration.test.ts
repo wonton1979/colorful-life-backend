@@ -18,7 +18,8 @@ after(async () => { await prisma.$disconnect(); server.close(); });
 async function fixture(emailVerified = false) {
   const user = await prisma.user.create({ data: { email: `${randomUUID()}@example.com`, passwordHash: "hash", emailVerified } }); userIds.push(user.id);
   const product = await prisma.legoProduct.create({ data: { setNumber: `CART-${randomUUID()}`, title: "Cart product", theme: "Test", ageRecommendation: "8+", pieceCount: 10 } }); productIds.push(product.id);
-  const listing = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), salePrice: new Decimal(15), currentStock: 10, reservedStock: 2, active: true } }); listingIds.push(listing.id);
+  const listing = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), salePrice: new Decimal(15), currentStock: 10, reservedStock: 2, active: true } }); listingIds.push(listing.id);
   return { listing, token: jwt.sign({ id: user.id, role: user.role }, config.JWT_SECRET), user };
 }
 const request = (token: string, path: string, init: RequestInit = {}) => fetch(`${url}${path}`, { ...init, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init.headers ?? {}) } });

@@ -47,8 +47,10 @@ async function fixture(sourceStock = 10) {
   const customer = await user("CUSTOMER");
   const product = await prisma.legoProduct.create({ data: { setNumber: randomUUID(), title: "HTTP inventory", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 } });
   products.push(product.id);
-  const source = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: sourceStock } });
-  const target = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "USED_LIKE_NEW", originalPrice: 8, currentStock: 2 } });
+  const source = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: sourceStock } });
+  const target = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "USED_LIKE_NEW", originalPrice: 8, currentStock: 2 } });
   listings.push(source.id, target.id);
   return { admin, customer, source, target };
 }
@@ -120,11 +122,13 @@ describe("POST /inventory/condition-adjustments", () => {
     assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.source.id, quantity: 1, reason: "OTHER" })).status, 409);
     const other = await prisma.legoProduct.create({ data: { setNumber: randomUUID(), title: "Other", theme: "TEST", ageRecommendation: "8+", pieceCount: 1 } });
     products.push(other.id);
-    const otherListing = await prisma.productListing.create({ data: { legoProductId: other.id, condition: "USED_LIKE_NEW", originalPrice: 1 } });
+    const otherListing = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: other.id, condition: "USED_LIKE_NEW", originalPrice: 1 } });
     listings.push(otherListing.id);
     assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: otherListing.id, quantity: 1, reason: "OTHER" })).status, 409);
     assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.target.id, quantity: 1, reason: "OTHER" })).status, 409);
-    const invalidTarget = await prisma.productListing.create({ data: { legoProductId: f.source.legoProductId, condition: "NEW", originalPrice: 1 } });
+    const invalidTarget = await prisma.productListing.create({ data: {
+        colorfulLifeCategory: "OTHERS", legoProductId: f.source.legoProductId, condition: "NEW", originalPrice: 1 } });
     listings.push(invalidTarget.id);
     assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: invalidTarget.id, quantity: 1, reason: "OTHER" })).status, 400);
   });
