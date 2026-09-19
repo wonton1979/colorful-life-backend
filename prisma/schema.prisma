@@ -269,6 +269,9 @@ model ProductListing {
   legoProductId         Int
   legoProduct           LegoProduct         @relation(fields: [legoProductId], references: [id])
   colorfulLifeCategory  ColorfulLifeCategory
+  catalogueArtworkUrl   String?
+  catalogueArtworkPublicId String?
+  isFeatureProduct      Boolean             @default(false)
   condition             ListingCondition
   originalPrice         Decimal             @db.Decimal(10, 2)
   salePrice             Decimal?            @db.Decimal(10, 2)

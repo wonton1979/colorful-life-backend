@@ -48,6 +48,9 @@ export type ProductListingMinAggregateOutputType = {
   id: number | null
   legoProductId: number | null
   colorfulLifeCategory: $Enums.ColorfulLifeCategory | null
+  catalogueArtworkUrl: string | null
+  catalogueArtworkPublicId: string | null
+  isFeatureProduct: boolean | null
   condition: $Enums.ListingCondition | null
   originalPrice: runtime.Decimal | null
   salePrice: runtime.Decimal | null
@@ -62,6 +65,9 @@ export type ProductListingMaxAggregateOutputType = {
   id: number | null
   legoProductId: number | null
   colorfulLifeCategory: $Enums.ColorfulLifeCategory | null
+  catalogueArtworkUrl: string | null
+  catalogueArtworkPublicId: string | null
+  isFeatureProduct: boolean | null
   condition: $Enums.ListingCondition | null
   originalPrice: runtime.Decimal | null
   salePrice: runtime.Decimal | null
@@ -76,6 +82,9 @@ export type ProductListingCountAggregateOutputType = {
   id: number
   legoProductId: number
   colorfulLifeCategory: number
+  catalogueArtworkUrl: number
+  catalogueArtworkPublicId: number
+  isFeatureProduct: number
   condition: number
   originalPrice: number
   salePrice: number
@@ -110,6 +119,9 @@ export type ProductListingMinAggregateInputType = {
   id?: true
   legoProductId?: true
   colorfulLifeCategory?: true
+  catalogueArtworkUrl?: true
+  catalogueArtworkPublicId?: true
+  isFeatureProduct?: true
   condition?: true
   originalPrice?: true
   salePrice?: true
@@ -124,6 +136,9 @@ export type ProductListingMaxAggregateInputType = {
   id?: true
   legoProductId?: true
   colorfulLifeCategory?: true
+  catalogueArtworkUrl?: true
+  catalogueArtworkPublicId?: true
+  isFeatureProduct?: true
   condition?: true
   originalPrice?: true
   salePrice?: true
@@ -138,6 +153,9 @@ export type ProductListingCountAggregateInputType = {
   id?: true
   legoProductId?: true
   colorfulLifeCategory?: true
+  catalogueArtworkUrl?: true
+  catalogueArtworkPublicId?: true
+  isFeatureProduct?: true
   condition?: true
   originalPrice?: true
   salePrice?: true
@@ -239,6 +257,9 @@ export type ProductListingGroupByOutputType = {
   id: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl: string | null
+  catalogueArtworkPublicId: string | null
+  isFeatureProduct: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal
   salePrice: runtime.Decimal | null
@@ -276,6 +297,9 @@ export type ProductListingWhereInput = {
   id?: Prisma.IntFilter<"ProductListing"> | number
   legoProductId?: Prisma.IntFilter<"ProductListing"> | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFilter<"ProductListing"> | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -298,6 +322,9 @@ export type ProductListingOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   legoProductId?: Prisma.SortOrder
   colorfulLifeCategory?: Prisma.SortOrder
+  catalogueArtworkUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  catalogueArtworkPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -323,6 +350,9 @@ export type ProductListingWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.ProductListingWhereInput | Prisma.ProductListingWhereInput[]
   legoProductId?: Prisma.IntFilter<"ProductListing"> | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFilter<"ProductListing"> | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -345,6 +375,9 @@ export type ProductListingOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   legoProductId?: Prisma.SortOrder
   colorfulLifeCategory?: Prisma.SortOrder
+  catalogueArtworkUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  catalogueArtworkPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
+  isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -367,6 +400,9 @@ export type ProductListingScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"ProductListing"> | number
   legoProductId?: Prisma.IntWithAggregatesFilter<"ProductListing"> | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryWithAggregatesFilter<"ProductListing"> | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.StringNullableWithAggregatesFilter<"ProductListing"> | string | null
+  catalogueArtworkPublicId?: Prisma.StringNullableWithAggregatesFilter<"ProductListing"> | string | null
+  isFeatureProduct?: Prisma.BoolWithAggregatesFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionWithAggregatesFilter<"ProductListing"> | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalWithAggregatesFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableWithAggregatesFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -379,6 +415,9 @@ export type ProductListingScalarWhereWithAggregatesInput = {
 
 export type ProductListingCreateInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -401,6 +440,9 @@ export type ProductListingUncheckedCreateInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -420,6 +462,9 @@ export type ProductListingUncheckedCreateInput = {
 
 export type ProductListingUpdateInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -442,6 +487,9 @@ export type ProductListingUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -463,6 +511,9 @@ export type ProductListingCreateManyInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -475,6 +526,9 @@ export type ProductListingCreateManyInput = {
 
 export type ProductListingUpdateManyMutationInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -489,6 +543,9 @@ export type ProductListingUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -513,6 +570,9 @@ export type ProductListingCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   legoProductId?: Prisma.SortOrder
   colorfulLifeCategory?: Prisma.SortOrder
+  catalogueArtworkUrl?: Prisma.SortOrder
+  catalogueArtworkPublicId?: Prisma.SortOrder
+  isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
@@ -536,6 +596,9 @@ export type ProductListingMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   legoProductId?: Prisma.SortOrder
   colorfulLifeCategory?: Prisma.SortOrder
+  catalogueArtworkUrl?: Prisma.SortOrder
+  catalogueArtworkPublicId?: Prisma.SortOrder
+  isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
@@ -550,6 +613,9 @@ export type ProductListingMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   legoProductId?: Prisma.SortOrder
   colorfulLifeCategory?: Prisma.SortOrder
+  catalogueArtworkUrl?: Prisma.SortOrder
+  catalogueArtworkPublicId?: Prisma.SortOrder
+  isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
@@ -741,6 +807,9 @@ export type ProductListingUpdateOneWithoutPurchaseItemsNestedInput = {
 
 export type ProductListingCreateWithoutLegoProductInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -761,6 +830,9 @@ export type ProductListingCreateWithoutLegoProductInput = {
 export type ProductListingUncheckedCreateWithoutLegoProductInput = {
   id?: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -811,6 +883,9 @@ export type ProductListingScalarWhereInput = {
   id?: Prisma.IntFilter<"ProductListing"> | number
   legoProductId?: Prisma.IntFilter<"ProductListing"> | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFilter<"ProductListing"> | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -823,6 +898,9 @@ export type ProductListingScalarWhereInput = {
 
 export type ProductListingCreateWithoutCartItemsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -844,6 +922,9 @@ export type ProductListingUncheckedCreateWithoutCartItemsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -878,6 +959,9 @@ export type ProductListingUpdateToOneWithWhereWithoutCartItemsInput = {
 
 export type ProductListingUpdateWithoutCartItemsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -899,6 +983,9 @@ export type ProductListingUncheckedUpdateWithoutCartItemsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -917,6 +1004,9 @@ export type ProductListingUncheckedUpdateWithoutCartItemsInput = {
 
 export type ProductListingCreateWithoutListingImagesInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -938,6 +1028,9 @@ export type ProductListingUncheckedCreateWithoutListingImagesInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -972,6 +1065,9 @@ export type ProductListingUpdateToOneWithWhereWithoutListingImagesInput = {
 
 export type ProductListingUpdateWithoutListingImagesInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -993,6 +1089,9 @@ export type ProductListingUncheckedUpdateWithoutListingImagesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1011,6 +1110,9 @@ export type ProductListingUncheckedUpdateWithoutListingImagesInput = {
 
 export type ProductListingCreateWithoutInventoryMovementsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1032,6 +1134,9 @@ export type ProductListingUncheckedCreateWithoutInventoryMovementsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1066,6 +1171,9 @@ export type ProductListingUpdateToOneWithWhereWithoutInventoryMovementsInput = {
 
 export type ProductListingUpdateWithoutInventoryMovementsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1087,6 +1195,9 @@ export type ProductListingUncheckedUpdateWithoutInventoryMovementsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1105,6 +1216,9 @@ export type ProductListingUncheckedUpdateWithoutInventoryMovementsInput = {
 
 export type ProductListingCreateWithoutSourceInventoryAuditsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1126,6 +1240,9 @@ export type ProductListingUncheckedCreateWithoutSourceInventoryAuditsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1149,6 +1266,9 @@ export type ProductListingCreateOrConnectWithoutSourceInventoryAuditsInput = {
 
 export type ProductListingCreateWithoutTargetInventoryAuditsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1170,6 +1290,9 @@ export type ProductListingUncheckedCreateWithoutTargetInventoryAuditsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1204,6 +1327,9 @@ export type ProductListingUpdateToOneWithWhereWithoutSourceInventoryAuditsInput 
 
 export type ProductListingUpdateWithoutSourceInventoryAuditsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1225,6 +1351,9 @@ export type ProductListingUncheckedUpdateWithoutSourceInventoryAuditsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1254,6 +1383,9 @@ export type ProductListingUpdateToOneWithWhereWithoutTargetInventoryAuditsInput 
 
 export type ProductListingUpdateWithoutTargetInventoryAuditsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1275,6 +1407,9 @@ export type ProductListingUncheckedUpdateWithoutTargetInventoryAuditsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1293,6 +1428,9 @@ export type ProductListingUncheckedUpdateWithoutTargetInventoryAuditsInput = {
 
 export type ProductListingCreateWithoutOrderItemsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1314,6 +1452,9 @@ export type ProductListingUncheckedCreateWithoutOrderItemsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1348,6 +1489,9 @@ export type ProductListingUpdateToOneWithWhereWithoutOrderItemsInput = {
 
 export type ProductListingUpdateWithoutOrderItemsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1369,6 +1513,9 @@ export type ProductListingUncheckedUpdateWithoutOrderItemsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1387,6 +1534,9 @@ export type ProductListingUncheckedUpdateWithoutOrderItemsInput = {
 
 export type ProductListingCreateWithoutPurchaseItemsInput = {
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1408,6 +1558,9 @@ export type ProductListingUncheckedCreateWithoutPurchaseItemsInput = {
   id?: number
   legoProductId: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1442,6 +1595,9 @@ export type ProductListingUpdateToOneWithWhereWithoutPurchaseItemsInput = {
 
 export type ProductListingUpdateWithoutPurchaseItemsInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1463,6 +1619,9 @@ export type ProductListingUncheckedUpdateWithoutPurchaseItemsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1482,6 +1641,9 @@ export type ProductListingUncheckedUpdateWithoutPurchaseItemsInput = {
 export type ProductListingCreateManyLegoProductInput = {
   id?: number
   colorfulLifeCategory: $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1494,6 +1656,9 @@ export type ProductListingCreateManyLegoProductInput = {
 
 export type ProductListingUpdateWithoutLegoProductInput = {
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1514,6 +1679,9 @@ export type ProductListingUpdateWithoutLegoProductInput = {
 export type ProductListingUncheckedUpdateWithoutLegoProductInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1534,6 +1702,9 @@ export type ProductListingUncheckedUpdateWithoutLegoProductInput = {
 export type ProductListingUncheckedUpdateManyWithoutLegoProductInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   colorfulLifeCategory?: Prisma.EnumColorfulLifeCategoryFieldUpdateOperationsInput | $Enums.ColorfulLifeCategory
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
@@ -1633,6 +1804,9 @@ export type ProductListingSelect<ExtArgs extends runtime.Types.Extensions.Intern
   id?: boolean
   legoProductId?: boolean
   colorfulLifeCategory?: boolean
+  catalogueArtworkUrl?: boolean
+  catalogueArtworkPublicId?: boolean
+  isFeatureProduct?: boolean
   condition?: boolean
   originalPrice?: boolean
   salePrice?: boolean
@@ -1656,6 +1830,9 @@ export type ProductListingSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   id?: boolean
   legoProductId?: boolean
   colorfulLifeCategory?: boolean
+  catalogueArtworkUrl?: boolean
+  catalogueArtworkPublicId?: boolean
+  isFeatureProduct?: boolean
   condition?: boolean
   originalPrice?: boolean
   salePrice?: boolean
@@ -1671,6 +1848,9 @@ export type ProductListingSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   id?: boolean
   legoProductId?: boolean
   colorfulLifeCategory?: boolean
+  catalogueArtworkUrl?: boolean
+  catalogueArtworkPublicId?: boolean
+  isFeatureProduct?: boolean
   condition?: boolean
   originalPrice?: boolean
   salePrice?: boolean
@@ -1686,6 +1866,9 @@ export type ProductListingSelectScalar = {
   id?: boolean
   legoProductId?: boolean
   colorfulLifeCategory?: boolean
+  catalogueArtworkUrl?: boolean
+  catalogueArtworkPublicId?: boolean
+  isFeatureProduct?: boolean
   condition?: boolean
   originalPrice?: boolean
   salePrice?: boolean
@@ -1696,7 +1879,7 @@ export type ProductListingSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductListingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "legoProductId" | "colorfulLifeCategory" | "condition" | "originalPrice" | "salePrice" | "currentStock" | "reservedStock" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["productListing"]>
+export type ProductListingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "legoProductId" | "colorfulLifeCategory" | "catalogueArtworkUrl" | "catalogueArtworkPublicId" | "isFeatureProduct" | "condition" | "originalPrice" | "salePrice" | "currentStock" | "reservedStock" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["productListing"]>
 export type ProductListingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   legoProduct?: boolean | Prisma.LegoProductDefaultArgs<ExtArgs>
   listingImages?: boolean | Prisma.ProductListing$listingImagesArgs<ExtArgs>
@@ -1731,6 +1914,9 @@ export type $ProductListingPayload<ExtArgs extends runtime.Types.Extensions.Inte
     id: number
     legoProductId: number
     colorfulLifeCategory: $Enums.ColorfulLifeCategory
+    catalogueArtworkUrl: string | null
+    catalogueArtworkPublicId: string | null
+    isFeatureProduct: boolean
     condition: $Enums.ListingCondition
     originalPrice: runtime.Decimal
     salePrice: runtime.Decimal | null
@@ -2173,6 +2359,9 @@ export interface ProductListingFieldRefs {
   readonly id: Prisma.FieldRef<"ProductListing", 'Int'>
   readonly legoProductId: Prisma.FieldRef<"ProductListing", 'Int'>
   readonly colorfulLifeCategory: Prisma.FieldRef<"ProductListing", 'ColorfulLifeCategory'>
+  readonly catalogueArtworkUrl: Prisma.FieldRef<"ProductListing", 'String'>
+  readonly catalogueArtworkPublicId: Prisma.FieldRef<"ProductListing", 'String'>
+  readonly isFeatureProduct: Prisma.FieldRef<"ProductListing", 'Boolean'>
   readonly condition: Prisma.FieldRef<"ProductListing", 'ListingCondition'>
   readonly originalPrice: Prisma.FieldRef<"ProductListing", 'Decimal'>
   readonly salePrice: Prisma.FieldRef<"ProductListing", 'Decimal'>

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
-import { getProducts, getProductById, createProduct, updateProduct, deactivateProduct, reactivateProduct, adjustInventory, getInventoryMovements } from "../controllers/products.js";
+import { getProducts, getProductById, createProduct, updateProduct, deactivateProduct, reactivateProduct, adjustInventory, getInventoryMovements, setFeatureProduct } from "../controllers/products.js";
 import { authMiddleware } from "../middleware/auth.js";
 
 const router = Router();
@@ -14,6 +14,7 @@ const adminOnly = (req: Request, res: Response, next: NextFunction) => {
 router.get("/", getProducts);
 // Register inventory movements route before the generic :id route to avoid conflict
 router.get("/:id/inventory-movements", authMiddleware, adminOnly, getInventoryMovements);
+router.patch("/:id/feature", authMiddleware, adminOnly, setFeatureProduct);
 router.get("/:id", getProductById);
 router.post("/", authMiddleware, adminOnly, createProduct);
 router.patch("/:id", authMiddleware, adminOnly, updateProduct);

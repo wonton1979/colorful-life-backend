@@ -3,6 +3,7 @@ import { config } from "../../config/index.js";
 import type { ImageStorage, ImageUploadInput, StoredImage } from "./imageStorage.js";
 
 export const PRODUCT_IMAGE_FOLDER = "colorful-life/products";
+export const CATALOGUE_ARTWORK_FOLDER = "colorful-life/catalogue-artwork";
 
 function configureCloudinary() {
   if (!config.CLOUDINARY_CLOUD_NAME || !config.CLOUDINARY_API_KEY || !config.CLOUDINARY_API_SECRET) {
@@ -20,41 +21,50 @@ export function isOwnedProductPublicId(publicId: string, listingId: number): boo
   return new RegExp(`^${PRODUCT_IMAGE_FOLDER}/${listingId}-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
 }
 
-export const cloudinaryImageStorage: ImageStorage = {
-  async upload(input: ImageUploadInput): Promise<StoredImage> {
-    const provider = configureCloudinary();
-    return new Promise((resolve, reject) => {
-      const stream = provider.uploader.upload_stream(
-        {
-          resource_type: "image",
-          type: "upload",
-          folder: PRODUCT_IMAGE_FOLDER,
-          public_id: input.publicId,
-          overwrite: false,
-          unique_filename: false,
-          use_filename: false,
-        },
-        (error, result) => {
-          if (error || !result?.public_id || !result.secure_url) {
-            reject(error ?? new Error("Cloudinary upload returned an incomplete result"));
-            return;
-          }
-          resolve({ publicId: result.public_id, secureUrl: result.secure_url });
-        },
-      );
-      stream.end(input.buffer);
-    });
-  },
+export function isOwnedCatalogueArtworkPublicId(publicId: string, listingId: number): boolean {
+  return new RegExp(`^${CATALOGUE_ARTWORK_FOLDER}/${listingId}-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
+}
 
-  async delete(publicId: string): Promise<void> {
-    const provider = configureCloudinary();
-    const result = await provider.uploader.destroy(publicId, {
-      resource_type: "image",
-      type: "upload",
-      invalidate: true,
-    });
-    if (result.result !== "ok" && result.result !== "not found") {
-      throw new Error(`Cloudinary deletion failed: ${result.result}`);
-    }
-  },
-};
+function createCloudinaryStorage(folder: string): ImageStorage {
+  return {
+    async upload(input: ImageUploadInput): Promise<StoredImage> {
+      const provider = configureCloudinary();
+      return new Promise((resolve, reject) => {
+        const stream = provider.uploader.upload_stream(
+          {
+            resource_type: "image",
+            type: "upload",
+            folder,
+            public_id: input.publicId,
+            overwrite: false,
+            unique_filename: false,
+            use_filename: false,
+          },
+          (error, result) => {
+            if (error || !result?.public_id || !result.secure_url) {
+              reject(error ?? new Error("Cloudinary upload returned an incomplete result"));
+              return;
+            }
+            resolve({ publicId: result.public_id, secureUrl: result.secure_url });
+          },
+        );
+        stream.end(input.buffer);
+      });
+    },
+
+    async delete(publicId: string): Promise<void> {
+      const provider = configureCloudinary();
+      const result = await provider.uploader.destroy(publicId, {
+        resource_type: "image",
+        type: "upload",
+        invalidate: true,
+      });
+      if (result.result !== "ok" && result.result !== "not found") {
+        throw new Error(`Cloudinary deletion failed: ${result.result}`);
+      }
+    },
+  };
+}
+
+export const cloudinaryImageStorage = createCloudinaryStorage(PRODUCT_IMAGE_FOLDER);
+export const cloudinaryCatalogueArtworkStorage = createCloudinaryStorage(CATALOGUE_ARTWORK_FOLDER);
