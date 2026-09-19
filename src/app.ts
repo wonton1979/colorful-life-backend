@@ -13,9 +13,10 @@ import paypalWebhookRouter from "./routes/paypalWebhook.js";
 import cartRouter from "./routes/cart.js";
 import cors from "cors";
 import { createListingImagesRouter } from "./routes/listingImages.js";
+import { createCatalogueArtworkRouter } from "./routes/catalogueArtwork.js";
 import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
-export function createApp(imageStorage?: ImageStorage) {
+export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage) {
   const app = express();
   app.use(cors({ origin: "http://localhost:5173" }));
   app.use("/payments", stripeWebhookRouter);
@@ -26,6 +27,7 @@ export function createApp(imageStorage?: ImageStorage) {
   app.use("/users", usersRouter);
   app.use("/products", productsRouter);
   app.use("/products", createListingImagesRouter(imageStorage));
+  app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
   app.use("/purchases", purchasesRouter);
   app.use("/purchase-items", purchaseItemsRouter);
   app.use("/orders", ordersRouter);

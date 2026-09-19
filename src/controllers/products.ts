@@ -5,6 +5,7 @@ import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
 import { listCatalogueProducts } from "../domain/products/productCatalogueService.js";
+import { createProductFeatureService, FeatureListingNotFoundError } from "../domain/products/productFeatureService.js";
 
 /**
  * GET /products
@@ -101,6 +102,9 @@ export const createProduct = async (req: Request, res: Response) => {
         id: true,
         legoProductId: true,
         colorfulLifeCategory: true,
+        catalogueArtworkUrl: true,
+        catalogueArtworkPublicId: true,
+        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -207,6 +211,9 @@ export const updateProduct = async (req: Request, res: Response) => {
         id: true,
         legoProductId: true,
         colorfulLifeCategory: true,
+        catalogueArtworkUrl: true,
+        catalogueArtworkPublicId: true,
+        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -247,6 +254,9 @@ export const getProductById = async (req: Request, res: Response) => {
         id: true,
         legoProductId: true,
         colorfulLifeCategory: true,
+        catalogueArtworkUrl: true,
+        catalogueArtworkPublicId: true,
+        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -290,6 +300,9 @@ export const deactivateProduct = async (req: Request, res: Response) => {
         id: true,
         legoProductId: true,
         colorfulLifeCategory: true,
+        catalogueArtworkUrl: true,
+        catalogueArtworkPublicId: true,
+        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -332,6 +345,9 @@ export const reactivateProduct = async (req: Request, res: Response) => {
         id: true,
         legoProductId: true,
         colorfulLifeCategory: true,
+        catalogueArtworkUrl: true,
+        catalogueArtworkPublicId: true,
+        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -350,6 +366,19 @@ export const reactivateProduct = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Reactivate product error", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/** PATCH /products/:id/feature — atomically selects the listing as its category feature. */
+export const setFeatureProduct = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: "Listing not found" });
+  try {
+    return res.json(await createProductFeatureService().setFeature(id));
+  } catch (error) {
+    if (error instanceof FeatureListingNotFoundError) return res.status(404).json({ error: error.message });
+    console.error("Set feature product error", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
