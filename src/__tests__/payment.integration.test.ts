@@ -67,7 +67,7 @@ async function createListing() {
       pieceCount: 100,
       productListings: {
         create: {
-            colorfulLifeCategory: "OTHERS",
+
           condition: "NEW",
           originalPrice: new Decimal("30.00"),
           salePrice: new Decimal("25.00"),

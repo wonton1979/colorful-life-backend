@@ -61,7 +61,7 @@ async function listing() {
   const product = await prisma.legoProduct.create({ data: { setNumber: `IMG-${randomUUID()}`, title: "Image Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 } });
   ids.products.push(product.id);
   const created = await prisma.productListing.create({ data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 10 } });
+        legoProductId: product.id, condition: "NEW", originalPrice: 10 } });
   ids.listings.push(created.id);
   return created.id;
 }

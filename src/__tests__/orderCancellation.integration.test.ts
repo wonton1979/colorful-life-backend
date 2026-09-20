@@ -61,7 +61,7 @@ async function makeOrder(userId: number, status: "PENDING" | "DISPATCHED" = "PEN
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({ data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), currentStock: 4, reservedStock: 1, active: true } });
+        legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), currentStock: 4, reservedStock: 1, active: true } });
   listingIds.push(listing.id);
   const order = await prisma.order.create({
     data: {

@@ -5,7 +5,6 @@ import type { ProductCatalogueQuery } from "./productCatalogueValidator.js";
 const listingSelect = {
   id: true,
   legoProductId: true,
-  colorfulLifeCategory: true,
   catalogueArtworkUrl: true,
   catalogueArtworkPublicId: true,
   isFeatureProduct: true,
@@ -16,7 +15,7 @@ const listingSelect = {
   reservedStock: true,
   createdAt: true,
   updatedAt: true,
-  legoProduct: true,
+  legoProduct: { include: { category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } } } },
   listingImages: { orderBy: { sortOrder: "asc" as const } },
 };
 
@@ -31,9 +30,7 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
   if (query.theme) {
     and.push({ legoProduct: { theme: { equals: query.theme, mode: "insensitive" } } });
   }
-  if (query.category) {
-    and.push({ colorfulLifeCategory: query.category });
-  }
+  if (query.categoryId !== undefined) and.push({ legoProduct: { categoryId: query.categoryId } });
   const price: Prisma.ProductListingWhereInput[] = [];
   if (query.minPrice !== undefined) price.push({ OR: [
     { salePrice: { gte: query.minPrice } },
@@ -56,8 +53,10 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
     }),
   ]);
   return {
-    items: items.map(({ reservedStock, ...listing }) => ({
+    items: items.map(({ reservedStock, legoProduct, ...listing }) => ({
       ...listing,
+      category: legoProduct.category,
+      legoProduct: (() => { const { category: _category, ...product } = legoProduct; return product; })(),
       // Pending orders reserve units within currentStock until confirmation or release.
       availableStock: Math.max(0, listing.currentStock - reservedStock),
     })),

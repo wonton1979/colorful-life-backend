@@ -25,7 +25,7 @@ async function fixture(quantity = 2) {
   const product = await prisma.legoProduct.create({ data: { setNumber: `EXP-${randomUUID()}`, title: "Expiry", theme: "TEST", ageRecommendation: "8+", pieceCount: 10 } });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({ data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(10), currentStock: 5, active: true } });
+        legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(10), currentStock: 5, active: true } });
   listingIds.push(listing.id);
   const order = await createOrder(user.id, { items: [{ productListingId: listing.id, quantity }] });
   orderIds.push(order.id);

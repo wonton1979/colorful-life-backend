@@ -403,6 +403,7 @@ export const ModelName = {
   PasswordResetToken: 'PasswordResetToken',
   Address: 'Address',
   LegoProduct: 'LegoProduct',
+  Category: 'Category',
   ProductListing: 'ProductListing',
   Cart: 'Cart',
   CartItem: 'CartItem',
@@ -433,7 +434,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "businessExpense" | "user" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "productListing" | "cart" | "cartItem" | "listingImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "category" | "productListing" | "cart" | "cartItem" | "listingImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -878,6 +879,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.LegoProductCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.LegoProductCountAggregateOutputType> | number
+        }
+      }
+    }
+    Category: {
+      payload: Prisma.$CategoryPayload<ExtArgs>
+      fields: Prisma.CategoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CategoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CategoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        findFirst: {
+          args: Prisma.CategoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CategoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        findMany: {
+          args: Prisma.CategoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>[]
+        }
+        create: {
+          args: Prisma.CategoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        createMany: {
+          args: Prisma.CategoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CategoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>[]
+        }
+        delete: {
+          args: Prisma.CategoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        update: {
+          args: Prisma.CategoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.CategoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CategoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CategoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.CategoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CategoryPayload>
+        }
+        aggregate: {
+          args: Prisma.CategoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCategory>
+        }
+        groupBy: {
+          args: Prisma.CategoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CategoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CategoryCountAggregateOutputType> | number
         }
       }
     }
@@ -2107,6 +2182,7 @@ export type AddressScalarFieldEnum = (typeof AddressScalarFieldEnum)[keyof typeo
 export const LegoProductScalarFieldEnum = {
   id: 'id',
   setNumber: 'setNumber',
+  categoryId: 'categoryId',
   title: 'title',
   description: 'description',
   theme: 'theme',
@@ -2119,10 +2195,21 @@ export const LegoProductScalarFieldEnum = {
 export type LegoProductScalarFieldEnum = (typeof LegoProductScalarFieldEnum)[keyof typeof LegoProductScalarFieldEnum]
 
 
+export const CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  subtitle: 'subtitle',
+  description: 'description',
+  imageUrl: 'imageUrl',
+  imagePublicId: 'imagePublicId'
+} as const
+
+export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]
+
+
 export const ProductListingScalarFieldEnum = {
   id: 'id',
   legoProductId: 'legoProductId',
-  colorfulLifeCategory: 'colorfulLifeCategory',
   catalogueArtworkUrl: 'catalogueArtworkUrl',
   catalogueArtworkPublicId: 'catalogueArtworkPublicId',
   isFeatureProduct: 'isFeatureProduct',
@@ -2527,20 +2614,6 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
- * Reference to a field of type 'ColorfulLifeCategory'
- */
-export type EnumColorfulLifeCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ColorfulLifeCategory'>
-
-
-
-/**
- * Reference to a field of type 'ColorfulLifeCategory[]'
- */
-export type ListEnumColorfulLifeCategoryFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ColorfulLifeCategory[]'>
-
-
-
-/**
  * Reference to a field of type 'ListingCondition'
  */
 export type EnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ListingCondition'>
@@ -2920,6 +2993,7 @@ export type GlobalOmitConfig = {
   passwordResetToken?: Prisma.PasswordResetTokenOmit
   address?: Prisma.AddressOmit
   legoProduct?: Prisma.LegoProductOmit
+  category?: Prisma.CategoryOmit
   productListing?: Prisma.ProductListingOmit
   cart?: Prisma.CartOmit
   cartItem?: Prisma.CartItemOmit

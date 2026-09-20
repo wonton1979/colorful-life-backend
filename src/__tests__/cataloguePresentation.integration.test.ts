@@ -52,9 +52,10 @@ async function user(role: "ADMIN" | "CUSTOMER") {
 }
 
 async function listing(category: "VEHICLES" | "CITY" = "VEHICLES", theme = "Technic") {
-  const product = await prisma.legoProduct.create({ data: { setNumber: `PRESENTATION-${randomUUID()}`, title: "Presentation Product", theme, ageRecommendation: "8+", pieceCount: 100 } });
+  const categoryRecord = await prisma.category.findUniqueOrThrow({ where: { name: category === "VEHICLES" ? "Vehicles" : "City" } });
+  const product = await prisma.legoProduct.create({ data: { setNumber: `PRESENTATION-${randomUUID()}`, title: "Presentation Product", theme, ageRecommendation: "8+", pieceCount: 100, categoryId: categoryRecord.id } });
   ids.products.push(product.id);
-  const created = await prisma.productListing.create({ data: { legoProductId: product.id, colorfulLifeCategory: category, condition: "NEW", originalPrice: 10, currentStock: 2 } });
+  const created = await prisma.productListing.create({ data: { legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: 2 } });
   ids.listings.push(created.id);
   return created;
 }
@@ -122,7 +123,8 @@ describe("catalogue presentation administration", () => {
     assert.notEqual(secondArtwork.publicId, firstArtwork.publicId);
     assert.deepEqual(artworkStorage.deletions, [firstArtwork.publicId]);
 
-    const catalogue = await (await request(`/products?category=VEHICLES&theme=Technic`)).json();
+    const vehicles = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
+    const catalogue = await (await request(`/products?categoryId=${vehicles.id}&theme=Technic`)).json();
     const item = catalogue.items.find((entry: any) => entry.id === created.id);
     assert.equal(item.catalogueArtworkUrl, secondArtwork.url);
     assert.equal(item.catalogueArtworkPublicId, secondArtwork.publicId);

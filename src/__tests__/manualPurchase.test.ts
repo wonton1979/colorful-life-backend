@@ -103,7 +103,7 @@ async function createProductAndListing(condition: ListingCondition = ListingCond
   legoProductIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId: product.id,
       condition,
       originalPrice: 10.0,
@@ -437,7 +437,7 @@ describe("Manual Purchase API", () => {
     legoProductIds.push(product.id);
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: ListingCondition.NEW,
         originalPrice: 10.0,
@@ -480,7 +480,7 @@ describe("Manual Purchase API", () => {
     legoProductIds.push(product.id);
     const listing1 = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: ListingCondition.NEW,
         originalPrice: 10.0,
@@ -489,7 +489,7 @@ describe("Manual Purchase API", () => {
     });
     const listing2 = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: ListingCondition.USED_LIKE_NEW,
         originalPrice: 8.0,

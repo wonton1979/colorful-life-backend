@@ -92,7 +92,7 @@ async function createPurchaseItem(quantity: number): Promise<{ purchaseItemId: n
   legoProductIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId: product.id,
       condition: "NEW",
       originalPrice: 10.0,
@@ -295,7 +295,7 @@ describe("POST /purchase-items/:id/receive", () => {
     purchaseDocIds.push(purchaseDoc.id);
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,

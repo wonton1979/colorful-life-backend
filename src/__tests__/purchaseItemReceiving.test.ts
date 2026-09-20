@@ -120,7 +120,7 @@ describe("receivePurchaseItem integration tests", () => {
 
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,

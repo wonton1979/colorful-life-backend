@@ -20,22 +20,6 @@ enum ListingCondition {
   USED_LIKE_NEW
 }
 
-enum ColorfulLifeCategory {
-  HARRY_POTTER
-  STAR_WARS
-  FRIENDS
-  CITY
-  DISNEY
-  MARVEL
-  JURASSIC_WORLD
-  FLOWERS_AND_BOTANICALS
-  NINJAGO
-  HEROES
-  VEHICLES
-  CREATOR
-  OTHERS
-}
-
 enum OrderStatus {
   PENDING
   EXPIRED
@@ -252,6 +236,9 @@ model Address {
 model LegoProduct {
   id                Int              @id @default(autoincrement())
   setNumber         String           @unique
+  // Nullable during the expand phase: historical orphan products have no listing-derived category.
+  categoryId        Int?
+  category          Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   title             String
   description       String?
   theme             String
@@ -262,13 +249,23 @@ model LegoProduct {
   productListings   ProductListing[]
 
   @@index([theme])
+  @@index([categoryId])
+}
+
+model Category {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  subtitle      String?
+  description   String?
+  imageUrl      String?
+  imagePublicId String?
+  legoProducts  LegoProduct[]
 }
 
 model ProductListing {
   id                    Int                 @id @default(autoincrement())
   legoProductId         Int
   legoProduct           LegoProduct         @relation(fields: [legoProductId], references: [id])
-  colorfulLifeCategory  ColorfulLifeCategory
   catalogueArtworkUrl   String?
   catalogueArtworkPublicId String?
   isFeatureProduct      Boolean             @default(false)
@@ -289,7 +286,6 @@ model ProductListing {
   targetInventoryAudits InventoryAudit[]    @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
-  @@index([colorfulLifeCategory])
   @@index([condition])
   @@index([active])
 }

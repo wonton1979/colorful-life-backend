@@ -54,7 +54,7 @@ before(async () => {
   legoProductId = product.id;
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId: product.id,
       condition: "NEW",
       originalPrice: new Decimal(20),
@@ -91,7 +91,7 @@ async function createZeroPriceListing() {
   });
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId: product.id,
       condition: "NEW",
       originalPrice: new Decimal(0),
