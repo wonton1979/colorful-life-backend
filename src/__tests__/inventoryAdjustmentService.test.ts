@@ -78,7 +78,7 @@ async function createProduct(): Promise<number> {
 async function createListing(legoProductId: number, condition: "NEW" | "USED_LIKE_NEW", currentStock = 0): Promise<number> {
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId,
       condition,
       originalPrice: 10,

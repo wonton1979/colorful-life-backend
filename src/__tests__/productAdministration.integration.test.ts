@@ -53,13 +53,14 @@ async function makeUser(role: "ADMIN" | "CUSTOMER") {
 }
 
 async function makeListing() {
+  const category = await prisma.category.findUniqueOrThrow({ where: { name: "Others" } });
   const product = await prisma.legoProduct.create({
-    data: { setNumber: `ADMIN-${randomUUID()}`, title: "Administration Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 },
+    data: { setNumber: `ADMIN-${randomUUID()}`, title: "Administration Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100, categoryId: category.id },
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 20, currentStock: 3, active: true },
+        legoProductId: product.id, condition: "NEW", originalPrice: 20, currentStock: 3, active: true },
   });
   listingIds.push(listing.id);
   return listing;
@@ -72,17 +73,17 @@ function request(path: string, token: string | undefined, init: RequestInit = {}
   return fetch(`${url}${path}`, { ...init, headers });
 }
 
-const productBody = {
+const productBody = (categoryId: number) => ({
   setNumber: "ADMIN-ROUTED-UNIQUE",
   title: "Created Product",
   theme: "TEST",
   ageRecommendation: "8+",
   pieceCount: 50,
   condition: "NEW",
-  colorfulLifeCategory: "VEHICLES",
+  categoryId,
   originalPrice: 12,
   currentStock: 2,
-};
+});
 
 describe("product administration authorization", () => {
   it("keeps catalogue reads public and protects every administration surface", async () => {
@@ -93,10 +94,11 @@ describe("product administration authorization", () => {
     assert.strictEqual((await request("/products", undefined)).status, 200);
     const publicProductResponse = await request(`/products/${listing.id}`, undefined);
     assert.strictEqual(publicProductResponse.status, 200);
-    assert.strictEqual((await publicProductResponse.json()).colorfulLifeCategory, "OTHERS");
+    assert.strictEqual((await publicProductResponse.json()).category.name, "Others");
+    const vehicles = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
 
     const protectedRequests: Array<{ path: string; method: string; body?: unknown }> = [
-      { path: "/products", method: "POST", body: productBody },
+      { path: "/products", method: "POST", body: productBody(vehicles.id) },
       { path: `/products/${listing.id}`, method: "PATCH", body: { title: "Changed" } },
       { path: `/products/${listing.id}/deactivate`, method: "PATCH" },
       { path: `/products/${listing.id}/reactivate`, method: "PATCH" },
@@ -109,17 +111,17 @@ describe("product administration authorization", () => {
       assert.strictEqual((await request(target.path, customer.token, { method: target.method, body })).status, 403);
     }
 
-    const createdResponse = await request("/products", admin.token, { method: "POST", body: JSON.stringify(productBody) });
+    const createdResponse = await request("/products", admin.token, { method: "POST", body: JSON.stringify(productBody(vehicles.id)) });
     assert.strictEqual(createdResponse.status, 201);
     const created = await createdResponse.json();
-    assert.strictEqual(created.colorfulLifeCategory, "VEHICLES");
+    assert.strictEqual(created.category.name, "Vehicles");
     listingIds.push(created.id);
     productIds.push(created.legoProductId);
 
-    const updateResponse = await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ title: "Updated Product", colorfulLifeCategory: "CITY" }) });
+    const updateResponse = await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ title: "Updated Product" }) });
     assert.strictEqual(updateResponse.status, 200);
-    assert.strictEqual((await updateResponse.json()).colorfulLifeCategory, "OTHERS");
-    assert.strictEqual((await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ colorfulLifeCategory: "CITY" }) })).status, 400);
+    assert.strictEqual((await updateResponse.json()).category.name, "Others");
+    assert.strictEqual((await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ categoryId: vehicles.id }) })).status, 400);
     assert.strictEqual((await request(`/products/${listing.id}/deactivate`, admin.token, { method: "PATCH" })).status, 200);
     assert.strictEqual((await request(`/products/${listing.id}/reactivate`, admin.token, { method: "PATCH" })).status, 200);
     assert.strictEqual((await request(`/products/${listing.id}/inventory-adjustments`, admin.token, { method: "POST", body: JSON.stringify({ quantity: 1 }) })).status, 200);
@@ -128,13 +130,14 @@ describe("product administration authorization", () => {
     assert.strictEqual((await movementsResponse.json()).movements.length, 1);
   });
 
-  it("requires and validates colorful life category on creation", async () => {
+  it("requires and validates Category identity on creation", async () => {
     const admin = await makeUser("ADMIN");
-    const missing = { ...productBody, setNumber: `ADMIN-MISSING-${randomUUID()}` };
-    delete (missing as Partial<typeof missing>).colorfulLifeCategory;
+    const vehicles = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
+    const missing = { ...productBody(vehicles.id), setNumber: `ADMIN-MISSING-${randomUUID()}` };
+    delete (missing as Partial<typeof missing>).categoryId;
     assert.strictEqual((await request("/products", admin.token, { method: "POST", body: JSON.stringify(missing) })).status, 400);
 
-    const invalid = { ...productBody, setNumber: `ADMIN-INVALID-${randomUUID()}`, colorfulLifeCategory: "NOT_A_CATEGORY" };
+    const invalid = { ...productBody(vehicles.id), setNumber: `ADMIN-INVALID-${randomUUID()}`, categoryId: 999999999 };
     assert.strictEqual((await request("/products", admin.token, { method: "POST", body: JSON.stringify(invalid) })).status, 400);
   });
 });

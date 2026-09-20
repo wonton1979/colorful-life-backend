@@ -14,6 +14,7 @@ import cartRouter from "./routes/cart.js";
 import cors from "cors";
 import { createListingImagesRouter } from "./routes/listingImages.js";
 import { createCatalogueArtworkRouter } from "./routes/catalogueArtwork.js";
+import categoriesRouter from "./routes/categories.js";
 import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
 export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage) {
@@ -28,6 +29,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/products", productsRouter);
   app.use("/products", createListingImagesRouter(imageStorage));
   app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
+  app.use("/categories", categoriesRouter);
   app.use("/purchases", purchasesRouter);
   app.use("/purchase-items", purchaseItemsRouter);
   app.use("/orders", ordersRouter);

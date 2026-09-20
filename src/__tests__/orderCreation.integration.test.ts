@@ -75,7 +75,7 @@ async function makeListing() {
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), salePrice: new Decimal(15), currentStock: 7, active: true },
+        legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(20), salePrice: new Decimal(15), currentStock: 7, active: true },
   });
   listingIds.push(listing.id);
   return listing;

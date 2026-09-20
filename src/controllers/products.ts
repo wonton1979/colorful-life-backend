@@ -1,11 +1,18 @@
 import { Request, Response } from "express";
 import { Prisma } from "../generated/prisma-client/client.js";
-import { ColorfulLifeCategory, ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
+import { ListingCondition, InventoryMovementType } from "../generated/prisma-client/enums.js";
 import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
 import { listCatalogueProducts } from "../domain/products/productCatalogueService.js";
 import { createProductFeatureService, FeatureListingNotFoundError } from "../domain/products/productFeatureService.js";
+
+const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true } as const;
+
+function serializeListing<T extends { legoProduct: { category?: unknown } }>(listing: T) {
+  const { category, ...legoProduct } = listing.legoProduct;
+  return { ...listing, category: category ?? null, legoProduct };
+}
 
 /**
  * GET /products
@@ -33,7 +40,7 @@ export const getProducts = async (req: Request, res: Response) => {
  *   - title: string
  *   - description?: string
  *   - theme: string
- *   - colorfulLifeCategory: ColorfulLifeCategory
+ *   - categoryId: existing Category ID
  *   - ageRecommendation: string
  *   - pieceCount: number
  *   - condition: "NEW" | "USED_LIKE_NEW"
@@ -47,7 +54,7 @@ export const createProduct = async (req: Request, res: Response) => {
     title: z.string().nonempty({ message: "title is required" }),
     description: z.string().optional(),
     theme: z.string().nonempty({ message: "theme is required" }),
-    colorfulLifeCategory: z.nativeEnum(ColorfulLifeCategory),
+    categoryId: z.number().int().positive(),
     ageRecommendation: z.string().nonempty({ message: "ageRecommendation is required" }),
     pieceCount: z.number().int().positive({ message: "pieceCount must be a positive integer" }),
     condition: z.nativeEnum(ListingCondition),
@@ -65,7 +72,7 @@ export const createProduct = async (req: Request, res: Response) => {
     title,
     description,
     theme,
-    colorfulLifeCategory,
+    categoryId,
     ageRecommendation,
     pieceCount,
     condition,
@@ -75,16 +82,19 @@ export const createProduct = async (req: Request, res: Response) => {
   } = parseResult.data;
 
   try {
-    // Atomic nested create of product listing and associated LegoProduct
+    const category = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
+    if (!category) return res.status(400).json({ error: "Category not found" });
+
+    // Atomic nested create of product listing and associated LegoProduct.
     const listing = await prisma.productListing.create({
       data: {
         condition,
-        colorfulLifeCategory,
         originalPrice,
         salePrice,
         currentStock: currentStock ?? 0,
         legoProduct: {
           create: {
+            category: { connect: { id: category.id } },
             setNumber,
             title,
             description,
@@ -101,7 +111,6 @@ export const createProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        colorfulLifeCategory: true,
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
@@ -111,13 +120,14 @@ export const createProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: true,
+        legoProduct: { include: { category: { select: categorySelect } } },
         listingImages: {
           orderBy: { sortOrder: "asc" },
         },
       },
     });
-    res.status(201).json(result);
+    if (!result) return res.status(500).json({ error: "Failed to retrieve created listing" });
+    res.status(201).json(serializeListing(result));
   } catch (err) {
     console.error("Create product error", err);
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -210,7 +220,6 @@ export const updateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        colorfulLifeCategory: true,
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
@@ -220,14 +229,14 @@ export const updateProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: true,
+        legoProduct: { include: { category: { select: categorySelect } } },
         listingImages: { orderBy: { sortOrder: "asc" } },
       },
     });
     if (!updated) {
       return res.status(500).json({ error: "Failed to retrieve updated listing" });
     }
-    res.json(updated);
+    res.json(serializeListing(updated));
   } catch (err) {
     console.error("Update product error", err);
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -253,7 +262,6 @@ export const getProductById = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        colorfulLifeCategory: true,
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
@@ -263,7 +271,7 @@ export const getProductById = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: true,
+        legoProduct: { include: { category: { select: categorySelect } } },
         listingImages: {
           orderBy: { sortOrder: "asc" },
         },
@@ -272,7 +280,7 @@ export const getProductById = async (req: Request, res: Response) => {
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
-    res.json(listing);
+    res.json(serializeListing(listing));
   } catch (err) {
     console.error("Get product by id error", err);
     res.status(500).json({ error: "Internal server error" });
@@ -299,7 +307,6 @@ export const deactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        colorfulLifeCategory: true,
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
@@ -310,14 +317,14 @@ export const deactivateProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: true,
+        legoProduct: { include: { category: { select: categorySelect } } },
         listingImages: { orderBy: { sortOrder: "asc" } },
       },
     });
     if (!updated) {
       return res.status(500).json({ error: "Failed to retrieve updated listing" });
     }
-    res.json(updated);
+    res.json(serializeListing(updated));
   } catch (err) {
     console.error("Deactivate product error", err);
     res.status(500).json({ error: "Internal server error" });
@@ -344,7 +351,6 @@ export const reactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        colorfulLifeCategory: true,
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
@@ -355,14 +361,14 @@ export const reactivateProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: true,
+        legoProduct: { include: { category: { select: categorySelect } } },
         listingImages: { orderBy: { sortOrder: "asc" } },
       },
     });
     if (!updated) {
       return res.status(500).json({ error: "Failed to retrieve updated listing" });
     }
-    res.json(updated);
+    res.json(serializeListing(updated));
   } catch (err) {
     console.error("Reactivate product error", err);
     res.status(500).json({ error: "Internal server error" });

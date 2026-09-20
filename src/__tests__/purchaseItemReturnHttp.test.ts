@@ -100,7 +100,7 @@ async function createReturnedPurchaseItem(quantity: number): Promise<{ purchaseI
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: "OTHERS",
+
       legoProductId: product.id,
       condition: "NEW",
       originalPrice: 10.0,
@@ -213,7 +213,7 @@ describe("Purchase Item Return HTTP Layer", () => {
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,
@@ -276,7 +276,7 @@ describe("Purchase Item Return HTTP Layer", () => {
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,
@@ -362,7 +362,7 @@ describe("Purchase Item Return HTTP Layer", () => {
     productIds.push(product.id);
     const listing = await prisma.productListing.create({
       data: {
-        colorfulLifeCategory: "OTHERS",
+
         legoProductId: product.id,
         condition: "NEW",
         originalPrice: 10.0,

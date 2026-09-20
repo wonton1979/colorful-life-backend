@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { ColorfulLifeCategory } from "../../generated/prisma-client/enums.js";
 
 export interface ProductCatalogueQuery {
   q?: string;
   theme?: string;
-  category?: ColorfulLifeCategory;
+  categoryId?: number;
   minPrice?: number;
   maxPrice?: number;
   page: number;
@@ -38,7 +37,7 @@ const optionalPageSize = z.preprocess(
 export const ProductCatalogueQuerySchema = z.object({
   q: optionalTrimmed,
   theme: optionalTrimmed,
-  category: z.nativeEnum(ColorfulLifeCategory).optional(),
+  categoryId: optionalPositiveInteger,
   minPrice: optionalNonNegativeDecimal,
   maxPrice: optionalNonNegativeDecimal,
   page: optionalPositiveInteger.default(1),
@@ -49,7 +48,7 @@ export const ProductCatalogueQuerySchema = z.object({
 ).transform((query): ProductCatalogueQuery => ({
   q: query.q,
   theme: query.theme,
-  category: query.category,
+  categoryId: query.categoryId,
   minPrice: query.minPrice,
   maxPrice: query.maxPrice,
   page: query.page,

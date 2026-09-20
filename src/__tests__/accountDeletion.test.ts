@@ -60,7 +60,7 @@ describe("account deletion domain", () => {
     const product = await prisma.legoProduct.create({ data: { setNumber: `DEL-${randomUUID()}`, title: "Historical", description: "History", theme: "TEST", ageRecommendation: "8+", pieceCount: 10 } });
     productIds.push(product.id);
     const listing = await prisma.productListing.create({ data: {
-        colorfulLifeCategory: "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: 20, currentStock: 1 } });
+        legoProductId: product.id, condition: "NEW", originalPrice: 20, currentStock: 1 } });
     listingIds.push(listing.id);
     const order = await prisma.order.create({ data: {
       userId: created.id, billingRecipientName: "Historical Customer", billingLine1: "1 Old Street", billingCity: "Oldtown", billingPostcode: "O1", billingCountryCode: "GB",

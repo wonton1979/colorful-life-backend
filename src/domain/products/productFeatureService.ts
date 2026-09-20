@@ -9,31 +9,35 @@ export function createProductFeatureService(db: PrismaClient = defaultPrisma) {
       return db.$transaction(async (tx) => {
         const candidate = await tx.productListing.findUnique({
           where: { id: listingId },
-          select: { colorfulLifeCategory: true },
+          select: { legoProduct: { select: { categoryId: true } } },
         });
-        if (!candidate) throw new FeatureListingNotFoundError("Listing not found");
+        if (!candidate || candidate.legoProduct.categoryId === null) throw new FeatureListingNotFoundError("Listing has no Category");
 
         // Lock the complete category set so concurrent selections serialize.
+        // The advisory lock is category-scoped because Category now belongs to
+        // LegoProduct and cannot be represented by a ProductListing index.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${candidate.legoProduct.categoryId})`;
         await tx.$queryRaw`
-          SELECT id FROM "ProductListing"
-          WHERE "colorfulLifeCategory" = ${candidate.colorfulLifeCategory}
-          ORDER BY id
+          SELECT pl.id FROM "ProductListing" pl
+          JOIN "LegoProduct" lp ON lp.id = pl."legoProductId"
+          WHERE lp."categoryId" = ${candidate.legoProduct.categoryId}
+          ORDER BY pl.id
           FOR UPDATE
         `;
         const listing = await tx.productListing.findUnique({
           where: { id: listingId },
-          select: { id: true, colorfulLifeCategory: true },
+          select: { id: true, legoProduct: { select: { categoryId: true } } },
         });
-        if (!listing) throw new FeatureListingNotFoundError("Listing not found");
+        if (!listing || listing.legoProduct.categoryId === null) throw new FeatureListingNotFoundError("Listing has no Category");
 
         await tx.productListing.updateMany({
-          where: { colorfulLifeCategory: listing.colorfulLifeCategory, isFeatureProduct: true },
+          where: { legoProduct: { categoryId: listing.legoProduct.categoryId }, isFeatureProduct: true },
           data: { isFeatureProduct: false },
         });
         return tx.productListing.update({
           where: { id: listingId },
           data: { isFeatureProduct: true },
-          select: { id: true, colorfulLifeCategory: true, isFeatureProduct: true },
+          select: { id: true, isFeatureProduct: true },
         });
       });
     },
