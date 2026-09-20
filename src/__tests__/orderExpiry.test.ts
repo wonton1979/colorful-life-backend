@@ -14,6 +14,7 @@ const userIds: number[] = [];
 const productIds: number[] = [];
 const listingIds: number[] = [];
 const orderIds: number[] = [];
+let adminUserId: number;
 
 async function fixture(quantity = 2) {
   const user = await prisma.user.create({ data: {
@@ -31,9 +32,16 @@ async function fixture(quantity = 2) {
   return { user, listing, order };
 }
 
-before(async () => {});
+before(async () => {
+  const admin = await prisma.user.create({ data: {
+    email: `expiry-admin-${randomUUID()}@example.com`, passwordHash: "hash", role: "ADMIN", emailVerified: true,
+  } });
+  adminUserId = admin.id;
+  userIds.push(admin.id);
+});
 after(async () => {
   if (orderIds.length) await prisma.order.deleteMany({ where: { id: { in: orderIds } } });
+  if (listingIds.length) await prisma.inventoryMovement.deleteMany({ where: { listingId: { in: listingIds } } });
   if (listingIds.length) await prisma.productListing.deleteMany({ where: { id: { in: listingIds } } });
   if (productIds.length) await prisma.legoProduct.deleteMany({ where: { id: { in: productIds } } });
   if (userIds.length) { await prisma.address.deleteMany({ where: { userId: { in: userIds } } }); await prisma.user.deleteMany({ where: { id: { in: userIds } } }); }
@@ -70,8 +78,7 @@ describe("Order expiry domain service", () => {
   it("does not expire terminal orders and repeated expiry is a no-op", async () => {
     const confirmed = await fixture(1);
     await prisma.order.update({ where: { id: confirmed.order.id }, data: { reservationExpiresAt: new Date(Date.now() - 1000) } });
-    await confirmOrder(999999999, confirmed.order.id).catch(() => undefined);
-    await prisma.order.update({ where: { id: confirmed.order.id }, data: { status: "CONFIRMED", reservationExpiresAt: null } });
+    await confirmOrder(adminUserId, confirmed.order.id);
     assert.strictEqual(await expireOrderReservation(confirmed.order.id), null);
     const expired = await fixture(1);
     await prisma.order.update({ where: { id: expired.order.id }, data: { reservationExpiresAt: new Date(Date.now() - 1000) } });
@@ -100,7 +107,7 @@ describe("Order expiry domain service", () => {
     assert.strictEqual((await prisma.productListing.findUnique({ where: { id: cancelFixture.listing.id } }))?.reservedStock, 0);
     const confirmFixture = await fixture(1);
     await prisma.order.update({ where: { id: confirmFixture.order.id }, data: { reservationExpiresAt: new Date(Date.now() - 1000) } });
-    await Promise.allSettled([expireOrderReservation(confirmFixture.order.id), confirmOrder(1, confirmFixture.order.id)]);
+    await Promise.allSettled([expireOrderReservation(confirmFixture.order.id), confirmOrder(adminUserId, confirmFixture.order.id)]);
     const final = await prisma.order.findUnique({ where: { id: confirmFixture.order.id } });
     const listing = await prisma.productListing.findUnique({ where: { id: confirmFixture.listing.id } });
     assert.ok(final?.status === "CONFIRMED" || final?.status === "EXPIRED");

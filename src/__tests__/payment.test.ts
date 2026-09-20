@@ -104,7 +104,7 @@ async function createZeroPriceListing() {
 }
 
 describe("Payment Service", () => {
-  // Before each test we reset the test DB – the repository uses `prisma migrate` and a test DB via .env
+  // Clean up this file's fixtures in the guarded, dedicated test database.
   beforeEach(async () => {
     // Scoped cleanup: only delete rows created by this test file
     if (createdPaymentIds.length) {

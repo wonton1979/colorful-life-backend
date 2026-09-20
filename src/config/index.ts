@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { config as dotenvConfig } from "dotenv";
+import { resolveDatabaseUrl } from "./testDatabase.js";
 
 // Load environment variables from .env if present
 dotenvConfig();
@@ -28,7 +29,10 @@ const configSchema = z.object({
     CLOUDINARY_API_SECRET: z.string().nonempty().optional(),
   });
 
-const parsed = configSchema.safeParse(process.env);
+const parsed = configSchema.safeParse({
+  ...process.env,
+  DATABASE_URL: resolveDatabaseUrl(process.env),
+});
 if (!parsed.success) {
   console.error("❌ Invalid environment configuration:", parsed.error.format());
   process.exit(1);
