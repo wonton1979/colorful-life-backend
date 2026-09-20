@@ -595,13 +595,63 @@ npm start
 
 ## Running Tests
 
-Build the project first:
+Development uses `DATABASE_URL` (normally database `colorful_life`). Automated
+tests require a separate `TEST_DATABASE_URL` targeting **exactly
+`colorful_life_test`**. Put both URLs in your ignored `.env`, or supply them as
+environment variables; see `.env.example`. Credentials must not be committed.
+There is no automatic fallback from a missing test URL to the development URL.
+
+Create an empty `colorful_life_test` database on your local PostgreSQL server,
+preferably owned by a dedicated test role with no access to development or
+production data. For example, using PostgreSQL client tools:
 
 ```bash
-npm run build
+createdb --host <local-postgres-host> --port 5432 --username <database-admin> \
+  --owner <test-role> colorful_life_test
 ```
 
-Then run the test suite using the project's configured test command.
+In WSL, use the reachable Windows PostgreSQL host address if PostgreSQL runs on
+Windows; `localhost` may not resolve to that server. Obtain the host from your
+existing local setup. The role must already exist and be allowed to own the test
+database. Enter credentials through the PostgreSQL prompt or your local secret
+configuration, not a committed command. Do not copy development data into tests.
+
+Run the connection-free safety checks before preparing the database:
+
+```bash
+npm run test:safety
+npm run test:db:check
+```
+
+`test:db:check` builds and validates configuration, reports only the test database
+name, and verifies the application selects that URL without connecting to a
+database. Normal application startup continues to use `DATABASE_URL` unchanged.
+
+Prepare the schema and run tests:
+
+```bash
+npm run test:db:prepare
+npm test
+# Or run selected compiled integration files:
+npm test -- dist/__tests__/cataloguePresentation.integration.test.js
+```
+
+Both preparation and `npm test` build first and apply the committed Prisma
+migrations using `prisma migrate deploy` against the validated test target.
+Applying migrations is repeatable; there is no reset, seed, or development-data
+dependency. Tests create and clean up their own fixtures. Test files run serially
+to avoid interference between catalogue queries and category-wide feature
+selection. Do not run multiple suites against the same test database concurrently.
+
+The shared guard runs before Prisma client construction and before migration or
+test subprocesses start. It requires both URLs, rejects production mode, requires
+the exact test database name, and rejects matching normal/test database names
+even when credentials or host aliases differ. Test URL query parameters are
+restricted to `schema=public` and one `sslmode` (`disable`, `require`, `verify-ca`,
+or `verify-full`); connection redirection options are rejected. Unsafe or missing
+configuration exits nonzero before database activity. Node test workers and direct
+`.test.js` execution also use this guard; setting `NODE_ENV=test` alone is
+insufficient. Use the npm commands to ensure current builds and migrations.
 
 Real Stripe Sandbox tests are opt-in and require the corresponding environment flag and test credentials.
 
