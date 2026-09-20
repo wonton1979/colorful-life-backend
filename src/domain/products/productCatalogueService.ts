@@ -13,6 +13,7 @@ const listingSelect = {
   originalPrice: true,
   salePrice: true,
   currentStock: true,
+  reservedStock: true,
   createdAt: true,
   updatedAt: true,
   legoProduct: true,
@@ -55,7 +56,11 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
     }),
   ]);
   return {
-    items,
+    items: items.map(({ reservedStock, ...listing }) => ({
+      ...listing,
+      // Pending orders reserve units within currentStock until confirmation or release.
+      availableStock: Math.max(0, listing.currentStock - reservedStock),
+    })),
     pagination: {
       page: query.page,
       pageSize: query.pageSize,

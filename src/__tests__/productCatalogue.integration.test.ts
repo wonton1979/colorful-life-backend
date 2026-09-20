@@ -27,14 +27,14 @@ afterEach(async () => {
 
 after(async () => { await prisma.$disconnect(); server.close(); });
 
-async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date }) {
+async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date; currentStock?: number; reservedStock?: number }) {
   const product = await prisma.legoProduct.create({
     data: { setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100 },
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
     data: {
-        colorfulLifeCategory: data.category ?? "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(data.originalPrice), salePrice: data.salePrice === undefined ? null : new Decimal(data.salePrice), currentStock: 1, active: data.active ?? true, createdAt: data.createdAt },
+        colorfulLifeCategory: data.category ?? "OTHERS", legoProductId: product.id, condition: "NEW", originalPrice: new Decimal(data.originalPrice), salePrice: data.salePrice === undefined ? null : new Decimal(data.salePrice), currentStock: data.currentStock ?? 1, reservedStock: data.reservedStock ?? 0, active: data.active ?? true, createdAt: data.createdAt },
   });
   listingIds.push(listing.id);
   return listing;
@@ -47,6 +47,69 @@ async function get(path: string) {
 }
 
 describe("Product catalogue HTTP integration", () => {
+  for (const { name, currentStock, reservedStock, expected } of [
+    { name: "unreserved stock", currentStock: 7, reservedStock: 0, expected: 7 },
+    { name: "partially reserved stock", currentStock: 7, reservedStock: 3, expected: 4 },
+    { name: "fully reserved stock", currentStock: 7, reservedStock: 7, expected: 0 },
+    { name: "empty stock", currentStock: 0, reservedStock: 0, expected: 0 },
+    { name: "inconsistent excess reservations", currentStock: 2, reservedStock: 5, expected: 0 },
+  ]) {
+    it(`exposes non-negative availableStock for ${name} without exposing reservations`, async () => {
+      const setNumber = `STOCK-${randomUUID()}`;
+      const listing = await makeListing({ setNumber, title: "Stock availability", theme: "City", originalPrice: 10, currentStock, reservedStock });
+      const { response, body } = await get(`/products?q=${setNumber}`);
+      assert.strictEqual(response.status, 200);
+      assert.strictEqual(body.items.length, 1);
+      const item = body.items[0];
+      assert.strictEqual(item.id, listing.id);
+      assert.strictEqual(item.availableStock, expected);
+      assert.strictEqual(item.currentStock, currentStock);
+      assert.ok(!Object.hasOwn(item, "reservedStock"));
+    });
+  }
+
+  it("preserves existing catalogue fields, serialization, and ordered listing images", async () => {
+    const setNumber = `CONTRACT-${randomUUID()}`;
+    const listing = await makeListing({ setNumber, title: "Catalogue contract", theme: "City", originalPrice: 12.5, salePrice: 9.25, currentStock: 6, reservedStock: 2 });
+    const laterImage = await prisma.listingImage.create({ data: { listingId: listing.id, url: "https://cdn.example/later.jpg", publicId: `later-${listing.id}`, sortOrder: 2 } });
+    const firstImage = await prisma.listingImage.create({ data: { listingId: listing.id, url: "https://cdn.example/first.jpg", publicId: `first-${listing.id}`, sortOrder: 1, altText: "First image" } });
+    const product = await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } });
+    const { response, body } = await get(`/products?q=${setNumber}`);
+    assert.strictEqual(response.status, 200);
+    assert.deepStrictEqual(body.items, [JSON.parse(JSON.stringify({
+      id: listing.id,
+      legoProductId: listing.legoProductId,
+      colorfulLifeCategory: listing.colorfulLifeCategory,
+      catalogueArtworkUrl: listing.catalogueArtworkUrl,
+      catalogueArtworkPublicId: listing.catalogueArtworkPublicId,
+      isFeatureProduct: listing.isFeatureProduct,
+      condition: listing.condition,
+      originalPrice: listing.originalPrice,
+      salePrice: listing.salePrice,
+      currentStock: 6,
+      createdAt: listing.createdAt,
+      updatedAt: listing.updatedAt,
+      legoProduct: product,
+      listingImages: [firstImage, laterImage],
+      availableStock: 4,
+    }))]);
+  });
+
+  it("reads current inventory on each request without changing stock", async () => {
+    const setNumber = `LIVE-STOCK-${randomUUID()}`;
+    const listing = await makeListing({ setNumber, title: "Changing inventory", theme: "City", originalPrice: 10, currentStock: 8, reservedStock: 3 });
+    const path = `/products?q=${setNumber}`;
+    const first = await get(path);
+    assert.strictEqual(first.body.items[0].availableStock, 5);
+    assert.deepStrictEqual((await get(path)).body, first.body);
+    assert.deepStrictEqual(await prisma.productListing.findUnique({ where: { id: listing.id } }), listing);
+
+    await prisma.productListing.update({ where: { id: listing.id }, data: { reservedStock: 6 } });
+    assert.strictEqual((await get(path)).body.items[0].availableStock, 2);
+    await prisma.productListing.update({ where: { id: listing.id }, data: { currentStock: 2, reservedStock: 0 } });
+    assert.strictEqual((await get(path)).body.items[0].availableStock, 2);
+  });
+
   it("is public and returns the default paginated active catalogue", async () => {
     await makeListing({ setNumber: `CAT-${randomUUID()}`, title: "Active", theme: "City", originalPrice: 10 });
     await makeListing({ setNumber: `CAT-${randomUUID()}`, title: "Inactive", theme: "City", originalPrice: 20, active: false });
@@ -73,13 +136,15 @@ describe("Product catalogue HTTP integration", () => {
   it("uses effective prices and supports combined filters and pagination", async () => {
     const suffix = randomUUID();
     await makeListing({ setNumber: `P1-${suffix}`, title: "Set One", theme: "Technic", originalPrice: 100, salePrice: 20, createdAt: new Date("2020-01-01") });
-    await makeListing({ setNumber: `P2-${suffix}`, title: "Set Two", theme: "Technic", originalPrice: 30, createdAt: new Date("2020-01-02") });
-    await makeListing({ setNumber: `P3-${suffix}`, title: "Set Three", theme: "Technic", originalPrice: 40, salePrice: 35, createdAt: new Date("2020-01-03") });
+    await makeListing({ setNumber: `P2-${suffix}`, title: "Set Two", theme: "Technic", originalPrice: 30, createdAt: new Date("2020-01-02"), currentStock: 4, reservedStock: 2 });
+    await makeListing({ setNumber: `P3-${suffix}`, title: "Set Three", theme: "Technic", originalPrice: 40, salePrice: 35, createdAt: new Date("2020-01-03"), currentStock: 3, reservedStock: 3 });
     const filtered = await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=1&pageSize=2`);
     assert.deepStrictEqual(filtered.body.pagination, { page: 1, pageSize: 2, totalItems: 3, totalPages: 2 });
     assert.deepStrictEqual(filtered.body.items.map((item: any) => item.legoProduct.setNumber), [`P3-${suffix}`, `P2-${suffix}`]);
+    assert.deepStrictEqual(filtered.body.items.map((item: any) => item.availableStock), [0, 2]);
     const second = await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=2&pageSize=2`);
     assert.deepStrictEqual(second.body.items.map((item: any) => item.legoProduct.setNumber), [`P1-${suffix}`]);
+    assert.deepStrictEqual(second.body.items.map((item: any) => item.availableStock), [1]);
     assert.strictEqual((await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=3&pageSize=2`)).body.items.length, 0);
   });
 
