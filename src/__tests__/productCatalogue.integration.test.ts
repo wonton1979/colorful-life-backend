@@ -80,7 +80,7 @@ describe("Product catalogue HTTP integration", () => {
     assert.deepStrictEqual(body.items, [JSON.parse(JSON.stringify({
       id: listing.id,
       legoProductId: listing.legoProductId,
-      category: { id: (await prisma.category.findUniqueOrThrow({ where: { name: "Others" } })).id, name: "Others", subtitle: "More little worlds to discover", description: null, imageUrl: null },
+      category: { id: (await prisma.category.findUniqueOrThrow({ where: { name: "Others" } })).id, name: "Others", subtitle: "More little worlds to discover", description: "Wander into a collection of delightful worlds, unusual ideas and small surprises waiting to be discovered.", imageUrl: null },
       catalogueArtworkUrl: listing.catalogueArtworkUrl,
       catalogueArtworkPublicId: listing.catalogueArtworkPublicId,
       isFeatureProduct: listing.isFeatureProduct,

@@ -53,14 +53,25 @@ describe("Category public contract", () => {
     assert.equal(response.status, 200);
     const categories = await response.json();
     assert.equal(categories.length, 13);
-    assert.deepEqual(categories.map((category: { name: string }) => category.name), [
-      "Harry Potter", "Star Wars", "Friends", "City", "Disney", "Marvel",
-      "Jurassic World", "Flowers & Botanicals", "NINJAGO", "DC & Batman",
-      "Vehicles", "Creator", "Others",
+    assert.deepEqual(categories.map((category: { id: number; name: string; subtitle: string; description: string | null }) => ({
+      id: category.id, name: category.name, subtitle: category.subtitle, description: category.description,
+    })), [
+      { id: 1, name: "Harry Potter", subtitle: "Magic in every build", description: "Step into a world of spells, secret rooms and stirring adventures, where every build holds a little magic." },
+      { id: 2, name: "Star Wars", subtitle: "Adventure among the stars", description: "Travel to galaxies far away, bringing daring journeys, loyal companions and legendary moments to life." },
+      { id: 3, name: "Friends", subtitle: "Build brighter days together", description: "Find bright, everyday adventures filled with friendship, creativity and cheerful places to share." },
+      { id: 4, name: "City", subtitle: "Every street tells a story", description: "Explore busy streets, helpful heroes and familiar scenes where there is always another story unfolding." },
+      { id: 5, name: "Disney", subtitle: "Build a little wonder", description: "Revisit beloved tales and build a little wonder, with familiar characters and magical moments around every corner." },
+      { id: 6, name: "Marvel", subtitle: "Heroes assemble here", description: "Assemble a world of brave heroes, bold choices and extraordinary adventures ready to leap into action." },
+      { id: 7, name: "Jurassic World", subtitle: "Big adventures from another age", description: "Enter a prehistoric world of mighty dinosaurs, untamed landscapes and exciting discoveries." },
+      { id: 8, name: "Flowers & Botanicals", subtitle: "Build something beautiful", description: "Bring a little calm indoors with graceful blooms, leafy treasures and nature-inspired details to enjoy." },
+      { id: 9, name: "NINJAGO", subtitle: "Train. Build. Adventure.", description: "Train alongside courageous ninja, discover ancient secrets and build adventures full of skill, spirit and surprise." },
+      { id: 10, name: "DC & Batman", subtitle: "Heroes after dark", description: "Enter the night with legendary heroes, daring rescues and Gotham adventures waiting to unfold." },
+      { id: 11, name: "Vehicles", subtitle: "Built for the thrill", description: "Feel the joy of movement with speedy cars, powerful machines and journeys limited only by imagination." },
+      { id: 12, name: "Creator", subtitle: "Imagine it. Build it differently.", description: "Let curiosity lead the way, rebuilding familiar ideas into something wonderfully unexpected." },
+      { id: 13, name: "Others", subtitle: "More little worlds to discover", description: "Wander into a collection of delightful worlds, unusual ideas and small surprises waiting to be discovered." },
     ]);
     assert.ok(categories.every((category: Record<string, unknown>) =>
-      "id" in category && "name" in category && "subtitle" in category &&
-      "description" in category && "imageUrl" in category && !("imagePublicId" in category)));
+      typeof category.description === "string" && category.imageUrl === null && !("imagePublicId" in category)));
   });
 
   it("creates a product by Category identity and returns the related category", async () => {
@@ -78,7 +89,7 @@ describe("Category public contract", () => {
     const body = await response.json();
     productIds.push(body.legoProductId);
     listingIds.push(body.id);
-    assert.deepEqual(body.category, { id: vehicles.id, name: "Vehicles", subtitle: "Built for the thrill", description: null, imageUrl: null });
+    assert.deepEqual(body.category, { id: vehicles.id, name: "Vehicles", subtitle: "Built for the thrill", description: "Feel the joy of movement with speedy cars, powerful machines and journeys limited only by imagination.", imageUrl: null });
     assert.equal(body.legoProduct.categoryId, vehicles.id);
   });
 
