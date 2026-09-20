@@ -49,6 +49,13 @@ RDS PostgreSQL
 - Listing images
 - Inventory-aware catalogue data
 
+Public `GET /products` returns `{ items, pagination }`. Every listing in `items`
+includes numeric `availableStock`: the currently sellable quantity calculated by
+the backend as `Math.max(0, currentStock - reservedStock)`. The existing
+`currentStock` field is preserved; `reservedStock` is not exposed in this response.
+Availability reflects inventory at read time; order creation still checks and
+reserves stock atomically.
+
 ### Customer Accounts
 
 - Registration and authentication
