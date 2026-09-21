@@ -39,6 +39,23 @@ async function createTestUser(url: string): Promise<{ token: string; userId: num
     Buffer.from(token.split(".")[1], "base64url").toString("utf8")
   );
   const userId = payload.id as number;
+  await prisma.user.update({ where: { id: userId }, data: { emailVerified: true, role: "ADMIN" } });
+  const loginRes = await fetch(`${url}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  assert.strictEqual(loginRes.status, 200, "Admin login should succeed");
+  const loginBody = await loginRes.json();
+  return { token: loginBody.token as string, userId };
+}
+
+async function createVerifiedCustomer(url: string): Promise<{ token: string; userId: number }> {
+  const email = `customer-import-test-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  const signupRes = await fetch(`${url}/auth/signup`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password: "Test1234!" }) });
+  const body = await signupRes.json();
+  const token = body.token as string;
+  const userId = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8")).id as number;
   await prisma.user.update({ where: { id: userId }, data: { emailVerified: true } });
   return { token, userId };
 }
@@ -189,6 +206,15 @@ describe("Purchase Import API", () => {
       body: form,
     });
     assert.strictEqual(res.status, 401);
+  });
+
+  it("rejects an ordinary verified customer from the admin import operation", async () => {
+    const customer = await createVerifiedCustomer(url);
+    const form = new FormData();
+    form.append("file", new Blob([fixtureBytes], { type: "application/pdf" }), "invoice.pdf");
+    const res = await fetch(`${url}/purchases/import`, { method: "POST", headers: { Authorization: `Bearer ${customer.token}` }, body: form });
+    assert.strictEqual(res.status, 403);
+    await prisma.user.delete({ where: { id: customer.userId } });
   });
 
   it("returns 400 for empty uploaded PDF", async () => {

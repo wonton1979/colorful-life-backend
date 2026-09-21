@@ -7,6 +7,13 @@ import { importPurchaseInvoice, listPurchases, getPurchaseById, createManualPurc
 
 const router = Router();
 
+const adminOnly = (req: Request, res: Response, next: NextFunction) => {
+  if ((req.user as { role: string }).role !== "ADMIN") {
+    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  }
+  next();
+};
+
 // Multer configuration – in‑memory storage, 10 MB limit
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -31,9 +38,9 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-router.post("/import", authMiddleware, requireVerifiedEmail, uploadMiddleware, importPurchaseInvoice);
+router.post("/import", authMiddleware, adminOnly, requireVerifiedEmail, uploadMiddleware, importPurchaseInvoice);
 router.get("/", authMiddleware, requireVerifiedEmail, listPurchases);
 router.get("/:id", authMiddleware, requireVerifiedEmail, getPurchaseById);
-router.post("/manual", authMiddleware, requireVerifiedEmail, createManualPurchase);
+router.post("/manual", authMiddleware, adminOnly, requireVerifiedEmail, createManualPurchase);
 
 export default router;
