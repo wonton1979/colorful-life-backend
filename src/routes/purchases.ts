@@ -1,3 +1,4 @@
+import { purchaseReviewRouter } from "./purchaseReview.js";
 import { Router } from "express";
 import multer from "multer";
 import type { Request, Response, NextFunction } from "express";
@@ -6,6 +7,7 @@ import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import { importPurchaseInvoice, listPurchases, getPurchaseById, createManualPurchase } from "../controllers/purchases.js";
 
 const router = Router();
+router.use("/:id/review", purchaseReviewRouter);
 
 const adminOnly = (req: Request, res: Response, next: NextFunction) => {
   if ((req.user as { role: string }).role !== "ADMIN") {

@@ -1,3 +1,5 @@
+import type { Prisma } from "../../generated/prisma-client/client.js";
+import { lockPurchaseForItem } from "./purchaseLock.js";
 import { prisma } from "../../prisma/runtime.js";
 import { InventoryMovementType } from "../../generated/prisma-client/enums.js";
 
@@ -83,9 +85,14 @@ export async function receivePurchaseItem(
   userId: number,
   purchaseItemId: number
 ): Promise<ReceiveResult> {
-  // All operations, including ownership lookup, must occur in a single
-  // transaction to guarantee isolation and avoid race conditions.
-  const result = await prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx) => {
+    await lockPurchaseForItem(tx, purchaseItemId);
+    return receivePurchaseItemInTransaction(tx, userId, purchaseItemId);
+  });
+}
+
+// Caller must hold the parent purchase lock; reuse within grouped receiving.
+export async function receivePurchaseItemInTransaction(tx: Prisma.TransactionClient, userId: number, purchaseItemId: number): Promise<ReceiveResult> {
     // 1️⃣ Lookup the purchase item to ensure it exists and is owned by the
     //    requesting user.
     const preliminary = await tx.purchaseItem.findUnique({
@@ -166,7 +173,4 @@ export async function receivePurchaseItem(
       listing: { id: updatedListing.id, currentStock: updatedListing.currentStock },
       movement,
     };
-  });
-
-  return result;
 }

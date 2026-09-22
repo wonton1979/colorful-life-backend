@@ -7,6 +7,7 @@ import { extractPdfText } from "../domain/purchases/pdfTextExtractor.js";
 import {
   parseAmazonPurchaseInvoice,
   AmazonPurchaseInvoiceParseError,
+  extractLegoSetNumber,
 } from "../domain/purchases/parsers/amazonPurchaseInvoiceParser.js";
 import { multiPagePurchaseInvoiceFixture } from "./fixtures/purchases/multiPagePurchaseInvoice.fixture.js";
 
@@ -33,6 +34,62 @@ function buildSyntheticPdfText(lines: string[]): {
 }
 
 describe("Amazon UK purchase invoice parser", () => {
+  it("extracts a set number from a clear LEGO title context", () => {
+    assert.strictEqual(
+      extractLegoSetNumber("LEGO Star Wars 75446 Grogu (Mandalorian Apprentice) Toy - Display Figure Model Kit"),
+      "75446",
+    );
+    assert.strictEqual(
+      extractLegoSetNumber("LEGO Technic 42171 Mercedes-AMG F1 W14 E Performance"),
+      "42171",
+    );
+  });
+
+  it("preserves an explicit structured set number over title extraction", () => {
+    assert.strictEqual(
+      extractLegoSetNumber("LEGO Star Wars 75446 Grogu", "75447"),
+      "75447",
+    );
+  });
+
+  it("does not treat ages, pieces, prices, quantities, or years as set numbers", () => {
+    assert.strictEqual(extractLegoSetNumber("LEGO Friends 10+ years old"), undefined);
+    assert.strictEqual(extractLegoSetNumber("LEGO City 1000 pieces £24.99 quantity 2 2024"), undefined);
+  });
+
+  it("rejects ambiguous contextual candidates", () => {
+    assert.strictEqual(
+      extractLegoSetNumber("LEGO Star Wars 75446 Grogu and LEGO Star Wars 75375 Falcon"),
+      undefined,
+    );
+    assert.strictEqual(extractLegoSetNumber("A product with no LEGO set identity"), undefined);
+  });
+
+  it("extracts the same identity independently for repeated source lines", () => {
+    const parsed = parseAmazonPurchaseInvoice(buildSyntheticPdfText([
+      "Order # TESTORDER",
+      "Order date 01 Aug 2026",
+      "Sold by Amazon EU S.à r.l., UK Branch",
+      "Invoice # INV123",
+      "Invoice date / Delivery date 02 Aug 2026",
+      "Description Qty Unit price",
+      "(excl. VAT)",
+      "VAT rate Unit price",
+      "(incl. VAT)",
+      "Item subtotal",
+      "(incl. VAT)",
+      "LEGO Star Wars 75446 Grogu (Mandalorian Apprentice) Toy",
+      "ASIN: B0GROGU75446",
+      "1 £10.00 0% £10.00 £10.00",
+      "LEGO Star Wars 75446 Grogu (Mandalorian Apprentice) Toy",
+      "ASIN: B0GROGU75446",
+      "2 £10.00 0% £20.00 £20.00",
+      "Invoice total £30.00",
+    ]), "TEST_HASH");
+    assert.deepStrictEqual(parsed.items.map((item) => item.sourceSetNumber), ["75446", "75446"]);
+    assert.deepStrictEqual(parsed.items.map((item) => item.quantity), [1, 2]);
+  });
+
   it("parses the real PDF fixture to match the golden fixture", async () => {
     const fixturePath = path.resolve(
       process.cwd(),

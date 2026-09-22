@@ -1,3 +1,4 @@
+import { lockPurchase } from "./purchaseLock.js";
 import { prisma } from "../../prisma/runtime.js";
 import type { CalculatedPurchaseDocument } from "./purchaseImport.js";
 import { matchProductListingId } from "../../services/purchaseItemMatcher.js";
@@ -67,6 +68,7 @@ export async function persistCalculatedPurchaseDocument(
        *    partNumber is the next ordinal within the purchase.  If there are
        *    no existing documents we start at 1.
        */
+      await lockPurchase(tx, purchase.id);
       const lastDoc = await tx.purchaseDocument.findFirst({
         where: { purchaseId: purchase.id },
         orderBy: { partNumber: "desc" },
