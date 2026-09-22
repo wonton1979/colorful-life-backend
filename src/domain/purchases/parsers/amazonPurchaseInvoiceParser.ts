@@ -58,6 +58,38 @@ const normalizeMonthName = (date: string): string => {
   return monthAbbrev ? `${day} ${monthAbbrev} ${year}` : date;
 };
 
+// Preserve the established source suffix form, including legacy short set IDs.
+const trailingSetNumberRe = /-\s*(\d+)\s*$/;
+const contextualSetNumberRe = /\bLEGO(?:\s+(?:[A-Za-z][A-Za-z0-9&'’/+.-]*)){0,8}\s+(\d{4,6})(?=\s+([A-Za-z(][A-Za-z0-9&'’/+.-]*)|$)/gi;
+
+/**
+ * Extract a set number only when the source gives us a strong LEGO-specific
+ * signal.  The hyphen-suffixed form is the established Amazon invoice shape;
+ * the contextual form supports titles such as "LEGO Star Wars 75446 Grogu".
+ * Ambiguous contextual candidates are deliberately rejected.
+ */
+export function extractLegoSetNumber(
+  description: string,
+  explicitSetNumber?: string | null,
+): string | undefined {
+  const explicit = explicitSetNumber?.trim();
+  if (explicit) return explicit;
+
+  const trailing = description.match(trailingSetNumberRe)?.[1];
+  if (trailing) return trailing;
+
+  const candidates = [...description.matchAll(contextualSetNumberRe)]
+    .filter((match) => !/^(?:pieces?|pcs?|parts?|years?|yrs?|months?|packs?|qty|quantity)$/i.test(match[2] ?? ""))
+    .map((match) => match[1])
+    .filter((candidate): candidate is string => {
+      const number = Number(candidate);
+      // Four-digit years are common in marketing copy, not set identities.
+      return !(number >= 1900 && number <= 2099);
+    });
+  const uniqueCandidates = [...new Set(candidates)];
+  return uniqueCandidates.length === 1 ? uniqueCandidates[0] : undefined;
+}
+
 /**
  * Parse an Amazon UK invoice into a `SourcePurchaseDocument`.
  * @param extractedPdf The result of `extractPdfText`.
@@ -112,8 +144,7 @@ export function parseAmazonPurchaseInvoice(
       throw new AmazonPurchaseInvoiceParseError("Item missing price information");
     }
     const description = pending.descriptionLines.join(" ").trim();
-    const setMatch = description.match(/-\s*(\d+)$/);
-    const sourceSetNumber = setMatch ? setMatch[1] : undefined;
+    const sourceSetNumber = extractLegoSetNumber(description);
     items.push({
       sourceLineNumber: items.length + 1,
       externalProductId: pending.asin,

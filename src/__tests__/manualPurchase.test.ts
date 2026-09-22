@@ -77,12 +77,13 @@ beforeEach(async () => {
     data: {
       email: `user-${randomUUID()}@example.com`,
       passwordHash: "test",
+      role: "ADMIN",
       emailVerified: true,
     },
   });
   userId = user.id;
   userIds.push(user.id);
-  userToken = jwt.sign({ id: userId, role: "CUSTOMER" }, config.JWT_SECRET, { expiresIn: "1h" });
+  userToken = jwt.sign({ id: userId, role: "ADMIN" }, config.JWT_SECRET, { expiresIn: "1h" });
 });
 
 afterEach(async () => {

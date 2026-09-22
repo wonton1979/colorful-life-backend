@@ -1,3 +1,4 @@
+import { lockPurchaseForItem } from "./purchaseLock.js";
 import { prisma } from "../../prisma/runtime.js";
 import { type PurchaseItem, type ProductListing, type InventoryMovement } from "../../generated/prisma-client/client.js";
 
@@ -66,6 +67,7 @@ export async function returnPurchaseItem(
   purchaseItemId: number,
 ): Promise<PurchaseItemReturnResult> {
   const result = await prisma.$transaction(async (tx) => {
+    await lockPurchaseForItem(tx, purchaseItemId);
     // Load the purchase item with minimal data needed for ownership checks.
     const purchaseItem = await tx.purchaseItem.findUnique({
       where: { id: purchaseItemId },
