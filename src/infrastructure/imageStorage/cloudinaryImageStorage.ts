@@ -4,6 +4,7 @@ import type { ImageStorage, ImageUploadInput, StoredImage } from "./imageStorage
 
 export const PRODUCT_IMAGE_FOLDER = "colorful-life/products";
 export const CATALOGUE_ARTWORK_FOLDER = "colorful-life/catalogue-artwork";
+export const CATEGORY_ARTWORK_FOLDER = "colorful-life/category-artwork";
 
 function configureCloudinary() {
   if (!config.CLOUDINARY_CLOUD_NAME || !config.CLOUDINARY_API_KEY || !config.CLOUDINARY_API_SECRET) {
@@ -23,6 +24,10 @@ export function isOwnedProductPublicId(publicId: string, listingId: number): boo
 
 export function isOwnedCatalogueArtworkPublicId(publicId: string, listingId: number): boolean {
   return new RegExp(`^${CATALOGUE_ARTWORK_FOLDER}/${listingId}-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
+}
+
+export function isOwnedCategoryArtworkPublicId(publicId: string, categoryId: number): boolean {
+  return new RegExp("^" + CATEGORY_ARTWORK_FOLDER + "/" + categoryId + "-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "i").test(publicId);
 }
 
 function createCloudinaryStorage(folder: string): ImageStorage {
@@ -68,3 +73,4 @@ function createCloudinaryStorage(folder: string): ImageStorage {
 
 export const cloudinaryImageStorage = createCloudinaryStorage(PRODUCT_IMAGE_FOLDER);
 export const cloudinaryCatalogueArtworkStorage = createCloudinaryStorage(CATALOGUE_ARTWORK_FOLDER);
+export const cloudinaryCategoryArtworkStorage = createCloudinaryStorage(CATEGORY_ARTWORK_FOLDER);
