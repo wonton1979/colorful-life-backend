@@ -15,9 +15,10 @@ import cors from "cors";
 import { createListingImagesRouter } from "./routes/listingImages.js";
 import { createCatalogueArtworkRouter } from "./routes/catalogueArtwork.js";
 import categoriesRouter from "./routes/categories.js";
+import { createCategoryManagementRouter } from "./routes/categoryManagement.js";
 import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
-export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage) {
+export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage, categoryArtworkStorage?: ImageStorage) {
   const app = express();
   app.use(cors({ origin: "http://localhost:5173" }));
   app.use("/payments", stripeWebhookRouter);
@@ -30,6 +31,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/products", createListingImagesRouter(imageStorage));
   app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
   app.use("/categories", categoriesRouter);
+  app.use("/admin/categories", createCategoryManagementRouter(categoryArtworkStorage));
   app.use("/purchases", purchasesRouter);
   app.use("/purchase-items", purchaseItemsRouter);
   app.use("/orders", ordersRouter);
