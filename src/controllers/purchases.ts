@@ -232,18 +232,35 @@ export const listPurchases = async (req: Request, res: Response) => {
       include: {
         purchaseDocuments: {
           where: { importedByUserId: userId },
+          include: {
+            purchaseItems: { select: { productListingId: true } },
+          },
         },
       },
       orderBy: [
         { sourceOrderDate: "desc" },
         { id: "desc" },
       ],
-      skip: (page - 1) * limit,
-      take: limit,
     });
+    // The query establishes the existing date/id order. Stable priority
+    // sorting keeps that order within each resolution group.
+    const prioritized = purchases.map((purchase, index) => {
+      const items = purchase.purchaseDocuments.flatMap((document) => document.purchaseItems);
+      const resolvedCount = items.filter((item) => item.productListingId !== null).length;
+      const priority = resolvedCount === 0 ? 0 : resolvedCount < items.length ? 1 : 2;
+      return { purchase, index, priority };
+    }).sort((a, b) => a.priority - b.priority || a.index - b.index);
+    const pagePurchases = prioritized
+      .slice((page - 1) * limit, page * limit)
+      .map(({ purchase }) => ({
+        ...purchase,
+        // Preserve the public history response shape; items are only read to
+        // derive priority from the existing listing association.
+        purchaseDocuments: purchase.purchaseDocuments.map(({ purchaseItems: _items, ...document }) => document),
+      }));
     const totalPages = Math.ceil(total / limit);
     res.json({
-      purchases,
+      purchases: pagePurchases,
       pagination: {
         page,
         limit,

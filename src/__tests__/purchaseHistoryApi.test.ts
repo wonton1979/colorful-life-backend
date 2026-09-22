@@ -4,6 +4,9 @@ import { describe, it, before, after, beforeEach, afterEach } from "node:test";
 import { prisma } from "../prisma/runtime.js";
 import app from "../app.js";
 
+const listingIds: number[] = [];
+const productIds: number[] = [];
+
 // ---------- Utility helpers ------------------------------------------------
 // Same helpers used in the import‑API tests – copied for consistency.
 // They are kept local to this file to avoid accidental reuse of shared state.
@@ -72,6 +75,8 @@ async function cleanup(userId: number): Promise<void> {
     }
   }
   await prisma.user.deleteMany({ where: { id: userId } });
+  if (listingIds.length) await prisma.productListing.deleteMany({ where: { id: { in: listingIds.splice(0) } } });
+  if (productIds.length) await prisma.legoProduct.deleteMany({ where: { id: { in: productIds.splice(0) } } });
 }
 
 /**
@@ -91,6 +96,7 @@ async function createPurchase(
         sourceDescription: string;
         quantity: number;
         finalUnitCost: number;
+        productListingId?: number | null;
       }>
     }>;
   }
@@ -118,7 +124,7 @@ async function createPurchase(
               // other required fields with placeholder values
               sourceSetNumber: null,
               externalProductId: null,
-              productListingId: null,
+              productListingId: i.productListingId ?? null,
               originalGrossUnitCost: 0,
               originalGrossLineTotal: 0,
               allocatedShipping: 0,
@@ -301,6 +307,50 @@ describe("Purchase History API", () => {
     // Verify secondary ordering by id descending
     assert.strictEqual(body.purchases[1].id, Math.max(olderId1, olderId2));
     assert.strictEqual(body.purchases[2].id, Math.min(olderId1, olderId2));
+  });
+
+  it("prioritizes unresolved, partial, then resolved purchases before date pagination", async () => {
+    const product = await prisma.legoProduct.create({
+      data: { setNumber: `history-${Date.now()}`, title: "History fixture", theme: "Test", ageRecommendation: "8+", pieceCount: 1 },
+    });
+    productIds.push(product.id);
+    const listing = await prisma.productListing.create({
+      data: { legoProductId: product.id, condition: "NEW", originalPrice: 1, currentStock: 0 },
+    });
+    listingIds.push(listing.id);
+
+    const make = (label: string, date: string, state: "unresolved" | "partial" | "resolved") => createPurchase(userId, {
+      reference: label,
+      orderDate: new Date(date),
+      docs: [{ partNumber: 1, importHash: `history-${label}-${Math.random()}`, items: state === "partial"
+        ? [
+          { sourceLineNumber: 1, sourceDescription: "Resolved line", quantity: 1, finalUnitCost: 10, productListingId: listing.id },
+          { sourceLineNumber: 2, sourceDescription: "Unresolved line", quantity: 1, finalUnitCost: 10 },
+        ]
+        : [{ sourceLineNumber: 1, sourceDescription: `${state} line`, quantity: 1, finalUnitCost: 10,
+          ...(state === "resolved" ? { productListingId: listing.id } : {}) }],
+      }],
+    });
+
+    const unresolvedOld = await make("unresolved-old", "2020-01-01", "unresolved");
+    const partialOld = await make("partial-old", "2021-01-01", "partial");
+    const resolvedOld = await make("resolved-old", "2022-01-01", "resolved");
+    const unresolvedNew = await make("unresolved-new", "2024-01-01", "unresolved");
+    const partialNew = await make("partial-new", "2025-01-01", "partial");
+    const resolvedNew = await make("resolved-new", "2026-01-01", "resolved");
+
+    const ids: number[] = [];
+    for (let page = 1; page <= 3; page++) {
+      const response = await fetch(`${url}/purchases?page=${page}&limit=2`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      assert.equal(response.status, 200);
+      const body = await response.json();
+      assert.equal(body.pagination.total, 6);
+      ids.push(...body.purchases.map((purchase: { id: number }) => purchase.id));
+      assert.equal("purchaseItems" in body.purchases[0].purchaseDocuments[0], false);
+    }
+    assert.deepEqual(ids, [unresolvedNew, unresolvedOld, partialNew, partialOld, resolvedNew, resolvedOld]);
   });
 
   // 7. GET /purchases/:id returns owned purchase
