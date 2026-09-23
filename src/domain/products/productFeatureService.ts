@@ -1,5 +1,6 @@
 import type { PrismaClient } from "../../generated/prisma-client/client.js";
 import { prisma as defaultPrisma } from "../../prisma/runtime.js";
+import { lockCategoryFeatureSelection } from "./productListingCreationService.js";
 
 export class FeatureListingNotFoundError extends Error {}
 
@@ -16,7 +17,7 @@ export function createProductFeatureService(db: PrismaClient = defaultPrisma) {
         // Lock the complete category set so concurrent selections serialize.
         // The advisory lock is category-scoped because Category now belongs to
         // LegoProduct and cannot be represented by a ProductListing index.
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${candidate.legoProduct.categoryId})`;
+        await lockCategoryFeatureSelection(tx, candidate.legoProduct.categoryId);
         await tx.$queryRaw`
           SELECT pl.id FROM "ProductListing" pl
           JOIN "LegoProduct" lp ON lp.id = pl."legoProductId"

@@ -10,6 +10,7 @@ import { prisma } from "../prisma/runtime.js";
 const userIds: number[] = [];
 const productIds: number[] = [];
 const listingIds: number[] = [];
+const categoryIds: number[] = [];
 let server: Server;
 let url: string;
 
@@ -27,11 +28,12 @@ afterEach(async () => {
     await prisma.productListing.deleteMany({ where: { id: { in: listingIds } } });
   }
   if (productIds.length) await prisma.legoProduct.deleteMany({ where: { id: { in: productIds } } });
+  if (categoryIds.length) await prisma.category.deleteMany({ where: { id: { in: categoryIds } } });
   if (userIds.length) {
     await prisma.address.deleteMany({ where: { userId: { in: userIds } } });
     await prisma.user.deleteMany({ where: { id: { in: userIds } } });
   }
-  userIds.length = productIds.length = listingIds.length = 0;
+  userIds.length = productIds.length = listingIds.length = categoryIds.length = 0;
 });
 
 after(async () => {
@@ -50,6 +52,12 @@ async function makeUser(role: "ADMIN" | "CUSTOMER") {
   });
   userIds.push(user.id);
   return { id: user.id, token: jwt.sign({ id: user.id, role }, config.JWT_SECRET, { expiresIn: "1h" }) };
+}
+
+async function makeCategory() {
+  const category = await prisma.category.create({ data: { name: `Auto Feature ${randomUUID()}` } });
+  categoryIds.push(category.id);
+  return category;
 }
 
 async function makeListing() {
@@ -139,5 +147,60 @@ describe("product administration authorization", () => {
 
     const invalid = { ...productBody(vehicles.id), setNumber: `ADMIN-INVALID-${randomUUID()}`, categoryId: 999999999 };
     assert.strictEqual((await request("/products", admin.token, { method: "POST", body: JSON.stringify(invalid) })).status, 400);
+  });
+
+  it("automatically features the first listing per category, preserves it, and serializes concurrent creation", async () => {
+    const admin = await makeUser("ADMIN");
+    const category = await makeCategory();
+    const secondCategory = await makeCategory();
+    const create = async (categoryId: number, title: string) => {
+      const response = await request("/products", admin.token, {
+        method: "POST",
+        body: JSON.stringify({ ...productBody(categoryId), setNumber: `AUTO-FEATURE-${randomUUID()}`, title }),
+      });
+      assert.equal(response.status, 201);
+      const listing = await response.json();
+      listingIds.push(listing.id);
+      productIds.push(listing.legoProductId);
+      return listing;
+    };
+
+    const first = await create(category.id, "First category listing");
+    const second = await create(category.id, "Second category listing");
+    assert.equal(first.isFeatureProduct, true);
+    assert.equal(second.isFeatureProduct, false);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: first.id } })).isFeatureProduct, true);
+
+    const otherCategoryListing = await create(secondCategory.id, "Other category listing");
+    assert.equal(otherCategoryListing.isFeatureProduct, true);
+
+    assert.equal((await request(`/products/${second.id}/feature`, admin.token, { method: "PATCH" })).status, 200);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: first.id } })).isFeatureProduct, false);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: second.id } })).isFeatureProduct, true);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: otherCategoryListing.id } })).isFeatureProduct, true);
+
+    const concurrentCategory = await makeCategory();
+    const concurrentListings = await Promise.all([
+      create(concurrentCategory.id, "Concurrent listing A"),
+      create(concurrentCategory.id, "Concurrent listing B"),
+    ]);
+    assert.equal(concurrentListings.filter((listing) => listing.isFeatureProduct).length, 1);
+    assert.equal(await prisma.productListing.count({
+      where: { id: { in: concurrentListings.map((listing) => listing.id) }, isFeatureProduct: true },
+    }), 1);
+
+    const rollbackCategory = await makeCategory();
+    const duplicateSetNumber = `AUTO-FEATURE-DUPLICATE-${randomUUID()}`;
+    const conflictingProduct = await prisma.legoProduct.create({ data: {
+      setNumber: duplicateSetNumber, title: "Existing product", theme: "TEST", ageRecommendation: "8+", pieceCount: 1,
+    } });
+    productIds.push(conflictingProduct.id);
+    const failedCreate = await request("/products", admin.token, {
+      method: "POST",
+      body: JSON.stringify({ ...productBody(rollbackCategory.id), setNumber: duplicateSetNumber, title: "Conflicting listing" }),
+    });
+    assert.equal(failedCreate.status, 409);
+    assert.equal(await prisma.legoProduct.count({ where: { categoryId: rollbackCategory.id } }), 0);
+    assert.equal(await prisma.productListing.count({ where: { legoProduct: { categoryId: rollbackCategory.id }, isFeatureProduct: true } }), 0);
   });
 });
