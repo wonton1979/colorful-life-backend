@@ -6,6 +6,7 @@ import { ImageValidationError } from "../domain/listingImages/listingImageErrors
 import type { ImageStorage } from "../infrastructure/imageStorage/imageStorage.js";
 
 const text = (max: number) => z.preprocess((value) => typeof value === "string" ? value.trim() || null : value, z.string().max(max).nullable());
+const createSchema = z.object({ name: z.string().trim().min(1).max(200), subtitle: text(300).optional(), description: text(2000).optional() });
 const updateSchema = z.object({ name: z.string().trim().min(1).max(200), subtitle: text(300), description: text(2000) });
 function categoryId(value: string | undefined) { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : null; }
 
@@ -20,6 +21,11 @@ export function createCategoryManagementController(storage: ImageStorage) {
   };
   return {
     list: async (_req: Request, res: Response) => { try { return res.json(await service.list()); } catch (error) { return mapError(res, error); } },
+    create: async (req: Request, res: Response) => {
+      const parsed = createSchema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: parsed.error.format() });
+      try { return res.status(201).json(await service.create(parsed.data)); } catch (error) { return mapError(res, error); }
+    },
     update: async (req: Request, res: Response) => {
       const id = categoryId(req.params.id);
       if (!id) return res.status(404).json({ error: "Category not found" });
