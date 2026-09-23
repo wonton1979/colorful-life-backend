@@ -11,9 +11,10 @@ import { receivePurchaseItem } from "../domain/purchases/purchaseItemReceiving.j
 let userId: number, purchaseId: number, listingId: number, productId: number;
 let ids: number[];
 let extraProducts: number[] = [];
+let extraCategoryIds: number[] = [];
 let categoryId: number | undefined;
 beforeEach(async () => {
-  extraProducts = []; categoryId = undefined;
+  extraProducts = []; extraCategoryIds = []; categoryId = undefined;
   userId = (await prisma.user.create({ data: { email: randomUUID() + "@test.invalid", passwordHash: "test", emailVerified: true, role: "ADMIN" } })).id;
   const listing = await prisma.productListing.create({ data: {
     condition: "NEW", currentStock: 0, originalPrice: "79.99",
@@ -41,6 +42,7 @@ afterEach(async () => {
   await prisma.productListing.deleteMany({ where: { legoProductId: { in: [productId, ...extraProducts] } } });
   await prisma.legoProduct.deleteMany({ where: { id: { in: [productId, ...extraProducts] } } });
   if (categoryId) await prisma.category.delete({ where: { id: categoryId } });
+  if (extraCategoryIds.length) await prisma.category.deleteMany({ where: { id: { in: extraCategoryIds } } });
   await prisma.user.delete({ where: { id: userId } });
 });
 const review = () => getPurchaseReview(userId, purchaseId);
@@ -208,5 +210,28 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
     assert.equal((await fetch(base + "/purchases/" + purchaseId + "/review/listings", {
       method: "POST", headers, body: JSON.stringify(newProductRequest),
     })).status, 409);
+
+    const existingProductCategory = await prisma.category.create({ data: { name: "Review existing product " + randomUUID() } });
+    extraCategoryIds.push(existingProductCategory.id);
+    const existingProduct = await prisma.legoProduct.create({ data: {
+      setNumber: randomUUID(), title: "Review existing listing", theme: "Test", ageRecommendation: "8+", pieceCount: 12,
+      categoryId: existingProductCategory.id,
+    } });
+    extraProducts.push(existingProduct.id);
+    const createdExisting = await fetch(base + "/purchases/" + purchaseId + "/review/listings", {
+      method: "POST", headers,
+      body: JSON.stringify({ existingProductId: existingProduct.id, condition: "NEW", originalPrice: 20, currentStock: 0 }),
+    });
+    assert.equal(createdExisting.status, 201);
+    const existingListing = await createdExisting.json();
+    assert.equal(existingListing.isFeatureProduct, true);
+    const createdAgain = await fetch(base + "/purchases/" + purchaseId + "/review/listings", {
+      method: "POST", headers,
+      body: JSON.stringify({ existingProductId: existingProduct.id, condition: "USED_LIKE_NEW", originalPrice: 15, currentStock: 0 }),
+    });
+    assert.equal(createdAgain.status, 201);
+    const laterListing = await createdAgain.json();
+    assert.equal(laterListing.isFeatureProduct, false);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: existingListing.id } })).isFeatureProduct, true);
   } finally { await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve())); }
 });

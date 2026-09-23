@@ -2,9 +2,11 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma/runtime.js";
 import { createProduct } from "../controllers/products.js";
+import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
 
 // Mounted under the authenticated ADMIN review router.
 export const purchaseListingsRouter = Router({ mergeParams: true });
+const listingCreation = createProductListingCreationService();
 purchaseListingsRouter.use(async (req, res, next) => {
   const id = Number((req.params as Record<string, string>).id);
   if (!Number.isInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid purchase" }); return; }
@@ -45,13 +47,13 @@ purchaseListingsRouter.post("/listings", async (req, res) => {
     return;
   }
   try {
-    const product = await prisma.legoProduct.findUnique({ where: { id: body.existingProductId } });
+    const product = await prisma.legoProduct.findUnique({ where: { id: body.existingProductId }, select: { id: true, categoryId: true } });
     if (!product) { res.status(404).json({ error: "Product not found" }); return; }
     const { existingProductId, ...data } = body;
-    const listing = await prisma.productListing.create({
-      data: { ...data, currentStock: 0, legoProductId: existingProductId },
+    const listing = await listingCreation.createForCategory(product.categoryId, (tx, isFeatureProduct) => tx.productListing.create({
+      data: { ...data, currentStock: 0, isFeatureProduct, legoProductId: existingProductId },
       include: { legoProduct: { include: { category: true } }, listingImages: true },
-    });
+    }));
     const { category, ...legoProduct } = listing.legoProduct;
     res.status(201).json({ ...listing, legoProduct, category, availableStock: 0 });
   } catch { res.status(500).json({ error: "Listing could not be created" }); }

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
 import { listCatalogueProducts } from "../domain/products/productCatalogueService.js";
 import { createProductFeatureService, FeatureListingNotFoundError } from "../domain/products/productFeatureService.js";
+import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
 
 const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true } as const;
 
@@ -85,26 +86,29 @@ export const createProduct = async (req: Request, res: Response) => {
     const category = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
     if (!category) return res.status(400).json({ error: "Category not found" });
 
-    // Atomic nested create of product listing and associated LegoProduct.
-    const listing = await prisma.productListing.create({
-      data: {
-        condition,
-        originalPrice,
-        salePrice,
-        currentStock: currentStock ?? 0,
-        legoProduct: {
-          create: {
-            category: { connect: { id: category.id } },
-            setNumber,
-            title,
-            description,
-            theme,
-            ageRecommendation,
-            pieceCount,
+    // Serialize first-feature selection and create the product/listing atomically.
+    const listing = await createProductListingCreationService().createForCategory(category.id, (tx, isFeatureProduct) =>
+      tx.productListing.create({
+        data: {
+          condition,
+          originalPrice,
+          salePrice,
+          currentStock: currentStock ?? 0,
+          isFeatureProduct,
+          legoProduct: {
+            create: {
+              category: { connect: { id: category.id } },
+              setNumber,
+              title,
+              description,
+              theme,
+              ageRecommendation,
+              pieceCount,
+            },
           },
         },
-      },
-    });
+      }),
+    );
 
     const result = await prisma.productListing.findUnique({
       where: { id: listing.id },
