@@ -15,6 +15,7 @@ export function createCategoryManagementRouter(storage: ImageStorage = cloudinar
   const router = Router();
   router.use(authMiddleware, adminOnly);
   router.get("/", controller.list);
+  router.post("/", controller.create);
   router.patch("/:id", controller.update);
   router.put("/:id/artwork", uploadMiddleware, controller.setArtwork);
   router.delete("/:id/artwork", controller.removeArtwork);

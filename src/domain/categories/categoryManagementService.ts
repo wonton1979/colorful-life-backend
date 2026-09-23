@@ -14,6 +14,9 @@ async function lockCategory(tx: Db, categoryId: number) {
 export function createCategoryManagementService(storage: ImageStorage, db: Db = defaultPrisma) {
   return {
     async list() { return db.category.findMany({ orderBy: { id: "asc" }, select: categorySelect }); },
+    async create(data: { name: string; subtitle?: string | null; description?: string | null }) {
+      return db.category.create({ data, select: categorySelect });
+    },
     async update(categoryId: number, data: { name: string; subtitle: string | null; description: string | null }) {
       if (!await db.category.findUnique({ where: { id: categoryId }, select: { id: true } })) throw new CategoryNotFoundError("Category not found");
       await db.category.update({ where: { id: categoryId }, data });

@@ -60,6 +60,41 @@ function artworkForm(seed = 1) {
 }
 
 describe("category management administration", () => {
+  it("allows Admins to create categories without artwork and normalizes metadata", async () => {
+    const token = await admin();
+    const response = await request("/admin/categories", token, { method: "POST", body: JSON.stringify({ name: "  New Category  ", subtitle: "   " }) });
+    assert.equal(response.status, 201);
+    const created = await response.json();
+    categories.push(created.id);
+    assert.deepEqual(created, { id: created.id, name: "New Category", subtitle: null, description: null, imageUrl: null, imagePublicId: null });
+    assert.equal((await prisma.category.findUniqueOrThrow({ where: { id: created.id } })).name, "New Category");
+
+    const withMetadata = await request("/admin/categories", token, { method: "POST", body: JSON.stringify({ name: "  Another Category  ", subtitle: " subtitle ", description: " description " }) });
+    assert.equal(withMetadata.status, 201);
+    const second = await withMetadata.json();
+    categories.push(second.id);
+    assert.deepEqual(second, { id: second.id, name: "Another Category", subtitle: "subtitle", description: "description", imageUrl: null, imagePublicId: null });
+  });
+  it("requires Admin authorization to create categories", async () => {
+    const body = JSON.stringify({ name: "Authorized Category" });
+    assert.equal((await request("/admin/categories", undefined, { method: "POST", body })).status, 401);
+    assert.equal((await request("/admin/categories", await admin("CUSTOMER"), { method: "POST", body })).status, 403);
+  });
+  it("rejects invalid creation metadata and duplicate names", async () => {
+    const token = await admin();
+    const existing = await prisma.category.findFirstOrThrow();
+    for (const body of [
+      {},
+      { name: "   " },
+      { name: 42 },
+      { name: "x".repeat(201) },
+      { name: "Valid", subtitle: "s".repeat(301) },
+      { name: "Valid", description: "d".repeat(2001) },
+    ]) {
+      assert.equal((await request("/admin/categories", token, { method: "POST", body: JSON.stringify(body) })).status, 400);
+    }
+    assert.equal((await request("/admin/categories", token, { method: "POST", body: JSON.stringify({ name: existing.name }) })).status, 409);
+  });
   it("protects Admin reads and updates text metadata with authoritative data", async () => {
     const value = await category(); const token = await admin();
     assert.equal((await request("/admin/categories")).status, 401);
