@@ -61,7 +61,7 @@ async function listing() {
   const product = await prisma.legoProduct.create({ data: { setNumber: `IMG-${randomUUID()}`, title: "Image Product", theme: "TEST", ageRecommendation: "8+", pieceCount: 100 } });
   ids.products.push(product.id);
   const created = await prisma.productListing.create({ data: {
-        legoProductId: product.id, condition: "NEW", originalPrice: 10 } });
+        legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: 1 } });
   ids.listings.push(created.id);
   return created.id;
 }
@@ -96,8 +96,10 @@ describe("listing image administration", () => {
     assert.ok(images.every((image) => image.publicId.startsWith(`colorful-life/products/${listingId}-`)));
     assert.ok(images.every((image) => image.url.startsWith("https://cdn.example/")));
     const catalogue = await request("/products");
-    const item = (await catalogue.json()).items.find((entry: any) => entry.id === listingId);
-    assert.deepEqual(item.listingImages.map((image: any) => image.id), images.map((image) => image.id));
+    const product = await prisma.productListing.findUniqueOrThrow({ where: { id: listingId }, select: { legoProductId: true } });
+    const productCard = (await catalogue.json()).items.find((entry: any) => entry.id === product.legoProductId);
+    const offer = productCard.offers.find((entry: any) => entry.id === listingId);
+    assert.deepEqual(offer.listingImages.map((image: any) => image.id), images.map((image) => image.id));
   });
 
   it("requires ADMIN authorization", async () => {

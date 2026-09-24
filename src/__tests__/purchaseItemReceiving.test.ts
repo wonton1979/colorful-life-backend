@@ -8,6 +8,7 @@ import {
   InvalidQuantityError,
   ProductListingMissingError,
   PurchaseItemNotFoundError,
+  UsedOfferPurchaseReceiptError,
   receivePurchaseItem,
 } from "../domain/purchases/purchaseItemReceiving.js";
 
@@ -242,6 +243,43 @@ describe("receivePurchaseItem integration tests", () => {
       movement.note,
       new RegExp(`PurchaseItem ${purchaseItemId} received`),
     );
+  });
+
+  it("does not pool receipt quantities into a physical Used offer", async () => {
+    const product = await prisma.legoProduct.create({
+      data: { setNumber: randomUUID(), title: "Used Receipt Guard", theme: "Test", ageRecommendation: "8+", pieceCount: 100 },
+    });
+    productIds.push(product.id);
+    const listing = await prisma.productListing.create({
+      data: {
+        legoProductId: product.id,
+        condition: "USED_LIKE_NEW",
+        usedLifecycle: "AVAILABLE",
+        damageDescription: "Creased outer box",
+        originalPrice: 20,
+        currentStock: 1,
+        usedConditionPhotos: { create: { url: "https://images.test/used.png", publicId: `used-${randomUUID()}`, sortOrder: 0 } },
+      },
+    });
+    listingIds.push(listing.id);
+    const purchase = await prisma.purchase.create({ data: { sourceOrderReference: `SO-${randomUUID()}` } });
+    purchaseIds.push(purchase.id);
+    const purchaseDoc = await prisma.purchaseDocument.create({
+      data: { purchaseId: purchase.id, partNumber: 1, importHash: randomUUID(), importedByUserId: userId,
+        originalGrossMerchandiseTotal: 0, shippingTotal: 0, discountTotal: 0, finalTotalPaid: 0 },
+    });
+    purchaseDocIds.push(purchaseDoc.id);
+    const item = await prisma.purchaseItem.create({
+      data: { purchaseDocumentId: purchaseDoc.id, productListingId: listing.id, sourceDescription: "Used set", quantity: 1,
+        originalGrossUnitCost: 1, originalGrossLineTotal: 1, finalLineCost: 1, finalUnitCost: 1 },
+    });
+    purchaseItemIds.push(item.id);
+
+    await assert.rejects(() => receivePurchaseItem(userId, item.id), UsedOfferPurchaseReceiptError);
+    const unchanged = await prisma.productListing.findUniqueOrThrow({ where: { id: listing.id } });
+    assert.equal(unchanged.currentStock, 1);
+    assert.equal(unchanged.usedLifecycle, "AVAILABLE");
+    assert.equal(await prisma.inventoryMovement.count({ where: { listingId: listing.id } }), 0);
   });
 
   it("throws PurchaseItemNotFoundError for a missing purchase item", async () => {

@@ -125,10 +125,12 @@ describe("catalogue presentation administration", () => {
 
     const vehicles = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
     const catalogue = await (await request(`/products?categoryId=${vehicles.id}&theme=Technic`)).json();
-    const item = catalogue.items.find((entry: any) => entry.id === created.id);
-    assert.equal(item.catalogueArtworkUrl, secondArtwork.url);
-    assert.equal(item.catalogueArtworkPublicId, secondArtwork.publicId);
-    assert.deepEqual(item.listingImages.map((entry: any) => entry.id), [image.id]);
+    const product = await prisma.productListing.findUniqueOrThrow({ where: { id: created.id }, select: { legoProductId: true } });
+    const productCard = catalogue.items.find((entry: any) => entry.id === product.legoProductId);
+    const offer = productCard.offers.find((entry: any) => entry.id === created.id);
+    assert.equal(offer.catalogueArtworkUrl, secondArtwork.url);
+    assert.equal(offer.catalogueArtworkPublicId, secondArtwork.publicId);
+    assert.deepEqual(offer.listingImages.map((entry: any) => entry.id), [image.id]);
 
     assert.equal((await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "DELETE" })).status, 204);
     const removed = await prisma.productListing.findUnique({ where: { id: created.id } });

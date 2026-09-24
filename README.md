@@ -49,12 +49,17 @@ RDS PostgreSQL
 - Listing images
 - Inventory-aware catalogue data
 
-Public `GET /products` returns `{ items, pagination }`. Every listing in `items`
-includes numeric `availableStock`: the currently sellable quantity calculated by
-the backend as `Math.max(0, currentStock - reservedStock)`. The existing
-`currentStock` field is preserved; `reservedStock` is not exposed in this response.
-Availability reflects inventory at read time; order creation still checks and
-reserves stock atomically.
+Public `GET /products` returns `{ items, pagination }` with one product card per
+LegoProduct. A card's top-level `id` is the LegoProduct/product-card identity.
+Its `offers` array contains the separately purchasable ProductListings, and each
+`offers[].id` is the ProductListing identity. Offer `availableStock` is calculated
+as `Math.max(0, currentStock - reservedStock)`; reserved stock is not exposed.
+The product-level `GET /products/by-product/:productId` route returns the same
+product identity with its currently available offers. The existing `GET
+/products/:id` route remains a listing-level lookup by ProductListing ID.
+Cart and order requests also use ProductListing IDs (`offers[].id`), never the
+top-level product-card ID. Availability reflects inventory at read time; order
+creation still checks and reserves stock atomically.
 
 ### Customer Accounts
 

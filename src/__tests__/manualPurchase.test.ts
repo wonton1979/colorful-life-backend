@@ -492,9 +492,9 @@ describe("Manual Purchase API", () => {
       data: {
 
         legoProductId: product.id,
-        condition: ListingCondition.USED_LIKE_NEW,
-        originalPrice: 8.0,
+        condition: ListingCondition.NEW,
         currentStock: 0,
+        originalPrice: 8.0,
       },
     });
     listingIds.push(listing1.id, listing2.id);

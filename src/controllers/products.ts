@@ -4,7 +4,7 @@ import { ListingCondition, InventoryMovementType } from "../generated/prisma-cli
 import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
-import { listCatalogueProducts } from "../domain/products/productCatalogueService.js";
+import { getCatalogueProductById, listCatalogueProducts } from "../domain/products/productCatalogueService.js";
 import { createProductFeatureService, FeatureListingNotFoundError } from "../domain/products/productFeatureService.js";
 import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
 
@@ -29,6 +29,20 @@ export const getProducts = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Get products error", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+/** Product-level catalogue detail with all currently stocked offers. */
+export const getCatalogueProduct = async (req: Request, res: Response) => {
+  const id = Number(req.params.productId);
+  if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: "Product not found" });
+  try {
+    const product = await getCatalogueProductById(id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    return res.json(product);
+  } catch (error) {
+    console.error("Get catalogue product error", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 /**
@@ -67,6 +81,9 @@ export const createProduct = async (req: Request, res: Response) => {
   const parseResult = schema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({ error: parseResult.error.format() });
+  }
+  if (parseResult.data.condition === ListingCondition.USED_LIKE_NEW) {
+    return res.status(400).json({ error: "Used offers must be created through the per-item Used offer operation" });
   }
   const {
     setNumber,
@@ -118,7 +135,7 @@ export const createProduct = async (req: Request, res: Response) => {
         catalogueArtworkUrl: true,
         catalogueArtworkPublicId: true,
         isFeatureProduct: true,
-        condition: true,
+      condition: true,
         originalPrice: true,
         salePrice: true,
         currentStock: true,
@@ -217,6 +234,9 @@ export const updateProduct = async (req: Request, res: Response) => {
     const existing = await prisma.productListing.findUnique({ where: { id } });
     if (!existing) {
       return res.status(404).json({ error: "Listing not found" });
+    }
+    if (body.condition !== undefined && body.condition !== existing.condition) {
+      return res.status(400).json({ error: "Listing condition cannot be changed through generic product editing" });
     }
     // Perform atomic nested update
     await prisma.productListing.update({ where: { id }, data: listingData });
@@ -351,6 +371,9 @@ export const reactivateProduct = async (req: Request, res: Response) => {
     if (!existing) {
       return res.status(404).json({ error: "Listing not found" });
     }
+    if (existing.condition === ListingCondition.USED_LIKE_NEW && existing.usedLifecycle !== "AVAILABLE") {
+      return res.status(409).json({ error: "A terminal Used offer cannot be reactivated" });
+    }
     await prisma.productListing.update({ where: { id }, data: { active: true } });
     const updated = await prisma.productListing.findUnique({
       where: { id },
@@ -428,9 +451,13 @@ export const adjustInventory = async (req: Request, res: Response) => {
       if (!listing) {
         throw new Error("listing_not_found");
       }
+      if (listing.condition === ListingCondition.USED_LIKE_NEW && (listing.usedLifecycle !== "AVAILABLE" || quantity > 0)) {
+        throw new Error("used_listing_is_not_adjustable");
+      }
       const updatedRows = await tx.$executeRaw`
         UPDATE "ProductListing"
-        SET "currentStock" = "currentStock" + ${quantity}
+        SET "currentStock" = "currentStock" + ${quantity},
+            "usedLifecycle" = CASE WHEN "condition" = 'USED_LIKE_NEW' AND "currentStock" + ${quantity} = 0 THEN 'RETIRED'::"UsedOfferLifecycle" ELSE "usedLifecycle" END
         WHERE "id" = ${listingId}
           AND "currentStock" + ${quantity} >= 0
           AND "currentStock" + ${quantity} >= "reservedStock"
@@ -477,6 +504,7 @@ export const adjustInventory = async (req: Request, res: Response) => {
     if (err.message === "listing_not_found") {
       return res.status(404).json({ error: "Listing not found" });
     }
+    if (err.message === "used_listing_is_not_adjustable") return res.status(409).json({ error: "Used offers cannot be restocked or adjusted into a pooled quantity" });
     console.error("Inventory adjustment error", err);
     res.status(500).json({ error: "Internal server error" });
   }

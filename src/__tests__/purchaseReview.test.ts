@@ -112,7 +112,7 @@ it("rejects protected fields, invalid amendments and stale revisions", async () 
 it("resolves, reassigns and clears an entire group; invalid targets leave all unchanged", async () => {
   let r = await matched();
   assert(r.groups[0].lines.every(l => l.productListingId === listingId));
-  const other = await prisma.productListing.create({ data: { legoProductId: productId, condition: "USED_LIKE_NEW", originalPrice: "50" } });
+  const other = await prisma.productListing.create({ data: { legoProductId: productId, condition: "NEW", originalPrice: "50", currentStock: 0 } });
   r = await resolveReviewGroup(userId, purchaseId, ids[0], { revision: r.revision, productListingId: other.id });
   assert(r.groups[0].lines.every(l => l.productListingId === other.id));
   await assert.rejects(() => resolveReviewGroup(userId, purchaseId, ids[0], { revision: r.revision, productListingId: 2147483647 }), { status: 400 });
@@ -187,11 +187,7 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
     const created = await fetch(base + "/purchases/" + purchaseId + "/review/listings", {
       method: "POST", headers, body: JSON.stringify({ existingProductId: productId, condition: "USED_LIKE_NEW", originalPrice: 30, currentStock: 0 }),
     });
-    assert.equal(created.status, 201);
-    const newListing = await created.json();
-    assert.equal(newListing.currentStock, 0);
-    assert.equal(newListing.legoProductId, productId);
-    assert.equal(await prisma.inventoryMovement.count({ where: { listingId: newListing.id } }), 0);
+    assert.equal(created.status, 400);
     const product = await prisma.legoProduct.findUniqueOrThrow({ where: { id: productId } });
     const search = await fetch(base + "/purchases/" + purchaseId + "/review/products?q=" + encodeURIComponent(product.setNumber), { headers });
     assert.equal(search.status, 200);
@@ -229,9 +225,7 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
       method: "POST", headers,
       body: JSON.stringify({ existingProductId: existingProduct.id, condition: "USED_LIKE_NEW", originalPrice: 15, currentStock: 0 }),
     });
-    assert.equal(createdAgain.status, 201);
-    const laterListing = await createdAgain.json();
-    assert.equal(laterListing.isFeatureProduct, false);
+    assert.equal(createdAgain.status, 400);
     assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: existingListing.id } })).isFeatureProduct, true);
   } finally { await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve())); }
 });

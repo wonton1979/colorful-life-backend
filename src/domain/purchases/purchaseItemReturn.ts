@@ -124,7 +124,8 @@ export async function returnPurchaseItem(
     // Attempt atomic stock decrement. Insufficient stock is signalled by count === 0.
     const stockUpdate = await tx.$executeRaw`
       UPDATE "ProductListing"
-      SET "currentStock" = "currentStock" - ${quantity}
+      SET "currentStock" = "currentStock" - ${quantity},
+          "usedLifecycle" = CASE WHEN "condition" = 'USED_LIKE_NEW' AND "currentStock" - ${quantity} = 0 THEN 'RETIRED'::"UsedOfferLifecycle" ELSE "usedLifecycle" END
       WHERE id = ${listingId}
         AND "currentStock" >= ${quantity}
         AND "currentStock" - ${quantity} >= "reservedStock"

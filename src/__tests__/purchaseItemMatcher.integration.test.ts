@@ -171,7 +171,7 @@ describe("purchaseItemMatcher persistence integration", () => {
     });
     const listingB = await prisma.productListing.create({
       data: {
-        legoProductId: productB.id, condition: "USED_LIKE_NEW", originalPrice: 8.0, currentStock: 3 },
+        legoProductId: productB.id, condition: "NEW", originalPrice: 8.0, currentStock: 0 },
     });
     listingIds.push(listingA.id, listingB.id);
 

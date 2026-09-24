@@ -60,7 +60,7 @@ export class InventoryListingsMustShareProductError extends Error {
 
 export class InvalidConditionAdjustmentError extends Error {
   constructor() {
-    super("Only NEW stock may be adjusted to USED_LIKE_NEW");
+    super("Used stock must be created as a new individually documented physical offer");
     this.name = "InvalidConditionAdjustmentError";
   }
 }
@@ -133,6 +133,13 @@ export async function reconcileStocktake(input: StocktakeReconciliationInput) {
     `;
     const listing = rows[0];
     if (!listing) throw new StocktakeListingNotFoundError(input.productListingId);
+    const metadata = await tx.productListing.findUnique({ where: { id: listing.id }, select: { condition: true, usedLifecycle: true } });
+    if (!metadata) throw new StocktakeListingNotFoundError(input.productListingId);
+    if (metadata.condition === ListingCondition.USED_LIKE_NEW && (
+      input.actualStock > 1 || (metadata.usedLifecycle !== "AVAILABLE" && input.actualStock !== 0)
+    )) {
+      throw new InvalidStocktakeQuantityError();
+    }
     if (input.actualStock < listing.reservedStock) {
       throw new StocktakeBelowReservedStockError();
     }
@@ -144,7 +151,8 @@ export async function reconcileStocktake(input: StocktakeReconciliationInput) {
 
     const updatedRows = await tx.$executeRaw`
       UPDATE "ProductListing"
-      SET "currentStock" = ${input.actualStock}
+      SET "currentStock" = ${input.actualStock},
+          "usedLifecycle" = CASE WHEN "condition" = 'USED_LIKE_NEW' AND ${input.actualStock} = 0 THEN 'RETIRED'::"UsedOfferLifecycle" ELSE "usedLifecycle" END
       WHERE id = ${listing.id}
         AND "currentStock" = ${listing.currentStock}
         AND "reservedStock" <= ${input.actualStock}
@@ -171,84 +179,10 @@ export async function reconcileStocktake(input: StocktakeReconciliationInput) {
 export async function conditionAdjustInventory(input: ConditionAdjustmentInput) {
   validateQuantity(input.quantity);
   validateReason(input.reason);
-
-  return prisma.$transaction(async (tx) => {
-    if (input.sourceProductListingId === input.targetProductListingId) {
-      throw new InventoryListingsMustDifferError();
-    }
-
-    const [source, target] = await Promise.all([
-      tx.productListing.findUnique({
-        where: { id: input.sourceProductListingId },
-        select: { id: true, legoProductId: true, condition: true, currentStock: true },
-      }),
-      tx.productListing.findUnique({
-        where: { id: input.targetProductListingId },
-        select: { id: true, legoProductId: true, condition: true, currentStock: true },
-      }),
-    ]);
-
-    if (!source) throw new InventoryListingNotFoundError(input.sourceProductListingId);
-    if (!target) throw new InventoryListingNotFoundError(input.targetProductListingId);
-    if (source.legoProductId !== target.legoProductId) {
-      throw new InventoryListingsMustShareProductError();
-    }
-    if (
-      source.condition !== ListingCondition.NEW ||
-      target.condition !== ListingCondition.USED_LIKE_NEW
-    ) {
-      throw new InvalidConditionAdjustmentError();
-    }
-
-    const sourceUpdate = await tx.$executeRaw`
-      UPDATE "ProductListing"
-      SET "currentStock" = "currentStock" - ${input.quantity}
-      WHERE id = ${source.id}
-        AND "currentStock" >= ${input.quantity}
-        AND "currentStock" - ${input.quantity} >= "reservedStock"
-    `;
-    if (sourceUpdate === 0) {
-      throw new InventoryInsufficientStockError(source.id);
-    }
-
-    await tx.productListing.update({
-      where: { id: target.id },
-      data: { currentStock: { increment: input.quantity } },
-    });
-
-    const note = normalizedReasonNote(input.reasonNote);
-    const sourceMovement = await tx.inventoryMovement.create({
-      data: {
-        listingId: source.id,
-        quantityChange: -input.quantity,
-        type: InventoryMovementType.CONDITION_ADJUSTMENT_SOURCE,
-        note: `Condition adjustment ${source.id} -> ${target.id}`,
-        performedByUserId: input.performedByUserId,
-      },
-    });
-    const targetMovement = await tx.inventoryMovement.create({
-      data: {
-        listingId: target.id,
-        quantityChange: input.quantity,
-        type: InventoryMovementType.CONDITION_ADJUSTMENT_TARGET,
-        note: `Condition adjustment ${source.id} -> ${target.id}`,
-        performedByUserId: input.performedByUserId,
-      },
-    });
-    const audit = await tx.inventoryAudit.create({
-      data: {
-        sourceProductListingId: source.id,
-        targetProductListingId: target.id,
-        action: InventoryAuditAction.CONDITION_ADJUSTMENT,
-        quantity: input.quantity,
-        reason: input.reason,
-        reasonNote: note,
-        performedByUserId: input.performedByUserId,
-      },
-    });
-
-    return { sourceMovement, targetMovement, audit };
-  });
+  // Used stock is now a physical, individually documented offer. Callers must
+  // use POST /inventory/condition-conversions to create a fresh offer.
+  void input;
+  throw new InvalidConditionAdjustmentError();
 }
 
 export async function writeOffInventory(input: WriteOffInput) {
@@ -258,13 +192,17 @@ export async function writeOffInventory(input: WriteOffInput) {
   return prisma.$transaction(async (tx) => {
     const source = await tx.productListing.findUnique({
       where: { id: input.sourceProductListingId },
-      select: { id: true },
+      select: { id: true, condition: true, usedLifecycle: true },
     });
     if (!source) throw new InventoryListingNotFoundError(input.sourceProductListingId);
+    if (source.condition === ListingCondition.USED_LIKE_NEW && (source.usedLifecycle !== "AVAILABLE" || input.quantity !== 1)) {
+      throw new InventoryInsufficientStockError(source.id);
+    }
 
     const sourceUpdate = await tx.$executeRaw`
       UPDATE "ProductListing"
-      SET "currentStock" = "currentStock" - ${input.quantity}
+      SET "currentStock" = "currentStock" - ${input.quantity},
+          "usedLifecycle" = CASE WHEN "condition" = 'USED_LIKE_NEW' AND "currentStock" - ${input.quantity} = 0 THEN 'RETIRED'::"UsedOfferLifecycle" ELSE "usedLifecycle" END
       WHERE id = ${source.id}
         AND "currentStock" >= ${input.quantity}
         AND "currentStock" - ${input.quantity} >= "reservedStock"

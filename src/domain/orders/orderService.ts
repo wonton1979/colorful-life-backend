@@ -106,6 +106,7 @@ export async function createOrder(
     const distinctIds = Array.from(listingIdsSet);
     const listings = await tx.productListing.findMany({
       where: { id: { in: distinctIds } },
+      include: { usedConditionPhotos: { orderBy: { sortOrder: "asc" } } },
     });
 
     // Validate existence
@@ -118,6 +119,9 @@ export async function createOrder(
     for (const l of listings) {
       if (!l.active) {
         throw new ProductListingInactiveError(l.id);
+      }
+      if (l.condition === "USED_LIKE_NEW" && l.usedLifecycle !== "AVAILABLE") {
+        throw new InsufficientAvailableStockError(l.id, 1);
       }
     }
     const listingMap = new Map<number, typeof listings[0]>();
@@ -135,6 +139,9 @@ export async function createOrder(
         quantity: item.quantity,
         unitPrice,
         lineTotal,
+        conditionSnapshot: listing.condition,
+        damageDescriptionSnapshot: listing.condition === "USED_LIKE_NEW" ? listing.damageDescription : null,
+        conditionPhotoSnapshot: listing.condition === "USED_LIKE_NEW" ? listing.usedConditionPhotos.map((photo) => ({ id: photo.id, url: photo.url, publicId: photo.publicId, sortOrder: photo.sortOrder })) : undefined,
       };
     });
 
@@ -144,6 +151,7 @@ export async function createOrder(
         UPDATE "ProductListing"
         SET "reservedStock" = "reservedStock" + ${item.quantity}
         WHERE id = ${item.productListingId}
+          AND ("condition" = 'NEW' OR ("condition" = 'USED_LIKE_NEW' AND "usedLifecycle" = 'AVAILABLE'))
           AND "reservedStock" <= "currentStock" - ${item.quantity}
       `;
       if (reservationResult === 0) {

@@ -41,6 +41,7 @@ purchaseListingsRouter.post("/listings", async (req, res) => {
   const parsed = creation.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Select a condition and valid product details. Initial stock must be zero." }); return; }
   const body = parsed.data;
+  if (body.condition === "USED_LIKE_NEW") { res.status(400).json({ error: "Used offers must be created through the per-item Used offer operation" }); return; }
   if (!("existingProductId" in body)) {
     req.body = body;
     await createProduct(req, res);
