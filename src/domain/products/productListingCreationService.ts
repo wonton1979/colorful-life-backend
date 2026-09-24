@@ -5,6 +5,14 @@ export async function lockCategoryFeatureSelection(tx: Prisma.TransactionClient,
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(${categoryId})`;
 }
 
+export async function hasCategoryFeatureProduct(tx: Prisma.TransactionClient, categoryId: number): Promise<boolean> {
+  const existingFeature = await tx.productListing.findFirst({
+    where: { legoProduct: { categoryId }, isFeatureProduct: true },
+    select: { id: true },
+  });
+  return existingFeature !== null;
+}
+
 export function createProductListingCreationService(db: PrismaClient = defaultPrisma) {
   return {
     async createForCategory<T>(
@@ -14,11 +22,7 @@ export function createProductListingCreationService(db: PrismaClient = defaultPr
       return db.$transaction(async (tx) => {
         if (categoryId === null) return createListing(tx, false);
         await lockCategoryFeatureSelection(tx, categoryId);
-        const existingFeature = await tx.productListing.findFirst({
-          where: { legoProduct: { categoryId }, isFeatureProduct: true },
-          select: { id: true },
-        });
-        return createListing(tx, existingFeature === null);
+        return createListing(tx, !(await hasCategoryFeatureProduct(tx, categoryId)));
       });
     },
   };

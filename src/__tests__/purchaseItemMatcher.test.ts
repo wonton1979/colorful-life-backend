@@ -103,7 +103,7 @@ describe("matchProductListingId", () => {
         {
           legoProductId: product.id,
 
-          condition: "USED_LIKE_NEW",
+          condition: "NEW",
           originalPrice: 12.0,
           currentStock: 3,
         },

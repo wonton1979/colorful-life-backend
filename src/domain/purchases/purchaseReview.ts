@@ -4,7 +4,7 @@ import { Prisma } from "../../generated/prisma-client/client.js";
 import { prisma } from "../../prisma/runtime.js";
 import { calculatePurchaseCosts } from "./purchaseImport.js";
 import { lockPurchase } from "./purchaseLock.js";
-import { receivePurchaseItemInTransaction } from "./purchaseItemReceiving.js";
+import { receivePurchaseItemInTransaction, UsedOfferPurchaseReceiptError } from "./purchaseItemReceiving.js";
 
 export class ReviewError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -116,14 +116,17 @@ export async function resolveReviewGroup(userId: number, purchaseId: number, gro
 }
 export async function receiveReviewGroup(userId: number, purchaseId: number, groupId: number, input: unknown) {
   const body = revisionSchema.parse(input);
-  return mutate(userId, purchaseId, body.revision, async (tx, purchase) => {
+  try { return await mutate(userId, purchaseId, body.revision, async (tx, purchase) => {
     const lines = findGroup(purchase, groupId);
     const listing = lines[0].productListing;
     if (!listing?.active || lines.some(l => l.productListingId !== listing.id)) throw new ReviewError(400, "Resolve all source lines to one active listing before receiving");
     const pending = lines.filter(l => !l.receivedAt);
     if (!pending.length) throw new ReviewError(409, "Purchase item already received");
     for (const line of pending) await receivePurchaseItemInTransaction(tx, userId, line.id);
-  });
+  }); } catch (error) {
+    if (error instanceof UsedOfferPurchaseReceiptError) throw new ReviewError(409, error.message);
+    throw error;
+  }
 }
 export async function amendReviewLine(userId: number, purchaseId: number, itemId: number, input: unknown) {
   const body = amendmentSchema.parse(input);

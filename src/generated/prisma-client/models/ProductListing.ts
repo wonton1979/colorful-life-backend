@@ -51,6 +51,8 @@ export type ProductListingMinAggregateOutputType = {
   catalogueArtworkPublicId: string | null
   isFeatureProduct: boolean | null
   condition: $Enums.ListingCondition | null
+  damageDescription: string | null
+  usedLifecycle: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | null
   salePrice: runtime.Decimal | null
   currentStock: number | null
@@ -67,6 +69,8 @@ export type ProductListingMaxAggregateOutputType = {
   catalogueArtworkPublicId: string | null
   isFeatureProduct: boolean | null
   condition: $Enums.ListingCondition | null
+  damageDescription: string | null
+  usedLifecycle: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | null
   salePrice: runtime.Decimal | null
   currentStock: number | null
@@ -83,6 +87,8 @@ export type ProductListingCountAggregateOutputType = {
   catalogueArtworkPublicId: number
   isFeatureProduct: number
   condition: number
+  damageDescription: number
+  usedLifecycle: number
   originalPrice: number
   salePrice: number
   currentStock: number
@@ -119,6 +125,8 @@ export type ProductListingMinAggregateInputType = {
   catalogueArtworkPublicId?: true
   isFeatureProduct?: true
   condition?: true
+  damageDescription?: true
+  usedLifecycle?: true
   originalPrice?: true
   salePrice?: true
   currentStock?: true
@@ -135,6 +143,8 @@ export type ProductListingMaxAggregateInputType = {
   catalogueArtworkPublicId?: true
   isFeatureProduct?: true
   condition?: true
+  damageDescription?: true
+  usedLifecycle?: true
   originalPrice?: true
   salePrice?: true
   currentStock?: true
@@ -151,6 +161,8 @@ export type ProductListingCountAggregateInputType = {
   catalogueArtworkPublicId?: true
   isFeatureProduct?: true
   condition?: true
+  damageDescription?: true
+  usedLifecycle?: true
   originalPrice?: true
   salePrice?: true
   currentStock?: true
@@ -254,6 +266,8 @@ export type ProductListingGroupByOutputType = {
   catalogueArtworkPublicId: string | null
   isFeatureProduct: boolean
   condition: $Enums.ListingCondition
+  damageDescription: string | null
+  usedLifecycle: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal
   salePrice: runtime.Decimal | null
   currentStock: number
@@ -293,6 +307,8 @@ export type ProductListingWhereInput = {
   catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
   isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
+  damageDescription?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  usedLifecycle?: Prisma.EnumUsedOfferLifecycleNullableFilter<"ProductListing"> | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFilter<"ProductListing"> | number
@@ -302,6 +318,7 @@ export type ProductListingWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"ProductListing"> | Date | string
   legoProduct?: Prisma.XOR<Prisma.LegoProductScalarRelationFilter, Prisma.LegoProductWhereInput>
   listingImages?: Prisma.ListingImageListRelationFilter
+  usedConditionPhotos?: Prisma.UsedConditionPhotoListRelationFilter
   inventoryMovements?: Prisma.InventoryMovementListRelationFilter
   purchaseItems?: Prisma.PurchaseItemListRelationFilter
   orderItems?: Prisma.OrderItemListRelationFilter
@@ -317,6 +334,8 @@ export type ProductListingOrderByWithRelationInput = {
   catalogueArtworkPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
   isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
+  damageDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  usedLifecycle?: Prisma.SortOrderInput | Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrderInput | Prisma.SortOrder
   currentStock?: Prisma.SortOrder
@@ -326,6 +345,7 @@ export type ProductListingOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   legoProduct?: Prisma.LegoProductOrderByWithRelationInput
   listingImages?: Prisma.ListingImageOrderByRelationAggregateInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoOrderByRelationAggregateInput
   inventoryMovements?: Prisma.InventoryMovementOrderByRelationAggregateInput
   purchaseItems?: Prisma.PurchaseItemOrderByRelationAggregateInput
   orderItems?: Prisma.OrderItemOrderByRelationAggregateInput
@@ -344,6 +364,8 @@ export type ProductListingWhereUniqueInput = Prisma.AtLeast<{
   catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
   isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
+  damageDescription?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  usedLifecycle?: Prisma.EnumUsedOfferLifecycleNullableFilter<"ProductListing"> | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFilter<"ProductListing"> | number
@@ -353,6 +375,7 @@ export type ProductListingWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"ProductListing"> | Date | string
   legoProduct?: Prisma.XOR<Prisma.LegoProductScalarRelationFilter, Prisma.LegoProductWhereInput>
   listingImages?: Prisma.ListingImageListRelationFilter
+  usedConditionPhotos?: Prisma.UsedConditionPhotoListRelationFilter
   inventoryMovements?: Prisma.InventoryMovementListRelationFilter
   purchaseItems?: Prisma.PurchaseItemListRelationFilter
   orderItems?: Prisma.OrderItemListRelationFilter
@@ -368,6 +391,8 @@ export type ProductListingOrderByWithAggregationInput = {
   catalogueArtworkPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
   isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
+  damageDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  usedLifecycle?: Prisma.SortOrderInput | Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrderInput | Prisma.SortOrder
   currentStock?: Prisma.SortOrder
@@ -392,6 +417,8 @@ export type ProductListingScalarWhereWithAggregatesInput = {
   catalogueArtworkPublicId?: Prisma.StringNullableWithAggregatesFilter<"ProductListing"> | string | null
   isFeatureProduct?: Prisma.BoolWithAggregatesFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionWithAggregatesFilter<"ProductListing"> | $Enums.ListingCondition
+  damageDescription?: Prisma.StringNullableWithAggregatesFilter<"ProductListing"> | string | null
+  usedLifecycle?: Prisma.EnumUsedOfferLifecycleNullableWithAggregatesFilter<"ProductListing"> | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalWithAggregatesFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableWithAggregatesFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntWithAggregatesFilter<"ProductListing"> | number
@@ -406,6 +433,8 @@ export type ProductListingCreateInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -415,6 +444,7 @@ export type ProductListingCreateInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -430,6 +460,8 @@ export type ProductListingUncheckedCreateInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -438,6 +470,7 @@ export type ProductListingUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -451,6 +484,8 @@ export type ProductListingUpdateInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -460,6 +495,7 @@ export type ProductListingUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -475,6 +511,8 @@ export type ProductListingUncheckedUpdateInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -483,6 +521,7 @@ export type ProductListingUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -498,6 +537,8 @@ export type ProductListingCreateManyInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -512,6 +553,8 @@ export type ProductListingUpdateManyMutationInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -528,6 +571,8 @@ export type ProductListingUncheckedUpdateManyInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -554,6 +599,8 @@ export type ProductListingCountOrderByAggregateInput = {
   catalogueArtworkPublicId?: Prisma.SortOrder
   isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
+  damageDescription?: Prisma.SortOrder
+  usedLifecycle?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
   currentStock?: Prisma.SortOrder
@@ -579,6 +626,8 @@ export type ProductListingMaxOrderByAggregateInput = {
   catalogueArtworkPublicId?: Prisma.SortOrder
   isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
+  damageDescription?: Prisma.SortOrder
+  usedLifecycle?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
   currentStock?: Prisma.SortOrder
@@ -595,6 +644,8 @@ export type ProductListingMinOrderByAggregateInput = {
   catalogueArtworkPublicId?: Prisma.SortOrder
   isFeatureProduct?: Prisma.SortOrder
   condition?: Prisma.SortOrder
+  damageDescription?: Prisma.SortOrder
+  usedLifecycle?: Prisma.SortOrder
   originalPrice?: Prisma.SortOrder
   salePrice?: Prisma.SortOrder
   currentStock?: Prisma.SortOrder
@@ -669,12 +720,30 @@ export type EnumListingConditionFieldUpdateOperationsInput = {
   set?: $Enums.ListingCondition
 }
 
+export type NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput = {
+  set?: $Enums.UsedOfferLifecycle | null
+}
+
 export type NullableDecimalFieldUpdateOperationsInput = {
   set?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
   decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
   multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
   divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
+}
+
+export type ProductListingCreateNestedOneWithoutUsedConditionPhotosInput = {
+  create?: Prisma.XOR<Prisma.ProductListingCreateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedCreateWithoutUsedConditionPhotosInput>
+  connectOrCreate?: Prisma.ProductListingCreateOrConnectWithoutUsedConditionPhotosInput
+  connect?: Prisma.ProductListingWhereUniqueInput
+}
+
+export type ProductListingUpdateOneRequiredWithoutUsedConditionPhotosNestedInput = {
+  create?: Prisma.XOR<Prisma.ProductListingCreateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedCreateWithoutUsedConditionPhotosInput>
+  connectOrCreate?: Prisma.ProductListingCreateOrConnectWithoutUsedConditionPhotosInput
+  upsert?: Prisma.ProductListingUpsertWithoutUsedConditionPhotosInput
+  connect?: Prisma.ProductListingWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProductListingUpdateToOneWithWhereWithoutUsedConditionPhotosInput, Prisma.ProductListingUpdateWithoutUsedConditionPhotosInput>, Prisma.ProductListingUncheckedUpdateWithoutUsedConditionPhotosInput>
 }
 
 export type ProductListingCreateNestedOneWithoutCartItemsInput = {
@@ -784,6 +853,8 @@ export type ProductListingCreateWithoutLegoProductInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -792,6 +863,7 @@ export type ProductListingCreateWithoutLegoProductInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -806,6 +878,8 @@ export type ProductListingUncheckedCreateWithoutLegoProductInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -814,6 +888,7 @@ export type ProductListingUncheckedCreateWithoutLegoProductInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -858,6 +933,8 @@ export type ProductListingScalarWhereInput = {
   catalogueArtworkPublicId?: Prisma.StringNullableFilter<"ProductListing"> | string | null
   isFeatureProduct?: Prisma.BoolFilter<"ProductListing"> | boolean
   condition?: Prisma.EnumListingConditionFilter<"ProductListing"> | $Enums.ListingCondition
+  damageDescription?: Prisma.StringNullableFilter<"ProductListing"> | string | null
+  usedLifecycle?: Prisma.EnumUsedOfferLifecycleNullableFilter<"ProductListing"> | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.DecimalNullableFilter<"ProductListing"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFilter<"ProductListing"> | number
@@ -867,11 +944,13 @@ export type ProductListingScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"ProductListing"> | Date | string
 }
 
-export type ProductListingCreateWithoutCartItemsInput = {
+export type ProductListingCreateWithoutUsedConditionPhotosInput = {
   catalogueArtworkUrl?: string | null
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -881,6 +960,121 @@ export type ProductListingCreateWithoutCartItemsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
+  purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
+  orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
+  cartItems?: Prisma.CartItemCreateNestedManyWithoutProductListingInput
+  sourceInventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutSourceProductListingInput
+  targetInventoryAudits?: Prisma.InventoryAuditCreateNestedManyWithoutTargetProductListingInput
+}
+
+export type ProductListingUncheckedCreateWithoutUsedConditionPhotosInput = {
+  id?: number
+  legoProductId: number
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
+  condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
+  originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
+  salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  currentStock?: number
+  reservedStock?: number
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
+  purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
+  orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
+  cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutProductListingInput
+  sourceInventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutSourceProductListingInput
+  targetInventoryAudits?: Prisma.InventoryAuditUncheckedCreateNestedManyWithoutTargetProductListingInput
+}
+
+export type ProductListingCreateOrConnectWithoutUsedConditionPhotosInput = {
+  where: Prisma.ProductListingWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProductListingCreateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedCreateWithoutUsedConditionPhotosInput>
+}
+
+export type ProductListingUpsertWithoutUsedConditionPhotosInput = {
+  update: Prisma.XOR<Prisma.ProductListingUpdateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedUpdateWithoutUsedConditionPhotosInput>
+  create: Prisma.XOR<Prisma.ProductListingCreateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedCreateWithoutUsedConditionPhotosInput>
+  where?: Prisma.ProductListingWhereInput
+}
+
+export type ProductListingUpdateToOneWithWhereWithoutUsedConditionPhotosInput = {
+  where?: Prisma.ProductListingWhereInput
+  data: Prisma.XOR<Prisma.ProductListingUpdateWithoutUsedConditionPhotosInput, Prisma.ProductListingUncheckedUpdateWithoutUsedConditionPhotosInput>
+}
+
+export type ProductListingUpdateWithoutUsedConditionPhotosInput = {
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
+  originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  currentStock?: Prisma.IntFieldUpdateOperationsInput | number
+  reservedStock?: Prisma.IntFieldUpdateOperationsInput | number
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
+  listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
+  purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
+  orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
+  cartItems?: Prisma.CartItemUpdateManyWithoutProductListingNestedInput
+  sourceInventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutSourceProductListingNestedInput
+  targetInventoryAudits?: Prisma.InventoryAuditUpdateManyWithoutTargetProductListingNestedInput
+}
+
+export type ProductListingUncheckedUpdateWithoutUsedConditionPhotosInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  legoProductId?: Prisma.IntFieldUpdateOperationsInput | number
+  catalogueArtworkUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
+  originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  currentStock?: Prisma.IntFieldUpdateOperationsInput | number
+  reservedStock?: Prisma.IntFieldUpdateOperationsInput | number
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
+  purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
+  orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
+  cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutProductListingNestedInput
+  sourceInventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutSourceProductListingNestedInput
+  targetInventoryAudits?: Prisma.InventoryAuditUncheckedUpdateManyWithoutTargetProductListingNestedInput
+}
+
+export type ProductListingCreateWithoutCartItemsInput = {
+  catalogueArtworkUrl?: string | null
+  catalogueArtworkPublicId?: string | null
+  isFeatureProduct?: boolean
+  condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
+  originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
+  salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  currentStock?: number
+  reservedStock?: number
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
+  listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -895,6 +1089,8 @@ export type ProductListingUncheckedCreateWithoutCartItemsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -903,6 +1099,7 @@ export type ProductListingUncheckedCreateWithoutCartItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -931,6 +1128,8 @@ export type ProductListingUpdateWithoutCartItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -940,6 +1139,7 @@ export type ProductListingUpdateWithoutCartItemsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -954,6 +1154,8 @@ export type ProductListingUncheckedUpdateWithoutCartItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -962,6 +1164,7 @@ export type ProductListingUncheckedUpdateWithoutCartItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -974,6 +1177,8 @@ export type ProductListingCreateWithoutListingImagesInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -982,6 +1187,7 @@ export type ProductListingCreateWithoutListingImagesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -997,6 +1203,8 @@ export type ProductListingUncheckedCreateWithoutListingImagesInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1004,6 +1212,7 @@ export type ProductListingUncheckedCreateWithoutListingImagesInput = {
   active?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1033,6 +1242,8 @@ export type ProductListingUpdateWithoutListingImagesInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1041,6 +1252,7 @@ export type ProductListingUpdateWithoutListingImagesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -1056,6 +1268,8 @@ export type ProductListingUncheckedUpdateWithoutListingImagesInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1063,6 +1277,7 @@ export type ProductListingUncheckedUpdateWithoutListingImagesInput = {
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1076,6 +1291,8 @@ export type ProductListingCreateWithoutInventoryMovementsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1085,6 +1302,7 @@ export type ProductListingCreateWithoutInventoryMovementsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemCreateNestedManyWithoutProductListingInput
@@ -1099,6 +1317,8 @@ export type ProductListingUncheckedCreateWithoutInventoryMovementsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1107,6 +1327,7 @@ export type ProductListingUncheckedCreateWithoutInventoryMovementsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1135,6 +1356,8 @@ export type ProductListingUpdateWithoutInventoryMovementsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1144,6 +1367,7 @@ export type ProductListingUpdateWithoutInventoryMovementsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUpdateManyWithoutProductListingNestedInput
@@ -1158,6 +1382,8 @@ export type ProductListingUncheckedUpdateWithoutInventoryMovementsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1166,6 +1392,7 @@ export type ProductListingUncheckedUpdateWithoutInventoryMovementsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1178,6 +1405,8 @@ export type ProductListingCreateWithoutSourceInventoryAuditsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1187,6 +1416,7 @@ export type ProductListingCreateWithoutSourceInventoryAuditsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -1201,6 +1431,8 @@ export type ProductListingUncheckedCreateWithoutSourceInventoryAuditsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1209,6 +1441,7 @@ export type ProductListingUncheckedCreateWithoutSourceInventoryAuditsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1226,6 +1459,8 @@ export type ProductListingCreateWithoutTargetInventoryAuditsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1235,6 +1470,7 @@ export type ProductListingCreateWithoutTargetInventoryAuditsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
@@ -1249,6 +1485,8 @@ export type ProductListingUncheckedCreateWithoutTargetInventoryAuditsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1257,6 +1495,7 @@ export type ProductListingUncheckedCreateWithoutTargetInventoryAuditsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1285,6 +1524,8 @@ export type ProductListingUpdateWithoutSourceInventoryAuditsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1294,6 +1535,7 @@ export type ProductListingUpdateWithoutSourceInventoryAuditsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -1308,6 +1550,8 @@ export type ProductListingUncheckedUpdateWithoutSourceInventoryAuditsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1316,6 +1560,7 @@ export type ProductListingUncheckedUpdateWithoutSourceInventoryAuditsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1339,6 +1584,8 @@ export type ProductListingUpdateWithoutTargetInventoryAuditsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1348,6 +1595,7 @@ export type ProductListingUpdateWithoutTargetInventoryAuditsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -1362,6 +1610,8 @@ export type ProductListingUncheckedUpdateWithoutTargetInventoryAuditsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1370,6 +1620,7 @@ export type ProductListingUncheckedUpdateWithoutTargetInventoryAuditsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1382,6 +1633,8 @@ export type ProductListingCreateWithoutOrderItemsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1391,6 +1644,7 @@ export type ProductListingCreateWithoutOrderItemsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemCreateNestedManyWithoutProductListingInput
@@ -1405,6 +1659,8 @@ export type ProductListingUncheckedCreateWithoutOrderItemsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1413,6 +1669,7 @@ export type ProductListingUncheckedCreateWithoutOrderItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   purchaseItems?: Prisma.PurchaseItemUncheckedCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1441,6 +1698,8 @@ export type ProductListingUpdateWithoutOrderItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1450,6 +1709,7 @@ export type ProductListingUpdateWithoutOrderItemsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUpdateManyWithoutProductListingNestedInput
@@ -1464,6 +1724,8 @@ export type ProductListingUncheckedUpdateWithoutOrderItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1472,6 +1734,7 @@ export type ProductListingUncheckedUpdateWithoutOrderItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1484,6 +1747,8 @@ export type ProductListingCreateWithoutPurchaseItemsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1493,6 +1758,7 @@ export type ProductListingCreateWithoutPurchaseItemsInput = {
   updatedAt?: Date | string
   legoProduct: Prisma.LegoProductCreateNestedOneWithoutProductListingsInput
   listingImages?: Prisma.ListingImageCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementCreateNestedManyWithoutListingInput
   orderItems?: Prisma.OrderItemCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemCreateNestedManyWithoutProductListingInput
@@ -1507,6 +1773,8 @@ export type ProductListingUncheckedCreateWithoutPurchaseItemsInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1515,6 +1783,7 @@ export type ProductListingUncheckedCreateWithoutPurchaseItemsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   listingImages?: Prisma.ListingImageUncheckedCreateNestedManyWithoutListingInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedCreateNestedManyWithoutListingInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedCreateNestedManyWithoutListingInput
   orderItems?: Prisma.OrderItemUncheckedCreateNestedManyWithoutProductListingInput
   cartItems?: Prisma.CartItemUncheckedCreateNestedManyWithoutProductListingInput
@@ -1543,6 +1812,8 @@ export type ProductListingUpdateWithoutPurchaseItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1552,6 +1823,7 @@ export type ProductListingUpdateWithoutPurchaseItemsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   legoProduct?: Prisma.LegoProductUpdateOneRequiredWithoutProductListingsNestedInput
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUpdateManyWithoutProductListingNestedInput
@@ -1566,6 +1838,8 @@ export type ProductListingUncheckedUpdateWithoutPurchaseItemsInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1574,6 +1848,7 @@ export type ProductListingUncheckedUpdateWithoutPurchaseItemsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
   cartItems?: Prisma.CartItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1587,6 +1862,8 @@ export type ProductListingCreateManyLegoProductInput = {
   catalogueArtworkPublicId?: string | null
   isFeatureProduct?: boolean
   condition: $Enums.ListingCondition
+  damageDescription?: string | null
+  usedLifecycle?: $Enums.UsedOfferLifecycle | null
   originalPrice: runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: number
@@ -1601,6 +1878,8 @@ export type ProductListingUpdateWithoutLegoProductInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1609,6 +1888,7 @@ export type ProductListingUpdateWithoutLegoProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUpdateManyWithoutProductListingNestedInput
@@ -1623,6 +1903,8 @@ export type ProductListingUncheckedUpdateWithoutLegoProductInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1631,6 +1913,7 @@ export type ProductListingUncheckedUpdateWithoutLegoProductInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   listingImages?: Prisma.ListingImageUncheckedUpdateManyWithoutListingNestedInput
+  usedConditionPhotos?: Prisma.UsedConditionPhotoUncheckedUpdateManyWithoutListingNestedInput
   inventoryMovements?: Prisma.InventoryMovementUncheckedUpdateManyWithoutListingNestedInput
   purchaseItems?: Prisma.PurchaseItemUncheckedUpdateManyWithoutProductListingNestedInput
   orderItems?: Prisma.OrderItemUncheckedUpdateManyWithoutProductListingNestedInput
@@ -1645,6 +1928,8 @@ export type ProductListingUncheckedUpdateManyWithoutLegoProductInput = {
   catalogueArtworkPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isFeatureProduct?: Prisma.BoolFieldUpdateOperationsInput | boolean
   condition?: Prisma.EnumListingConditionFieldUpdateOperationsInput | $Enums.ListingCondition
+  damageDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  usedLifecycle?: Prisma.NullableEnumUsedOfferLifecycleFieldUpdateOperationsInput | $Enums.UsedOfferLifecycle | null
   originalPrice?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   salePrice?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currentStock?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1661,6 +1946,7 @@ export type ProductListingUncheckedUpdateManyWithoutLegoProductInput = {
 
 export type ProductListingCountOutputType = {
   listingImages: number
+  usedConditionPhotos: number
   inventoryMovements: number
   purchaseItems: number
   orderItems: number
@@ -1671,6 +1957,7 @@ export type ProductListingCountOutputType = {
 
 export type ProductListingCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   listingImages?: boolean | ProductListingCountOutputTypeCountListingImagesArgs
+  usedConditionPhotos?: boolean | ProductListingCountOutputTypeCountUsedConditionPhotosArgs
   inventoryMovements?: boolean | ProductListingCountOutputTypeCountInventoryMovementsArgs
   purchaseItems?: boolean | ProductListingCountOutputTypeCountPurchaseItemsArgs
   orderItems?: boolean | ProductListingCountOutputTypeCountOrderItemsArgs
@@ -1694,6 +1981,13 @@ export type ProductListingCountOutputTypeDefaultArgs<ExtArgs extends runtime.Typ
  */
 export type ProductListingCountOutputTypeCountListingImagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.ListingImageWhereInput
+}
+
+/**
+ * ProductListingCountOutputType without action
+ */
+export type ProductListingCountOutputTypeCountUsedConditionPhotosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UsedConditionPhotoWhereInput
 }
 
 /**
@@ -1746,6 +2040,8 @@ export type ProductListingSelect<ExtArgs extends runtime.Types.Extensions.Intern
   catalogueArtworkPublicId?: boolean
   isFeatureProduct?: boolean
   condition?: boolean
+  damageDescription?: boolean
+  usedLifecycle?: boolean
   originalPrice?: boolean
   salePrice?: boolean
   currentStock?: boolean
@@ -1755,6 +2051,7 @@ export type ProductListingSelect<ExtArgs extends runtime.Types.Extensions.Intern
   updatedAt?: boolean
   legoProduct?: boolean | Prisma.LegoProductDefaultArgs<ExtArgs>
   listingImages?: boolean | Prisma.ProductListing$listingImagesArgs<ExtArgs>
+  usedConditionPhotos?: boolean | Prisma.ProductListing$usedConditionPhotosArgs<ExtArgs>
   inventoryMovements?: boolean | Prisma.ProductListing$inventoryMovementsArgs<ExtArgs>
   purchaseItems?: boolean | Prisma.ProductListing$purchaseItemsArgs<ExtArgs>
   orderItems?: boolean | Prisma.ProductListing$orderItemsArgs<ExtArgs>
@@ -1771,6 +2068,8 @@ export type ProductListingSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   catalogueArtworkPublicId?: boolean
   isFeatureProduct?: boolean
   condition?: boolean
+  damageDescription?: boolean
+  usedLifecycle?: boolean
   originalPrice?: boolean
   salePrice?: boolean
   currentStock?: boolean
@@ -1788,6 +2087,8 @@ export type ProductListingSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   catalogueArtworkPublicId?: boolean
   isFeatureProduct?: boolean
   condition?: boolean
+  damageDescription?: boolean
+  usedLifecycle?: boolean
   originalPrice?: boolean
   salePrice?: boolean
   currentStock?: boolean
@@ -1805,6 +2106,8 @@ export type ProductListingSelectScalar = {
   catalogueArtworkPublicId?: boolean
   isFeatureProduct?: boolean
   condition?: boolean
+  damageDescription?: boolean
+  usedLifecycle?: boolean
   originalPrice?: boolean
   salePrice?: boolean
   currentStock?: boolean
@@ -1814,10 +2117,11 @@ export type ProductListingSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ProductListingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "legoProductId" | "catalogueArtworkUrl" | "catalogueArtworkPublicId" | "isFeatureProduct" | "condition" | "originalPrice" | "salePrice" | "currentStock" | "reservedStock" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["productListing"]>
+export type ProductListingOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "legoProductId" | "catalogueArtworkUrl" | "catalogueArtworkPublicId" | "isFeatureProduct" | "condition" | "damageDescription" | "usedLifecycle" | "originalPrice" | "salePrice" | "currentStock" | "reservedStock" | "active" | "createdAt" | "updatedAt", ExtArgs["result"]["productListing"]>
 export type ProductListingInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   legoProduct?: boolean | Prisma.LegoProductDefaultArgs<ExtArgs>
   listingImages?: boolean | Prisma.ProductListing$listingImagesArgs<ExtArgs>
+  usedConditionPhotos?: boolean | Prisma.ProductListing$usedConditionPhotosArgs<ExtArgs>
   inventoryMovements?: boolean | Prisma.ProductListing$inventoryMovementsArgs<ExtArgs>
   purchaseItems?: boolean | Prisma.ProductListing$purchaseItemsArgs<ExtArgs>
   orderItems?: boolean | Prisma.ProductListing$orderItemsArgs<ExtArgs>
@@ -1838,6 +2142,7 @@ export type $ProductListingPayload<ExtArgs extends runtime.Types.Extensions.Inte
   objects: {
     legoProduct: Prisma.$LegoProductPayload<ExtArgs>
     listingImages: Prisma.$ListingImagePayload<ExtArgs>[]
+    usedConditionPhotos: Prisma.$UsedConditionPhotoPayload<ExtArgs>[]
     inventoryMovements: Prisma.$InventoryMovementPayload<ExtArgs>[]
     purchaseItems: Prisma.$PurchaseItemPayload<ExtArgs>[]
     orderItems: Prisma.$OrderItemPayload<ExtArgs>[]
@@ -1852,6 +2157,8 @@ export type $ProductListingPayload<ExtArgs extends runtime.Types.Extensions.Inte
     catalogueArtworkPublicId: string | null
     isFeatureProduct: boolean
     condition: $Enums.ListingCondition
+    damageDescription: string | null
+    usedLifecycle: $Enums.UsedOfferLifecycle | null
     originalPrice: runtime.Decimal
     salePrice: runtime.Decimal | null
     currentStock: number
@@ -2255,6 +2562,7 @@ export interface Prisma__ProductListingClient<T, Null = never, ExtArgs extends r
   readonly [Symbol.toStringTag]: "PrismaPromise"
   legoProduct<T extends Prisma.LegoProductDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LegoProductDefaultArgs<ExtArgs>>): Prisma.Prisma__LegoProductClient<runtime.Types.Result.GetResult<Prisma.$LegoProductPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   listingImages<T extends Prisma.ProductListing$listingImagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductListing$listingImagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ListingImagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  usedConditionPhotos<T extends Prisma.ProductListing$usedConditionPhotosArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductListing$usedConditionPhotosArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UsedConditionPhotoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   inventoryMovements<T extends Prisma.ProductListing$inventoryMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductListing$inventoryMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$InventoryMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   purchaseItems<T extends Prisma.ProductListing$purchaseItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductListing$purchaseItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PurchaseItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   orderItems<T extends Prisma.ProductListing$orderItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProductListing$orderItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2296,6 +2604,8 @@ export interface ProductListingFieldRefs {
   readonly catalogueArtworkPublicId: Prisma.FieldRef<"ProductListing", 'String'>
   readonly isFeatureProduct: Prisma.FieldRef<"ProductListing", 'Boolean'>
   readonly condition: Prisma.FieldRef<"ProductListing", 'ListingCondition'>
+  readonly damageDescription: Prisma.FieldRef<"ProductListing", 'String'>
+  readonly usedLifecycle: Prisma.FieldRef<"ProductListing", 'UsedOfferLifecycle'>
   readonly originalPrice: Prisma.FieldRef<"ProductListing", 'Decimal'>
   readonly salePrice: Prisma.FieldRef<"ProductListing", 'Decimal'>
   readonly currentStock: Prisma.FieldRef<"ProductListing", 'Int'>
@@ -2725,6 +3035,30 @@ export type ProductListing$listingImagesArgs<ExtArgs extends runtime.Types.Exten
   take?: number
   skip?: number
   distinct?: Prisma.ListingImageScalarFieldEnum | Prisma.ListingImageScalarFieldEnum[]
+}
+
+/**
+ * ProductListing.usedConditionPhotos
+ */
+export type ProductListing$usedConditionPhotosArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UsedConditionPhoto
+   */
+  select?: Prisma.UsedConditionPhotoSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UsedConditionPhoto
+   */
+  omit?: Prisma.UsedConditionPhotoOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UsedConditionPhotoInclude<ExtArgs> | null
+  where?: Prisma.UsedConditionPhotoWhereInput
+  orderBy?: Prisma.UsedConditionPhotoOrderByWithRelationInput | Prisma.UsedConditionPhotoOrderByWithRelationInput[]
+  cursor?: Prisma.UsedConditionPhotoWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UsedConditionPhotoScalarFieldEnum | Prisma.UsedConditionPhotoScalarFieldEnum[]
 }
 
 /**

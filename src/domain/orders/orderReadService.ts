@@ -16,6 +16,9 @@ const orderReadSelect = {
       quantity: true,
       unitPrice: true,
       lineTotal: true,
+      conditionSnapshot: true,
+      damageDescriptionSnapshot: true,
+      conditionPhotoSnapshot: true,
       productListing: {
         select: {
           id: true,

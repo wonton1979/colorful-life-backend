@@ -60,12 +60,15 @@ describe("Product catalogue HTTP integration", () => {
       const listing = await makeListing({ setNumber, title: "Stock availability", theme: "City", originalPrice: 10, currentStock, reservedStock });
       const { response, body } = await get(`/products?q=${setNumber}`);
       assert.strictEqual(response.status, 200);
+      if (expected === 0) { assert.strictEqual(body.items.length, 0); return; }
       assert.strictEqual(body.items.length, 1);
       const item = body.items[0];
-      assert.strictEqual(item.id, listing.id);
-      assert.strictEqual(item.availableStock, expected);
-      assert.strictEqual(item.currentStock, currentStock);
-      assert.ok(!Object.hasOwn(item, "reservedStock"));
+      assert.strictEqual(item.id, listing.legoProductId);
+      assert.strictEqual(item.offers.length, 1);
+      assert.strictEqual(item.offers[0].id, listing.id);
+      assert.strictEqual(item.offers[0].availableStock, expected);
+      assert.strictEqual(item.offers[0].currentStock, currentStock);
+      assert.ok(!Object.hasOwn(item.offers[0], "reservedStock"));
     });
   }
 
@@ -77,23 +80,17 @@ describe("Product catalogue HTTP integration", () => {
     const product = await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } });
     const { response, body } = await get(`/products?q=${setNumber}`);
     assert.strictEqual(response.status, 200);
-    assert.deepStrictEqual(body.items, [JSON.parse(JSON.stringify({
-      id: listing.id,
-      legoProductId: listing.legoProductId,
-      category: { id: (await prisma.category.findUniqueOrThrow({ where: { name: "Others" } })).id, name: "Others", subtitle: "More little worlds to discover", description: "Wander into a collection of delightful worlds, unusual ideas and small surprises waiting to be discovered.", imageUrl: null },
-      catalogueArtworkUrl: listing.catalogueArtworkUrl,
-      catalogueArtworkPublicId: listing.catalogueArtworkPublicId,
-      isFeatureProduct: listing.isFeatureProduct,
-      condition: listing.condition,
-      originalPrice: listing.originalPrice,
-      salePrice: listing.salePrice,
-      currentStock: 6,
-      createdAt: listing.createdAt,
-      updatedAt: listing.updatedAt,
-      legoProduct: product,
-      listingImages: [firstImage, laterImage],
-      availableStock: 4,
-    }))]);
+    assert.equal(body.items.length, 1);
+    const item = body.items[0];
+    assert.equal(item.id, listing.legoProductId);
+    assert.equal(item.setNumber, product.setNumber);
+    assert.equal(item.title, product.title);
+    assert.equal(item.category.name, "Others");
+    assert.equal(item.offers.length, 1);
+    assert.equal(item.offers[0].id, listing.id);
+    assert.equal(item.offers[0].condition, "NEW");
+    assert.equal(item.offers[0].availableStock, 4);
+    assert.deepEqual(item.offers[0].listingImages.map((image: any) => image.id), [firstImage.id, laterImage.id]);
   });
 
   it("reads current inventory on each request without changing stock", async () => {
@@ -101,14 +98,14 @@ describe("Product catalogue HTTP integration", () => {
     const listing = await makeListing({ setNumber, title: "Changing inventory", theme: "City", originalPrice: 10, currentStock: 8, reservedStock: 3 });
     const path = `/products?q=${setNumber}`;
     const first = await get(path);
-    assert.strictEqual(first.body.items[0].availableStock, 5);
+    assert.strictEqual(first.body.items[0].offers[0].availableStock, 5);
     assert.deepStrictEqual((await get(path)).body, first.body);
-    assert.deepStrictEqual(await prisma.productListing.findUnique({ where: { id: listing.id } }), listing);
+    assert.equal((await prisma.productListing.findUnique({ where: { id: listing.id } }))?.currentStock, listing.currentStock);
 
     await prisma.productListing.update({ where: { id: listing.id }, data: { reservedStock: 6 } });
-    assert.strictEqual((await get(path)).body.items[0].availableStock, 2);
+    assert.strictEqual((await get(path)).body.items[0].offers[0].availableStock, 2);
     await prisma.productListing.update({ where: { id: listing.id }, data: { currentStock: 2, reservedStock: 0 } });
-    assert.strictEqual((await get(path)).body.items[0].availableStock, 2);
+    assert.strictEqual((await get(path)).body.items[0].offers[0].availableStock, 2);
   });
 
   it("is public and returns the default paginated active catalogue", async () => {
@@ -120,9 +117,9 @@ describe("Product catalogue HTTP integration", () => {
     assert.strictEqual(body.pagination.page, 1);
     assert.strictEqual(body.pagination.pageSize, 20);
     assert.ok(body.pagination.totalItems >= 1);
-    assert.ok(body.items.some((item: any) => item.legoProduct.title === "Active"));
-    assert.equal(body.items.find((item: any) => item.legoProduct.title === "Active").category.name, "Others");
-    assert.ok(!body.items.some((item: any) => item.legoProduct.title === "Inactive"));
+    assert.ok(body.items.some((item: any) => item.title === "Active"));
+    assert.equal(body.items.find((item: any) => item.title === "Active").category.name, "Others");
+    assert.ok(!body.items.some((item: any) => item.title === "Inactive"));
   });
 
   it("searches set number/title case-insensitively and filters theme", async () => {
@@ -140,12 +137,12 @@ describe("Product catalogue HTTP integration", () => {
     await makeListing({ setNumber: `P2-${suffix}`, title: "Set Two", theme: "Technic", originalPrice: 30, createdAt: new Date("2020-01-02"), currentStock: 4, reservedStock: 2 });
     await makeListing({ setNumber: `P3-${suffix}`, title: "Set Three", theme: "Technic", originalPrice: 40, salePrice: 35, createdAt: new Date("2020-01-03"), currentStock: 3, reservedStock: 3 });
     const filtered = await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=1&pageSize=2`);
-    assert.deepStrictEqual(filtered.body.pagination, { page: 1, pageSize: 2, totalItems: 3, totalPages: 2 });
-    assert.deepStrictEqual(filtered.body.items.map((item: any) => item.legoProduct.setNumber), [`P3-${suffix}`, `P2-${suffix}`]);
-    assert.deepStrictEqual(filtered.body.items.map((item: any) => item.availableStock), [0, 2]);
+    assert.deepStrictEqual(filtered.body.pagination, { page: 1, pageSize: 2, totalItems: 2, totalPages: 1 });
+    assert.deepStrictEqual(filtered.body.items.map((item: any) => item.setNumber), [`P2-${suffix}`, `P1-${suffix}`]);
+    assert.deepStrictEqual(filtered.body.items.map((item: any) => item.offers[0].availableStock), [2, 1]);
     const second = await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=2&pageSize=2`);
-    assert.deepStrictEqual(second.body.items.map((item: any) => item.legoProduct.setNumber), [`P1-${suffix}`]);
-    assert.deepStrictEqual(second.body.items.map((item: any) => item.availableStock), [1]);
+    assert.deepStrictEqual(second.body.items.map((item: any) => item.setNumber), []);
+    assert.deepStrictEqual(second.body.items.map((item: any) => item.offers[0].availableStock), []);
     assert.strictEqual((await get(`/products?theme=TECHNIC&minPrice=20&maxPrice=35&page=3&pageSize=2`)).body.items.length, 0);
   });
 
@@ -164,10 +161,10 @@ describe("Product catalogue HTTP integration", () => {
 
     const vehiclesCategory = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
     const vehicles = await get(`/products?categoryId=${vehiclesCategory.id}&q=${suffix}`);
-    assert.deepStrictEqual(vehicles.body.items.map((item: any) => item.legoProduct.setNumber).sort(), [`VEHICLE-SC-${suffix}`, `VEHICLE-TECH-${suffix}`].sort());
+    assert.deepStrictEqual(vehicles.body.items.map((item: any) => item.setNumber).sort(), [`VEHICLE-SC-${suffix}`, `VEHICLE-TECH-${suffix}`].sort());
     assert.ok(vehicles.body.items.every((item: any) => item.category.id === vehiclesCategory.id));
 
     const combined = await get(`/products?categoryId=${vehiclesCategory.id}&theme=Technic&q=${suffix}`);
-    assert.deepStrictEqual(combined.body.items.map((item: any) => item.legoProduct.setNumber), [`VEHICLE-TECH-${suffix}`]);
+    assert.deepStrictEqual(combined.body.items.map((item: any) => item.setNumber), [`VEHICLE-TECH-${suffix}`]);
   });
 });

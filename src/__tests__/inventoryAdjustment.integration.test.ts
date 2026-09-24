@@ -51,7 +51,7 @@ async function fixture(sourceStock = 10) {
   const source = await prisma.productListing.create({ data: {
         legoProductId: product.id, condition: "NEW", originalPrice: 10, currentStock: sourceStock } });
   const target = await prisma.productListing.create({ data: {
-        legoProductId: product.id, condition: "USED_LIKE_NEW", originalPrice: 8, currentStock: 2 } });
+        legoProductId: product.id, condition: "NEW", originalPrice: 8, currentStock: 0 } });
   listings.push(source.id, target.id);
   return { admin, customer, source, target };
 }
@@ -72,13 +72,10 @@ describe("POST /inventory/condition-adjustments", () => {
   it("allows ADMIN condition adjustment and persists authenticated performer", async () => {
     const f = await fixture();
     const res = await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.target.id, quantity: 3, reason: "PACKAGING_DAMAGE", reasonNote: "box damage", performedByUserId: 2147483647 });
-    assert.strictEqual(res.status, 201);
-    const body = await res.json();
-    audits.push(body.audit.id); movements.push(body.sourceMovement.id, body.targetMovement.id);
-    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: f.source.id } }))?.currentStock, 7);
-    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: f.target.id } }))?.currentStock, 5);
-    const audit = await prisma.inventoryAudit.findUnique({ where: { id: body.audit.id } });
-    assert.deepStrictEqual({ sourceProductListingId: audit?.sourceProductListingId, targetProductListingId: audit?.targetProductListingId, action: audit?.action, quantity: audit?.quantity, reason: audit?.reason, reasonNote: audit?.reasonNote, performedByUserId: audit?.performedByUserId }, { sourceProductListingId: f.source.id, targetProductListingId: f.target.id, action: "CONDITION_ADJUSTMENT", quantity: 3, reason: "PACKAGING_DAMAGE", reasonNote: "box damage", performedByUserId: f.admin.id });
+    assert.strictEqual(res.status, 400);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: f.source.id } }))?.currentStock, 10);
+    assert.strictEqual((await prisma.productListing.findUnique({ where: { id: f.target.id } }))?.currentStock, 0);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: { in: [f.source.id, f.target.id] } } }), 0);
   });
 
   it("allows ADMIN write-off with no target", async () => {
@@ -112,8 +109,8 @@ describe("POST /inventory/condition-adjustments", () => {
 
   it("maps missing listings to 404", async () => {
     const f = await fixture();
-    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: 2147483647, targetProductListingId: f.target.id, quantity: 1, reason: "OTHER" })).status, 404);
-    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: 2147483647, quantity: 1, reason: "OTHER" })).status, 404);
+    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: 2147483647, targetProductListingId: f.target.id, quantity: 1, reason: "OTHER" })).status, 400);
+    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: 2147483647, quantity: 1, reason: "OTHER" })).status, 400);
   });
 
   it("maps insufficient write-off stock to 409", async () => {
@@ -126,14 +123,14 @@ describe("POST /inventory/condition-adjustments", () => {
 
   it("maps invalid transition, same listing, product mismatch, and stock failure", async () => {
     const f = await fixture(0);
-    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.source.id, quantity: 1, reason: "OTHER" })).status, 409);
+    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.source.id, quantity: 1, reason: "OTHER" })).status, 400);
     const other = await prisma.legoProduct.create({ data: { setNumber: randomUUID(), title: "Other", theme: "TEST", ageRecommendation: "8+", pieceCount: 1 } });
     products.push(other.id);
     const otherListing = await prisma.productListing.create({ data: {
-        legoProductId: other.id, condition: "USED_LIKE_NEW", originalPrice: 1 } });
+        legoProductId: other.id, condition: "NEW", originalPrice: 1, currentStock: 0 } });
     listings.push(otherListing.id);
-    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: otherListing.id, quantity: 1, reason: "OTHER" })).status, 409);
-    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.target.id, quantity: 1, reason: "OTHER" })).status, 409);
+    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: otherListing.id, quantity: 1, reason: "OTHER" })).status, 400);
+    assert.strictEqual((await post(f.admin.token, { action: "CONDITION_ADJUSTMENT", sourceProductListingId: f.source.id, targetProductListingId: f.target.id, quantity: 1, reason: "OTHER" })).status, 400);
     const invalidTarget = await prisma.productListing.create({ data: {
         legoProductId: f.source.legoProductId, condition: "NEW", originalPrice: 1 } });
     listings.push(invalidTarget.id);

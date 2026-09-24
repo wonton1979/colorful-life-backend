@@ -462,11 +462,15 @@ export async function inspectOrderReturn(
       },
       select: {
         quantity: true,
+        orderItem: { select: { productListing: { select: { condition: true } } } },
       },
     });
 
     if (!orderReturn) {
       throw new OrderReturnNotFoundError(returnId, orderId);
+    }
+    if (restockQuantity > 0 && orderReturn.orderItem.productListing.condition === "USED_LIKE_NEW") {
+      throw new InvalidInspectionRestockConditionError();
     }
 
     if (restockQuantity > orderReturn.quantity) {
@@ -566,6 +570,9 @@ export async function completeOrderReturn(
     const listing = orderItem.productListing;
     if (!listing) {
       throw new ProductListingMissingError(orderItem.productListingId);
+    }
+    if (listing.condition === "USED_LIKE_NEW" && orderReturn.restockQuantity > 0) {
+      throw new InvalidInspectionRestockConditionError();
     }
 
     const claimResult = await tx.$executeRaw`

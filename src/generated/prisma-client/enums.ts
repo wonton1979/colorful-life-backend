@@ -25,6 +25,15 @@ export const ListingCondition = {
 export type ListingCondition = (typeof ListingCondition)[keyof typeof ListingCondition]
 
 
+export const UsedOfferLifecycle = {
+  AVAILABLE: 'AVAILABLE',
+  SOLD: 'SOLD',
+  RETIRED: 'RETIRED'
+} as const
+
+export type UsedOfferLifecycle = (typeof UsedOfferLifecycle)[keyof typeof UsedOfferLifecycle]
+
+
 export const OrderStatus = {
   PENDING: 'PENDING',
   EXPIRED: 'EXPIRED',

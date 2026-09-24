@@ -58,6 +58,11 @@ export type Category = Prisma.CategoryModel
  */
 export type ProductListing = Prisma.ProductListingModel
 /**
+ * Model UsedConditionPhoto
+ *
+ */
+export type UsedConditionPhoto = Prisma.UsedConditionPhotoModel
+/**
  * Model Cart
  *
  */

@@ -45,6 +45,10 @@ export class ProductListingMissingError extends Error {
   }
 }
 
+export class UsedOfferPurchaseReceiptError extends Error {
+  constructor() { super("Used physical offers cannot receive pooled purchase stock"); this.name = "UsedOfferPurchaseReceiptError"; }
+}
+
 /**
  * Result returned by the receive service.
  */
@@ -125,6 +129,7 @@ export async function receivePurchaseItemInTransaction(tx: Prisma.TransactionCli
         quantity: true,
         productListingId: true,
         receivedAt: true,
+        productListing: { select: { condition: true } },
       },
     });
 
@@ -135,6 +140,9 @@ export async function receivePurchaseItemInTransaction(tx: Prisma.TransactionCli
 
     if (!item.productListingId) {
       throw new ProductListingMissingError();
+    }
+    if (item.productListing?.condition === "USED_LIKE_NEW") {
+      throw new UsedOfferPurchaseReceiptError();
     }
 
     if (item.quantity <= 0) {

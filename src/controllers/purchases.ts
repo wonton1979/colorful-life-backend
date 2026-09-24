@@ -18,6 +18,7 @@ import {
   AlreadyReceivedError,
   InvalidQuantityError,
   ProductListingMissingError,
+  UsedOfferPurchaseReceiptError,
 } from "../domain/purchases/purchaseItemReceiving.js";
 // Domain service and error classes for purchase item return
 import {
@@ -112,6 +113,7 @@ export const receivePurchaseItem = async (req: Request, res: Response) => {
     if (err instanceof ProductListingMissingError) {
       return res.status(400).json({ error: err.message });
     }
+    if (err instanceof UsedOfferPurchaseReceiptError) return res.status(409).json({ error: err.message });
     console.error("Receive purchase item error", err);
     return res.status(500).json({ error: "Internal server error" });
   }

@@ -20,6 +20,12 @@ enum ListingCondition {
   USED_LIKE_NEW
 }
 
+enum UsedOfferLifecycle {
+  AVAILABLE
+  SOLD
+  RETIRED
+}
+
 enum OrderStatus {
   PENDING
   EXPIRED
@@ -263,31 +269,47 @@ model Category {
 }
 
 model ProductListing {
-  id                    Int                 @id @default(autoincrement())
-  legoProductId         Int
-  legoProduct           LegoProduct         @relation(fields: [legoProductId], references: [id])
-  catalogueArtworkUrl   String?
+  id                       Int                  @id @default(autoincrement())
+  legoProductId            Int
+  legoProduct              LegoProduct          @relation(fields: [legoProductId], references: [id])
+  catalogueArtworkUrl      String?
   catalogueArtworkPublicId String?
-  isFeatureProduct      Boolean             @default(false)
-  condition             ListingCondition
-  originalPrice         Decimal             @db.Decimal(10, 2)
-  salePrice             Decimal?            @db.Decimal(10, 2)
-  currentStock          Int                 @default(0)
-  reservedStock         Int                 @default(0)
-  active                Boolean             @default(true)
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  listingImages         ListingImage[]
-  inventoryMovements    InventoryMovement[]
-  purchaseItems         PurchaseItem[]
-  orderItems            OrderItem[]
-  cartItems             CartItem[]
-  sourceInventoryAudits InventoryAudit[]    @relation("InventoryAuditSourceListing")
-  targetInventoryAudits InventoryAudit[]    @relation("InventoryAuditTargetListing")
+  isFeatureProduct         Boolean              @default(false)
+  condition                ListingCondition
+  damageDescription        String?
+  usedLifecycle            UsedOfferLifecycle?
+  originalPrice            Decimal              @db.Decimal(10, 2)
+  salePrice                Decimal?             @db.Decimal(10, 2)
+  currentStock             Int                  @default(0)
+  reservedStock            Int                  @default(0)
+  active                   Boolean              @default(true)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  listingImages            ListingImage[]
+  usedConditionPhotos      UsedConditionPhoto[]
+  inventoryMovements       InventoryMovement[]
+  purchaseItems            PurchaseItem[]
+  orderItems               OrderItem[]
+  cartItems                CartItem[]
+  sourceInventoryAudits    InventoryAudit[]     @relation("InventoryAuditSourceListing")
+  targetInventoryAudits    InventoryAudit[]     @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
   @@index([condition])
   @@index([active])
+}
+
+model UsedConditionPhoto {
+  id        Int            @id @default(autoincrement())
+  listingId Int
+  listing   ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  publicId  String
+  sortOrder Int
+  createdAt DateTime       @default(now())
+
+  @@unique([listingId, sortOrder])
+  @@index([listingId])
 }
 
 model Cart {
@@ -477,19 +499,22 @@ model Refund {
 }
 
 model OrderItem {
-  id                     Int            @id @default(autoincrement())
-  orderId                Int
-  order                  Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productListingId       Int
-  productListing         ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
-  quantity               Int
-  returnedQuantity       Int            @default(0)
-  reservedReturnQuantity Int            @default(0)
-  unitPrice              Decimal        @db.Decimal(10, 2)
-  lineTotal              Decimal        @db.Decimal(12, 2)
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
-  returns                OrderReturn[]
+  id                        Int               @id @default(autoincrement())
+  orderId                   Int
+  order                     Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productListingId          Int
+  productListing            ProductListing    @relation(fields: [productListingId], references: [id], onDelete: Restrict)
+  quantity                  Int
+  returnedQuantity          Int               @default(0)
+  reservedReturnQuantity    Int               @default(0)
+  unitPrice                 Decimal           @db.Decimal(10, 2)
+  lineTotal                 Decimal           @db.Decimal(12, 2)
+  conditionSnapshot         ListingCondition?
+  damageDescriptionSnapshot String?
+  conditionPhotoSnapshot    Json?
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  returns                   OrderReturn[]
 
   @@index([orderId])
   @@index([productListingId])

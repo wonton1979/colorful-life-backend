@@ -405,6 +405,7 @@ export const ModelName = {
   LegoProduct: 'LegoProduct',
   Category: 'Category',
   ProductListing: 'ProductListing',
+  UsedConditionPhoto: 'UsedConditionPhoto',
   Cart: 'Cart',
   CartItem: 'CartItem',
   ListingImage: 'ListingImage',
@@ -434,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "businessExpense" | "user" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "category" | "productListing" | "cart" | "cartItem" | "listingImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "category" | "productListing" | "usedConditionPhoto" | "cart" | "cartItem" | "listingImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1027,6 +1028,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ProductListingCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ProductListingCountAggregateOutputType> | number
+        }
+      }
+    }
+    UsedConditionPhoto: {
+      payload: Prisma.$UsedConditionPhotoPayload<ExtArgs>
+      fields: Prisma.UsedConditionPhotoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UsedConditionPhotoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UsedConditionPhotoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        findFirst: {
+          args: Prisma.UsedConditionPhotoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UsedConditionPhotoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        findMany: {
+          args: Prisma.UsedConditionPhotoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>[]
+        }
+        create: {
+          args: Prisma.UsedConditionPhotoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        createMany: {
+          args: Prisma.UsedConditionPhotoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UsedConditionPhotoCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>[]
+        }
+        delete: {
+          args: Prisma.UsedConditionPhotoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        update: {
+          args: Prisma.UsedConditionPhotoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        deleteMany: {
+          args: Prisma.UsedConditionPhotoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UsedConditionPhotoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UsedConditionPhotoUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>[]
+        }
+        upsert: {
+          args: Prisma.UsedConditionPhotoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UsedConditionPhotoPayload>
+        }
+        aggregate: {
+          args: Prisma.UsedConditionPhotoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUsedConditionPhoto>
+        }
+        groupBy: {
+          args: Prisma.UsedConditionPhotoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsedConditionPhotoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UsedConditionPhotoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UsedConditionPhotoCountAggregateOutputType> | number
         }
       }
     }
@@ -2214,6 +2289,8 @@ export const ProductListingScalarFieldEnum = {
   catalogueArtworkPublicId: 'catalogueArtworkPublicId',
   isFeatureProduct: 'isFeatureProduct',
   condition: 'condition',
+  damageDescription: 'damageDescription',
+  usedLifecycle: 'usedLifecycle',
   originalPrice: 'originalPrice',
   salePrice: 'salePrice',
   currentStock: 'currentStock',
@@ -2224,6 +2301,18 @@ export const ProductListingScalarFieldEnum = {
 } as const
 
 export type ProductListingScalarFieldEnum = (typeof ProductListingScalarFieldEnum)[keyof typeof ProductListingScalarFieldEnum]
+
+
+export const UsedConditionPhotoScalarFieldEnum = {
+  id: 'id',
+  listingId: 'listingId',
+  url: 'url',
+  publicId: 'publicId',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt'
+} as const
+
+export type UsedConditionPhotoScalarFieldEnum = (typeof UsedConditionPhotoScalarFieldEnum)[keyof typeof UsedConditionPhotoScalarFieldEnum]
 
 
 export const CartScalarFieldEnum = {
@@ -2388,6 +2477,9 @@ export const OrderItemScalarFieldEnum = {
   reservedReturnQuantity: 'reservedReturnQuantity',
   unitPrice: 'unitPrice',
   lineTotal: 'lineTotal',
+  conditionSnapshot: 'conditionSnapshot',
+  damageDescriptionSnapshot: 'damageDescriptionSnapshot',
+  conditionPhotoSnapshot: 'conditionPhotoSnapshot',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -2486,6 +2578,14 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -2500,6 +2600,15 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -2624,6 +2733,20 @@ export type EnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'ListingCondition[]'
  */
 export type ListEnumListingConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ListingCondition[]'>
+
+
+
+/**
+ * Reference to a field of type 'UsedOfferLifecycle'
+ */
+export type EnumUsedOfferLifecycleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UsedOfferLifecycle'>
+
+
+
+/**
+ * Reference to a field of type 'UsedOfferLifecycle[]'
+ */
+export type ListEnumUsedOfferLifecycleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'UsedOfferLifecycle[]'>
 
 
 
@@ -2764,6 +2887,20 @@ export type EnumRefundProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'RefundProvider[]'
  */
 export type ListEnumRefundProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RefundProvider[]'>
+
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
 
 
 
@@ -2995,6 +3132,7 @@ export type GlobalOmitConfig = {
   legoProduct?: Prisma.LegoProductOmit
   category?: Prisma.CategoryOmit
   productListing?: Prisma.ProductListingOmit
+  usedConditionPhoto?: Prisma.UsedConditionPhotoOmit
   cart?: Prisma.CartOmit
   cartItem?: Prisma.CartItemOmit
   listingImage?: Prisma.ListingImageOmit

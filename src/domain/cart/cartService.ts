@@ -4,8 +4,9 @@ import { CartItemNotFoundError, InsufficientAvailableStockError, ProductListingI
 
 const listingSelect = {
   id: true, legoProductId: true, condition: true, originalPrice: true, salePrice: true,
-  currentStock: true, reservedStock: true, active: true, legoProduct: true,
+  currentStock: true, reservedStock: true, active: true, usedLifecycle: true, damageDescription: true, legoProduct: true,
   listingImages: { orderBy: { sortOrder: "asc" as const } },
+  usedConditionPhotos: { orderBy: { sortOrder: "asc" as const } },
 };
 
 async function getOrCreateCart(userId: number) {
@@ -22,6 +23,9 @@ async function validateListing(productListingId: number, quantity: number, db: t
   const listing = await db.productListing.findUnique({ where: { id: productListingId }, select: listingSelect });
   if (!listing) throw new ProductListingNotFoundError(productListingId);
   if (!listing.active) throw new ProductListingInactiveError(productListingId);
+  if (listing.condition === "USED_LIKE_NEW" && listing.usedLifecycle !== "AVAILABLE") {
+    throw new InsufficientAvailableStockError(productListingId, 0, quantity);
+  }
   const availableStock = listing.currentStock - listing.reservedStock;
   if (quantity > availableStock) throw new InsufficientAvailableStockError(productListingId, availableStock, quantity);
   return listing;
@@ -39,6 +43,9 @@ export async function addCartItem(userId: number, productListingId: number, quan
     const listing = await tx.productListing.findUnique({ where: { id: productListingId }, select: listingSelect });
     if (!listing) throw new ProductListingNotFoundError(productListingId);
     if (!listing.active) throw new ProductListingInactiveError(productListingId);
+    if (listing.condition === "USED_LIKE_NEW" && listing.usedLifecycle !== "AVAILABLE") {
+      throw new InsufficientAvailableStockError(productListingId, 0, quantity);
+    }
 
     const availableStock = listing.currentStock - listing.reservedStock;
     const rows = await tx.$queryRaw<Array<{ id: number }>>`
@@ -47,6 +54,7 @@ export async function addCartItem(userId: number, productListingId: number, quan
       FROM "ProductListing"
       WHERE "id" = ${productListingId}
         AND "active" = TRUE
+        AND ("condition" = 'NEW' OR ("condition" = 'USED_LIKE_NEW' AND "usedLifecycle" = 'AVAILABLE'))
         AND "currentStock" - "reservedStock" >= ${quantity}
       ON CONFLICT ("cartId", "productListingId") DO UPDATE
       SET "quantity" = "CartItem"."quantity" + EXCLUDED."quantity",

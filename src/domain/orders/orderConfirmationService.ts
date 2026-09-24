@@ -43,10 +43,12 @@ export async function confirmOrder(adminUserId: number,orderId: number,) {
       const conversionResult = await tx.$executeRaw`
         UPDATE "ProductListing"
         SET "currentStock" = "currentStock" - ${item.quantity},
-            "reservedStock" = "reservedStock" - ${item.quantity}
+            "reservedStock" = "reservedStock" - ${item.quantity},
+            "usedLifecycle" = CASE WHEN "condition" = 'USED_LIKE_NEW' THEN 'SOLD'::"UsedOfferLifecycle" ELSE "usedLifecycle" END
         WHERE id = ${item.productListingId}
           AND "currentStock" >= ${item.quantity}
           AND "reservedStock" >= ${item.quantity}
+          AND ("condition" = 'NEW' OR ("condition" = 'USED_LIKE_NEW' AND "usedLifecycle" = 'AVAILABLE' AND ${item.quantity} = 1))
       `;
       if (conversionResult === 0) {
         const listing = await tx.productListing.findUnique({ where: { id: item.productListingId }, select: { currentStock: true } });

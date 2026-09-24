@@ -65,10 +65,13 @@ export async function cancelOrder(
     } else if (order.status === OrderStatus.CONFIRMED) {
       const orderItems = await tx.orderItem.findMany({
         where: { orderId },
-        select: { productListingId: true, quantity: true },
+        select: { productListingId: true, quantity: true, productListing: { select: { condition: true } } },
       });
 
       for (const item of orderItems) {
+        // A confirmed Used offer is terminal once consumed; a later cancellation
+        // must not make that physical item sellable again.
+        if (item.productListing.condition === "USED_LIKE_NEW") continue;
         await tx.productListing.update({
           where: { id: item.productListingId },
           data: { currentStock: { increment: item.quantity } },
@@ -147,10 +150,11 @@ export async function cancelOrderByAdmin(
     } else if (order.status === OrderStatus.CONFIRMED) {
       const orderItems = await tx.orderItem.findMany({
         where: { orderId },
-        select: { productListingId: true, quantity: true },
+        select: { productListingId: true, quantity: true, productListing: { select: { condition: true } } },
       });
 
       for (const item of orderItems) {
+        if (item.productListing.condition === "USED_LIKE_NEW") continue;
         await tx.productListing.update({
           where: { id: item.productListingId },
           data: { currentStock: { increment: item.quantity } },

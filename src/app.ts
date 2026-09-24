@@ -16,6 +16,7 @@ import { createListingImagesRouter } from "./routes/listingImages.js";
 import { createCatalogueArtworkRouter } from "./routes/catalogueArtwork.js";
 import categoriesRouter from "./routes/categories.js";
 import { createCategoryManagementRouter } from "./routes/categoryManagement.js";
+import { createUsedOffersRouter, createConditionConversionRouter } from "./routes/usedOffers.js";
 import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
 export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage, categoryArtworkStorage?: ImageStorage) {
@@ -28,6 +29,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/", profileRouter);
   app.use("/users", usersRouter);
   app.use("/products", productsRouter);
+  app.use("/products", createUsedOffersRouter(imageStorage));
   app.use("/products", createListingImagesRouter(imageStorage));
   app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
   app.use("/categories", categoriesRouter);
@@ -38,6 +40,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/cart", cartRouter);
   app.use("/business-expenses", businessExpensesRouter);
   app.use("/inventory", inventoryRouter);
+  app.use("/inventory", createConditionConversionRouter(imageStorage));
   app.get("/health", (_req, res) => { res.json({ status: "ok" }); });
   return app;
 }
