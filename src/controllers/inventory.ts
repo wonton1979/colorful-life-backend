@@ -10,7 +10,35 @@ import {
   InventoryListingNotFoundError,
   InventoryListingsMustDifferError,
   InventoryListingsMustShareProductError,
+  reconcileStocktake,
+  InvalidStocktakeQuantityError,
+  StocktakeBelowReservedStockError,
+  StocktakeListingNotFoundError,
 } from "../domain/inventory/inventoryAdjustmentService.js";
+import { z } from "zod";
+
+export const reconcileStocktakeInventory = async (req: Request, res: Response) => {
+  const user = req.user as { id: number; role: string };
+  if (user.role !== "ADMIN") return res.status(403).json({ error: "Forbidden: ADMIN only" });
+
+  const parsed = z.object({
+    productListingId: z.number().int().positive(),
+    actualStock: z.number().int().nonnegative().max(2_147_483_647),
+    reasonNote: z.string().trim().optional(),
+  }).strict().safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.format() });
+
+  try {
+    const result = await reconcileStocktake({ ...parsed.data, performedByUserId: user.id });
+    return res.status(200).json(result);
+  } catch (err: unknown) {
+    if (err instanceof InvalidStocktakeQuantityError) return res.status(400).json({ error: err.message });
+    if (err instanceof StocktakeListingNotFoundError) return res.status(404).json({ error: err.message });
+    if (err instanceof StocktakeBelowReservedStockError) return res.status(409).json({ error: err.message });
+    console.error("Stocktake reconciliation error", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 
 export const createInventoryAdjustment = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };

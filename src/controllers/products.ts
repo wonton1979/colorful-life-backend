@@ -146,13 +146,17 @@ export const createProduct = async (req: Request, res: Response) => {
  * Partially updates a product listing and its associated LegoProduct.
  * Supports updates to the following fields:
  *   - LegoProduct: setNumber, title, description, theme, ageRecommendation, pieceCount
- *   - ProductListing: condition, originalPrice, salePrice, currentStock
+ *   - ProductListing: condition, originalPrice, salePrice
  * Non‑updatable fields (IDs, timestamps, active flag, etc.) are ignored.
  */
 export const updateProduct = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     return res.status(404).json({ error: "Listing not found" });
+  }
+
+  if (typeof req.body === "object" && req.body !== null && "currentStock" in req.body) {
+    return res.status(400).json({ error: "currentStock must be changed through an inventory operation" });
   }
 
   // Define partial schema for validation
@@ -169,7 +173,6 @@ export const updateProduct = async (req: Request, res: Response) => {
       condition: z.nativeEnum(ListingCondition),
       originalPrice: z.number().positive({ message: "originalPrice must be positive" }),
       salePrice: z.number().nonnegative().optional(),
-      currentStock: z.number().int().nonnegative().optional(),
     })
     .partial();
 
@@ -190,7 +193,6 @@ export const updateProduct = async (req: Request, res: Response) => {
   if (body.condition !== undefined) listingData.condition = body.condition;
   if (body.originalPrice !== undefined) listingData.originalPrice = body.originalPrice;
   if (body.salePrice !== undefined) listingData.salePrice = body.salePrice;
-  if (body.currentStock !== undefined) listingData.currentStock = body.currentStock;
 
   // Map LegoProduct fields
   const legoFields = [
