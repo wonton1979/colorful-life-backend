@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import app from "../app.js";
 import { config } from "../config/index.js";
 import { prisma } from "../prisma/runtime.js";
+import { reconcileStocktake } from "../domain/inventory/inventoryAdjustmentService.js";
 
 const users: number[] = [];
 const products: number[] = [];
@@ -59,6 +60,12 @@ async function post(token: string | undefined, body: unknown) {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
   return fetch(`${url}/inventory/condition-adjustments`, { method: "POST", headers, body: JSON.stringify(body) });
+}
+
+async function postStocktake(token: string | undefined, body: unknown) {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return fetch(`${url}/inventory/stocktakes`, { method: "POST", headers, body: JSON.stringify(body) });
 }
 
 describe("POST /inventory/condition-adjustments", () => {
@@ -144,5 +151,81 @@ describe("POST /inventory/condition-adjustments", () => {
     assert.deepStrictEqual([relatedOrder, relatedPayment, relatedRefund, relatedReturn], [0, 0, 0, 0]);
     const body = await res.json();
     audits.push(body.audit.id); movements.push(body.movement.id);
+  });
+});
+
+describe("POST /inventory/stocktakes", () => {
+  it("requires an ADMIN and validates actualStock as a non-negative integer", async () => {
+    const f = await fixture();
+    const body = { productListingId: f.source.id, actualStock: 5 };
+    assert.strictEqual((await postStocktake(undefined, body)).status, 401);
+    assert.strictEqual((await postStocktake(f.customer.token, body)).status, 403);
+    for (const actualStock of [-1, 1.5, 2_147_483_648]) {
+      assert.strictEqual((await postStocktake(f.admin.token, { ...body, actualStock })).status, 400);
+    }
+  });
+
+  it("reconciles positive and negative differences with signed manual movements", async () => {
+    const f = await fixture(5);
+    const positive = await postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 7, reasonNote: "counted at home" });
+    assert.strictEqual(positive.status, 200);
+    const positiveBody = await positive.json();
+    movements.push(positiveBody.movement.id);
+    assert.deepStrictEqual(positiveBody.listing, { id: f.source.id, currentStock: 7 });
+    assert.strictEqual(positiveBody.movement.quantityChange, 2);
+    assert.strictEqual(positiveBody.movement.type, "MANUAL_ADJUSTMENT");
+    assert.strictEqual(positiveBody.movement.note, "counted at home");
+
+    const negative = await postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 5 });
+    assert.strictEqual(negative.status, 200);
+    const negativeBody = await negative.json();
+    movements.push(negativeBody.movement.id);
+    assert.strictEqual(negativeBody.movement.quantityChange, -2);
+    assert.strictEqual(negativeBody.movement.type, "MANUAL_ADJUSTMENT");
+    assert.strictEqual((await prisma.productListing.findUniqueOrThrow({ where: { id: f.source.id } })).currentStock, 5);
+  });
+
+  it("returns a successful no-op without a zero movement", async () => {
+    const f = await fixture(5);
+    const response = await postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 5 });
+    assert.strictEqual(response.status, 200);
+    const body = await response.json();
+    assert.deepStrictEqual(body.listing, { id: f.source.id, currentStock: 5 });
+    assert.strictEqual(body.movement, null);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: f.source.id } }), 0);
+  });
+
+  it("rejects actual stock below reservations without changing stock or writing movement", async () => {
+    const f = await fixture(5);
+    await prisma.productListing.update({ where: { id: f.source.id }, data: { reservedStock: 3 } });
+    const response = await postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 2 });
+    assert.strictEqual(response.status, 409);
+    assert.strictEqual((await prisma.productListing.findUniqueOrThrow({ where: { id: f.source.id } })).currentStock, 5);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: f.source.id } }), 0);
+  });
+
+  it("rolls back the stock write if movement creation fails", async () => {
+    const f = await fixture(5);
+    await assert.rejects(() => reconcileStocktake({
+      productListingId: f.source.id,
+      actualStock: 7,
+      performedByUserId: 2_147_483_647,
+    }));
+    assert.strictEqual((await prisma.productListing.findUniqueOrThrow({ where: { id: f.source.id } })).currentStock, 5);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: f.source.id } }), 0);
+  });
+
+  it("serializes concurrent stocktakes against the locked listing row", async () => {
+    const f = await fixture(8);
+    const results = await Promise.all([
+      postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 6 }),
+      postStocktake(f.admin.token, { productListingId: f.source.id, actualStock: 6 }),
+    ]);
+    assert.deepStrictEqual(results.map((response) => response.status), [200, 200]);
+    const bodies = await Promise.all(results.map((response) => response.json()));
+    movements.push(...bodies.filter((body) => body.movement).map((body) => body.movement.id));
+    assert.deepStrictEqual(bodies.map((body) => body.movement?.quantityChange ?? 0).sort((a, b) => a - b), [-2, 0]);
+    assert.strictEqual((await prisma.productListing.findUniqueOrThrow({ where: { id: f.source.id } })).currentStock, 6);
+    assert.strictEqual(await prisma.inventoryMovement.count({ where: { listingId: f.source.id } }), 1);
   });
 });

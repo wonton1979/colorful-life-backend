@@ -129,6 +129,12 @@ describe("product administration authorization", () => {
     const updateResponse = await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ title: "Updated Product" }) });
     assert.strictEqual(updateResponse.status, 200);
     assert.strictEqual((await updateResponse.json()).category.name, "Others");
+    const stockEditResponse = await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ currentStock: 99 }) });
+    assert.strictEqual(stockEditResponse.status, 400);
+    const mixedStockEditResponse = await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ title: "Should not update", currentStock: 99 }) });
+    assert.strictEqual(mixedStockEditResponse.status, 400);
+    assert.strictEqual((await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } })).title, "Updated Product");
+    assert.strictEqual((await prisma.productListing.findUniqueOrThrow({ where: { id: listing.id } })).currentStock, 3);
     assert.strictEqual((await request(`/products/${listing.id}`, admin.token, { method: "PATCH", body: JSON.stringify({ categoryId: vehicles.id }) })).status, 400);
     assert.strictEqual((await request(`/products/${listing.id}/deactivate`, admin.token, { method: "PATCH" })).status, 200);
     assert.strictEqual((await request(`/products/${listing.id}/reactivate`, admin.token, { method: "PATCH" })).status, 200);
