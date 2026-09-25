@@ -6,8 +6,8 @@ export async function lockCategoryFeatureSelection(tx: Prisma.TransactionClient,
 }
 
 export async function hasCategoryFeatureProduct(tx: Prisma.TransactionClient, categoryId: number): Promise<boolean> {
-  const existingFeature = await tx.productListing.findFirst({
-    where: { legoProduct: { categoryId }, isFeatureProduct: true },
+  const existingFeature = await tx.legoProduct.findFirst({
+    where: { categoryId, isFeatureProduct: true },
     select: { id: true },
   });
   return existingFeature !== null;

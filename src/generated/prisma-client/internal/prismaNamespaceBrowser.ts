@@ -62,7 +62,7 @@ export const ModelName = {
   UsedConditionPhoto: 'UsedConditionPhoto',
   Cart: 'Cart',
   CartItem: 'CartItem',
-  ListingImage: 'ListingImage',
+  ProductImage: 'ProductImage',
   InventoryMovement: 'InventoryMovement',
   InventoryAudit: 'InventoryAudit',
   Order: 'Order',
@@ -176,6 +176,9 @@ export const LegoProductScalarFieldEnum = {
   ageRecommendation: 'ageRecommendation',
   pieceCount: 'pieceCount',
   isRetired: 'isRetired',
+  catalogueArtworkUrl: 'catalogueArtworkUrl',
+  catalogueArtworkPublicId: 'catalogueArtworkPublicId',
+  isFeatureProduct: 'isFeatureProduct',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -198,9 +201,6 @@ export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typ
 export const ProductListingScalarFieldEnum = {
   id: 'id',
   legoProductId: 'legoProductId',
-  catalogueArtworkUrl: 'catalogueArtworkUrl',
-  catalogueArtworkPublicId: 'catalogueArtworkPublicId',
-  isFeatureProduct: 'isFeatureProduct',
   condition: 'condition',
   damageDescription: 'damageDescription',
   usedLifecycle: 'usedLifecycle',
@@ -250,9 +250,9 @@ export const CartItemScalarFieldEnum = {
 export type CartItemScalarFieldEnum = (typeof CartItemScalarFieldEnum)[keyof typeof CartItemScalarFieldEnum]
 
 
-export const ListingImageScalarFieldEnum = {
+export const ProductImageScalarFieldEnum = {
   id: 'id',
-  listingId: 'listingId',
+  legoProductId: 'legoProductId',
   url: 'url',
   publicId: 'publicId',
   altText: 'altText',
@@ -260,7 +260,7 @@ export const ListingImageScalarFieldEnum = {
   createdAt: 'createdAt'
 } as const
 
-export type ListingImageScalarFieldEnum = (typeof ListingImageScalarFieldEnum)[keyof typeof ListingImageScalarFieldEnum]
+export type ProductImageScalarFieldEnum = (typeof ProductImageScalarFieldEnum)[keyof typeof ProductImageScalarFieldEnum]
 
 
 export const InventoryMovementScalarFieldEnum = {

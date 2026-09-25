@@ -12,7 +12,7 @@ import stripeWebhookRouter from "./routes/stripeWebhook.js";
 import paypalWebhookRouter from "./routes/paypalWebhook.js";
 import cartRouter from "./routes/cart.js";
 import cors from "cors";
-import { createListingImagesRouter } from "./routes/listingImages.js";
+import { createProductImagesRouter } from "./routes/productImages.js";
 import { createCatalogueArtworkRouter } from "./routes/catalogueArtwork.js";
 import categoriesRouter from "./routes/categories.js";
 import { createCategoryManagementRouter } from "./routes/categoryManagement.js";
@@ -32,7 +32,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/users", usersRouter);
   app.use("/products", productsRouter);
   app.use("/products", createUsedOffersRouter(imageStorage));
-  app.use("/products", createListingImagesRouter(imageStorage));
+  app.use("/products", createProductImagesRouter(imageStorage));
   app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
   app.use("/admin/products", adminProductsRouter);
   app.use("/admin/product-listings", adminProductListingsRouter);

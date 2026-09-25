@@ -2,41 +2,42 @@ import type { PrismaClient } from "../../generated/prisma-client/client.js";
 import { prisma as defaultPrisma } from "../../prisma/runtime.js";
 import { lockCategoryFeatureSelection } from "./productListingCreationService.js";
 
-export class FeatureListingNotFoundError extends Error {}
+export class FeatureProductNotFoundError extends Error {}
+export class FeatureProductCategoryChangedError extends Error {}
 
 export function createProductFeatureService(db: PrismaClient = defaultPrisma) {
   return {
-    async setFeature(listingId: number) {
+    async setFeature(productId: number) {
       return db.$transaction(async (tx) => {
-        const candidate = await tx.productListing.findUnique({
-          where: { id: listingId },
-          select: { legoProduct: { select: { categoryId: true } } },
+        const candidate = await tx.legoProduct.findUnique({
+          where: { id: productId },
+          select: { categoryId: true },
         });
-        if (!candidate || candidate.legoProduct.categoryId === null) throw new FeatureListingNotFoundError("Listing has no Category");
+        if (!candidate || candidate.categoryId === null) throw new FeatureProductNotFoundError("Product has no Category");
 
-        // Lock the complete category set so concurrent selections serialize.
-        // The advisory lock is category-scoped because Category now belongs to
-        // LegoProduct and cannot be represented by a ProductListing index.
-        await lockCategoryFeatureSelection(tx, candidate.legoProduct.categoryId);
-        await tx.$queryRaw`
-          SELECT pl.id FROM "ProductListing" pl
-          JOIN "LegoProduct" lp ON lp.id = pl."legoProductId"
-          WHERE lp."categoryId" = ${candidate.legoProduct.categoryId}
-          ORDER BY pl.id
+        // Application selections take the category advisory lock before rows.
+        // Direct category writes are protected by the unique index and CHECK,
+        // without a row trigger that would acquire these locks in reverse order.
+        await lockCategoryFeatureSelection(tx, candidate.categoryId);
+        const products = await tx.$queryRaw<Array<{ id: number }>>`
+          SELECT lp.id FROM "LegoProduct" lp
+          WHERE lp."categoryId" = ${candidate.categoryId}
+          ORDER BY lp.id
           FOR UPDATE
         `;
-        const listing = await tx.productListing.findUnique({
-          where: { id: listingId },
-          select: { id: true, legoProduct: { select: { categoryId: true } } },
-        });
-        if (!listing || listing.legoProduct.categoryId === null) throw new FeatureListingNotFoundError("Listing has no Category");
+        // A direct category move can commit while we wait. Only proceed if the
+        // candidate was actually locked in the category whose advisory lock we
+        // own. Never clear another category's feature using a stale lock.
+        if (!products.some((product) => product.id === productId)) {
+          throw new FeatureProductCategoryChangedError("Product category changed; retry Feature selection");
+        }
 
-        await tx.productListing.updateMany({
-          where: { legoProduct: { categoryId: listing.legoProduct.categoryId }, isFeatureProduct: true },
+        await tx.legoProduct.updateMany({
+          where: { categoryId: candidate.categoryId, isFeatureProduct: true },
           data: { isFeatureProduct: false },
         });
-        return tx.productListing.update({
-          where: { id: listingId },
+        return tx.legoProduct.update({
+          where: { id: productId },
           data: { isFeatureProduct: true },
           select: { id: true, isFeatureProduct: true },
         });

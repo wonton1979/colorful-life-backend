@@ -220,12 +220,12 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
     });
     assert.equal(createdExisting.status, 201);
     const existingListing = await createdExisting.json();
-    assert.equal(existingListing.isFeatureProduct, true);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: existingProduct.id } })).isFeatureProduct, true);
     const createdAgain = await fetch(base + "/purchases/" + purchaseId + "/review/listings", {
       method: "POST", headers,
       body: JSON.stringify({ existingProductId: existingProduct.id, condition: "USED_LIKE_NEW", originalPrice: 15, currentStock: 0 }),
     });
     assert.equal(createdAgain.status, 400);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: existingListing.id } })).isFeatureProduct, true);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: existingProduct.id } })).isFeatureProduct, true);
   } finally { await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve())); }
 });

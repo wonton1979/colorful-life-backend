@@ -51,10 +51,19 @@ purchaseListingsRouter.post("/listings", async (req, res) => {
     const product = await prisma.legoProduct.findUnique({ where: { id: body.existingProductId }, select: { id: true, categoryId: true } });
     if (!product) { res.status(404).json({ error: "Product not found" }); return; }
     const { existingProductId, ...data } = body;
-    const listing = await listingCreation.createForCategory(product.categoryId, (tx, isFeatureProduct) => tx.productListing.create({
-      data: { ...data, currentStock: 0, isFeatureProduct, legoProductId: existingProductId },
-      include: { legoProduct: { include: { category: true } }, listingImages: true },
-    }));
+    const listing = await listingCreation.createForCategory(product.categoryId, async (tx, firstProductInCategory) => {
+      if (firstProductInCategory) await tx.legoProduct.update({ where: { id: existingProductId }, data: { isFeatureProduct: true } });
+      return tx.productListing.create({
+        data: { ...data, currentStock: 0, legoProductId: existingProductId },
+        include: { legoProduct: { include: {
+          category: true,
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } } },
+      });
+    });
     const { category, ...legoProduct } = listing.legoProduct;
     res.status(201).json({ ...listing, legoProduct, category, availableStock: 0 });
   } catch { res.status(500).json({ error: "Listing could not be created" }); }

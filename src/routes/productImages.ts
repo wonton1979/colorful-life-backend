@@ -2,7 +2,7 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import multer from "multer";
 import { authMiddleware } from "../middleware/auth.js";
 import { cloudinaryImageStorage } from "../infrastructure/imageStorage/cloudinaryImageStorage.js";
-import { createListingImageController } from "../controllers/listingImages.js";
+import { createProductImageController } from "../controllers/productImages.js";
 import type { ImageStorage } from "../infrastructure/imageStorage/imageStorage.js";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024, files: 1 }, fileFilter: (_req, file, cb) => {
@@ -22,14 +22,15 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
   });
 }
 
-export function createListingImagesRouter(storage: ImageStorage = cloudinaryImageStorage) {
-  const controller = createListingImageController(storage);
+export function createProductImagesRouter(storage: ImageStorage = cloudinaryImageStorage) {
+  const controller = createProductImageController(storage);
   const router = Router();
-  router.post("/:listingId/images", authMiddleware, adminOnly, uploadMiddleware, controller.upload);
-  router.patch("/:listingId/images/order", authMiddleware, adminOnly, controller.reorder);
-  router.patch("/:listingId/images/:imageId", authMiddleware, adminOnly, controller.updateAltText);
-  router.delete("/:listingId/images/:imageId", authMiddleware, adminOnly, controller.delete);
+  router.get("/by-product/:productId/images", authMiddleware, adminOnly, controller.list);
+  router.post("/by-product/:productId/images", authMiddleware, adminOnly, uploadMiddleware, controller.upload);
+  router.patch("/by-product/:productId/images/order", authMiddleware, adminOnly, controller.reorder);
+  router.patch("/by-product/:productId/images/:imageId", authMiddleware, adminOnly, controller.updateAltText);
+  router.delete("/by-product/:productId/images/:imageId", authMiddleware, adminOnly, controller.delete);
   return router;
 }
 
-export default createListingImagesRouter();
+export default createProductImagesRouter();

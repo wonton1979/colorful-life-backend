@@ -27,10 +27,14 @@ afterEach(async () => {
 
 after(async () => { await prisma.$disconnect(); server.close(); });
 
-async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date; currentStock?: number; reservedStock?: number; isRetired?: boolean }) {
+async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date; currentStock?: number; reservedStock?: number; isRetired?: boolean; isFeatureProduct?: boolean; catalogueArtworkUrl?: string | null; catalogueArtworkPublicId?: string | null }) {
   const category = await prisma.category.findUniqueOrThrow({ where: { name: data.category === "VEHICLES" ? "Vehicles" : data.category === "CITY" ? "City" : "Others" } });
   const product = await prisma.legoProduct.create({
-    data: { setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100, categoryId: category.id, isRetired: data.isRetired },
+    data: {
+      setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100,
+      categoryId: category.id, isRetired: data.isRetired, isFeatureProduct: data.isFeatureProduct ?? false,
+      catalogueArtworkUrl: data.catalogueArtworkUrl ?? null, catalogueArtworkPublicId: data.catalogueArtworkPublicId ?? null,
+    },
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
@@ -72,11 +76,11 @@ describe("Product catalogue HTTP integration", () => {
     });
   }
 
-  it("preserves existing catalogue fields, serialization, and ordered listing images", async () => {
+  it("returns shared product presentation once and keeps offer fields listing-specific", async () => {
     const setNumber = `CONTRACT-${randomUUID()}`;
     const listing = await makeListing({ setNumber, title: "Catalogue contract", theme: "City", originalPrice: 12.5, salePrice: 9.25, currentStock: 6, reservedStock: 2 });
-    const laterImage = await prisma.listingImage.create({ data: { listingId: listing.id, url: "https://cdn.example/later.jpg", publicId: `later-${listing.id}`, sortOrder: 2 } });
-    const firstImage = await prisma.listingImage.create({ data: { listingId: listing.id, url: "https://cdn.example/first.jpg", publicId: `first-${listing.id}`, sortOrder: 1, altText: "First image" } });
+    const laterImage = await prisma.productImage.create({ data: { legoProductId: listing.legoProductId, url: "https://cdn.example/later.jpg", publicId: `later-${listing.legoProductId}`, sortOrder: 2 } });
+    const firstImage = await prisma.productImage.create({ data: { legoProductId: listing.legoProductId, url: "https://cdn.example/first.jpg", publicId: `first-${listing.legoProductId}`, sortOrder: 1, altText: "First image" } });
     const product = await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } });
     const { response, body } = await get(`/products?q=${setNumber}`);
     assert.strictEqual(response.status, 200);
@@ -91,7 +95,49 @@ describe("Product catalogue HTTP integration", () => {
     assert.equal(item.offers[0].id, listing.id);
     assert.equal(item.offers[0].condition, "NEW");
     assert.equal(item.offers[0].availableStock, 4);
-    assert.deepEqual(item.offers[0].listingImages.map((image: any) => image.id), [firstImage.id, laterImage.id]);
+    assert.deepEqual(item.productImages.map((image: any) => image.id), [firstImage.id, laterImage.id]);
+    assert.ok(!Object.hasOwn(item.offers[0], "productImages"));
+    assert.ok(!Object.hasOwn(item.offers[0], "catalogueArtworkUrl"));
+  });
+
+  it("keeps shared presentation visible when only an AVAILABLE Used offer is sellable", async () => {
+    const setNumber = `USED-ONLY-PRESENTATION-${randomUUID()}`;
+    const listing = await makeListing({
+      setNumber, title: "Used-only product", theme: "Juniors", originalPrice: 25, currentStock: 0,
+      isFeatureProduct: true, catalogueArtworkUrl: "https://cdn.example/artwork.jpg", catalogueArtworkPublicId: "artwork-shared",
+    });
+    const image = await prisma.productImage.create({ data: {
+      legoProductId: listing.legoProductId, url: "https://cdn.example/product.jpg", publicId: "product-shared", altText: "Set box", sortOrder: 0,
+    } });
+    const used = await prisma.productListing.create({ data: {
+      legoProductId: listing.legoProductId, condition: "USED_LIKE_NEW", originalPrice: 24, currentStock: 1,
+      usedLifecycle: "AVAILABLE", damageDescription: "Corner wear",
+      usedConditionPhotos: { create: { url: "https://cdn.example/condition.jpg", publicId: "used-only-evidence", sortOrder: 0 } },
+    } });
+    listingIds.push(used.id);
+
+    const catalogue = await get(`/products?q=${setNumber}`);
+    assert.equal(catalogue.body.items.length, 1);
+    const item = catalogue.body.items[0];
+    assert.equal(item.catalogueArtworkUrl, "https://cdn.example/artwork.jpg");
+    assert.equal(item.catalogueArtworkPublicId, "artwork-shared");
+    assert.equal(item.isFeatureProduct, true);
+    assert.deepEqual(item.productImages.map((row: any) => row.id), [image.id]);
+    assert.equal(item.offers.length, 1);
+    assert.equal(item.offers[0].id, used.id);
+    assert.deepEqual(item.offers[0].usedConditionPhotos.map((photo: any) => photo.publicId), ["used-only-evidence"]);
+    assert.ok(!Object.hasOwn(item.offers[0], "catalogueArtworkUrl"));
+
+    const detail = await get(`/products/by-product/${listing.legoProductId}`);
+    assert.equal(detail.response.status, 200);
+    assert.deepEqual(detail.body, item);
+  });
+
+  it("hides a product with no sellable offers from list and product detail", async () => {
+    const setNumber = `UNSELLABLE-${randomUUID()}`;
+    const listing = await makeListing({ setNumber, title: "Unavailable", theme: "City", originalPrice: 10, currentStock: 0 });
+    assert.deepEqual((await get(`/products?q=${setNumber}`)).body.items, []);
+    assert.equal((await get(`/products/by-product/${listing.legoProductId}`)).response.status, 404);
   });
 
   it("reads current inventory on each request without changing stock", async () => {

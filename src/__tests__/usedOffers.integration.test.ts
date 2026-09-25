@@ -130,7 +130,7 @@ describe("per-item Used offers", () => {
     assert.equal(listing.currentStock, 1); assert.equal(listing.usedLifecycle, "AVAILABLE");
     assert.equal(listing.damageDescription, "Creased outer box"); assert.equal(Number(listing.originalPrice), 49.99); assert.equal(Number(listing.salePrice), 39.99);
     assert.deepEqual(listing.usedConditionPhotos.map((p: any) => p.sortOrder), [0, 1]);
-    assert.equal(listing.listingImages.length, 0);
+    assert.deepEqual(listing.legoProduct.productImages, []);
     assert.equal(await prisma.inventoryMovement.count({ where: { listingId: listing.id, quantityChange: 1 } }), 1);
 
     const customer = await prisma.user.create({ data: { email: `buyer-${randomUUID()}@example.test`, passwordHash: "test", emailVerified: true,
@@ -219,13 +219,14 @@ describe("per-item Used offers", () => {
   it("preserves the selected product feature when its last NEW unit converts to Used", async () => {
     const cat = await category();
     const lego = await product(cat.id);
-    const source = await prisma.productListing.create({ data: { legoProductId: lego.id, condition: "NEW", originalPrice: 60, currentStock: 1, isFeatureProduct: true } }); listings.push(source.id);
+    await prisma.legoProduct.update({ where: { id: lego.id }, data: { isFeatureProduct: true } });
+    const source = await prisma.productListing.create({ data: { legoProductId: lego.id, condition: "NEW", originalPrice: 60, currentStock: 1 } }); listings.push(source.id);
     const response = await request(`/inventory/condition-conversions/${lego.id}`, adminToken, form("Outer box corner dent", 1, {
       sourceNewListingId: String(source.id), reason: "PACKAGING_DAMAGE",
     }));
     assert.equal(response.status, 201);
     const used = await response.json(); listings.push(used.id);
-    assert.equal(used.isFeatureProduct, false);
+    assert.equal(used.legoProduct.isFeatureProduct, true);
     const catalogue = await (await fetch(`${base}/products?q=${encodeURIComponent(lego.setNumber)}`)).json();
     assert.equal(catalogue.items[0].id, lego.id);
     assert.equal(catalogue.items[0].isFeatureProduct, true);
@@ -238,17 +239,18 @@ describe("per-item Used offers", () => {
     const firstResponse = await createOffer(firstProduct.id);
     assert.equal(firstResponse.status, 201);
     const firstUsed = await firstResponse.json(); listings.push(firstUsed.id);
-    assert.equal(firstUsed.isFeatureProduct, true);
+    assert.equal(firstUsed.legoProduct.isFeatureProduct, true);
 
     const occupiedCategory = await category();
     const featuredProduct = await product(occupiedCategory.id);
-    const featuredNew = await prisma.productListing.create({ data: { legoProductId: featuredProduct.id, condition: "NEW", originalPrice: 30, currentStock: 1, isFeatureProduct: true } }); listings.push(featuredNew.id);
+    await prisma.legoProduct.update({ where: { id: featuredProduct.id }, data: { isFeatureProduct: true } });
+    const featuredNew = await prisma.productListing.create({ data: { legoProductId: featuredProduct.id, condition: "NEW", originalPrice: 30, currentStock: 1 } }); listings.push(featuredNew.id);
     const otherProduct = await product(occupiedCategory.id);
     const otherResponse = await createOffer(otherProduct.id);
     assert.equal(otherResponse.status, 201);
     const otherUsed = await otherResponse.json(); listings.push(otherUsed.id);
-    assert.equal(otherUsed.isFeatureProduct, false);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: featuredNew.id } })).isFeatureProduct, true);
+    assert.equal(otherUsed.legoProduct.isFeatureProduct, false);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: featuredProduct.id } })).isFeatureProduct, true);
   });
 
   it("filters product eligibility and price on the same available offer", async () => {

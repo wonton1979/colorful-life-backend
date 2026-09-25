@@ -219,26 +219,26 @@ describe("product administration authorization", () => {
 
     const first = await create(category.id, "First category listing");
     const second = await create(category.id, "Second category listing");
-    assert.equal(first.isFeatureProduct, true);
-    assert.equal(second.isFeatureProduct, false);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: first.id } })).isFeatureProduct, true);
+    assert.equal(first.legoProduct.isFeatureProduct, true);
+    assert.equal(second.legoProduct.isFeatureProduct, false);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: first.legoProductId } })).isFeatureProduct, true);
 
     const otherCategoryListing = await create(secondCategory.id, "Other category listing");
-    assert.equal(otherCategoryListing.isFeatureProduct, true);
+    assert.equal(otherCategoryListing.legoProduct.isFeatureProduct, true);
 
-    assert.equal((await request(`/products/${second.id}/feature`, admin.token, { method: "PATCH" })).status, 200);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: first.id } })).isFeatureProduct, false);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: second.id } })).isFeatureProduct, true);
-    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: otherCategoryListing.id } })).isFeatureProduct, true);
+    assert.equal((await request(`/products/by-product/${second.legoProductId}/feature`, admin.token, { method: "PATCH" })).status, 200);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: first.legoProductId } })).isFeatureProduct, false);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: second.legoProductId } })).isFeatureProduct, true);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: otherCategoryListing.legoProductId } })).isFeatureProduct, true);
 
     const concurrentCategory = await makeCategory();
     const concurrentListings = await Promise.all([
       create(concurrentCategory.id, "Concurrent listing A"),
       create(concurrentCategory.id, "Concurrent listing B"),
     ]);
-    assert.equal(concurrentListings.filter((listing) => listing.isFeatureProduct).length, 1);
-    assert.equal(await prisma.productListing.count({
-      where: { id: { in: concurrentListings.map((listing) => listing.id) }, isFeatureProduct: true },
+    assert.equal(concurrentListings.filter((listing) => listing.legoProduct.isFeatureProduct).length, 1);
+    assert.equal(await prisma.legoProduct.count({
+      where: { id: { in: concurrentListings.map((listing) => listing.legoProductId) }, isFeatureProduct: true },
     }), 1);
 
     const rollbackCategory = await makeCategory();
@@ -253,6 +253,6 @@ describe("product administration authorization", () => {
     });
     assert.equal(failedCreate.status, 409);
     assert.equal(await prisma.legoProduct.count({ where: { categoryId: rollbackCategory.id } }), 0);
-    assert.equal(await prisma.productListing.count({ where: { legoProduct: { categoryId: rollbackCategory.id }, isFeatureProduct: true } }), 0);
+    assert.equal(await prisma.legoProduct.count({ where: { categoryId: rollbackCategory.id, isFeatureProduct: true } }), 0);
   });
 });

@@ -5,7 +5,7 @@ import { prisma } from "../prisma/runtime.js";
 import { z } from "zod";
 import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogueValidator.js";
 import { getCatalogueProductById, listCatalogueProducts } from "../domain/products/productCatalogueService.js";
-import { createProductFeatureService, FeatureListingNotFoundError } from "../domain/products/productFeatureService.js";
+import { createProductFeatureService, FeatureProductNotFoundError, FeatureProductCategoryChangedError } from "../domain/products/productFeatureService.js";
 import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
 
 const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true } as const;
@@ -114,7 +114,6 @@ export const createProduct = async (req: Request, res: Response) => {
           originalPrice,
           salePrice,
           currentStock: currentStock ?? 0,
-          isFeatureProduct,
           legoProduct: {
             create: {
               category: { connect: { id: category.id } },
@@ -125,6 +124,7 @@ export const createProduct = async (req: Request, res: Response) => {
               ageRecommendation,
               pieceCount,
               isRetired,
+              isFeatureProduct,
             },
           },
         },
@@ -136,19 +136,19 @@ export const createProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        catalogueArtworkUrl: true,
-        catalogueArtworkPublicId: true,
-        isFeatureProduct: true,
-      condition: true,
+        condition: true,
         originalPrice: true,
         salePrice: true,
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: { include: { category: { select: categorySelect } } },
-        listingImages: {
-          orderBy: { sortOrder: "asc" },
-        },
+        legoProduct: { include: {
+          category: { select: categorySelect },
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } },
       },
     });
     if (!result) return res.status(500).json({ error: "Failed to retrieve created listing" });
@@ -252,17 +252,19 @@ export const updateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        catalogueArtworkUrl: true,
-        catalogueArtworkPublicId: true,
-        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: { include: { category: { select: categorySelect } } },
-        listingImages: { orderBy: { sortOrder: "asc" } },
+        legoProduct: { include: {
+          category: { select: categorySelect },
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } },
       },
     });
     if (!updated) {
@@ -294,19 +296,19 @@ export const getProductById = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        catalogueArtworkUrl: true,
-        catalogueArtworkPublicId: true,
-        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: { include: { category: { select: categorySelect } } },
-        listingImages: {
-          orderBy: { sortOrder: "asc" },
-        },
+        legoProduct: { include: {
+          category: { select: categorySelect },
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } },
       },
     });
     if (!listing) {
@@ -339,9 +341,6 @@ export const deactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        catalogueArtworkUrl: true,
-        catalogueArtworkPublicId: true,
-        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -349,8 +348,13 @@ export const deactivateProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: { include: { category: { select: categorySelect } } },
-        listingImages: { orderBy: { sortOrder: "asc" } },
+        legoProduct: { include: {
+          category: { select: categorySelect },
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } },
       },
     });
     if (!updated) {
@@ -386,9 +390,6 @@ export const reactivateProduct = async (req: Request, res: Response) => {
       select: {
         id: true,
         legoProductId: true,
-        catalogueArtworkUrl: true,
-        catalogueArtworkPublicId: true,
-        isFeatureProduct: true,
         condition: true,
         originalPrice: true,
         salePrice: true,
@@ -396,8 +397,13 @@ export const reactivateProduct = async (req: Request, res: Response) => {
         currentStock: true,
         createdAt: true,
         updatedAt: true,
-        legoProduct: { include: { category: { select: categorySelect } } },
-        listingImages: { orderBy: { sortOrder: "asc" } },
+        legoProduct: { include: {
+          category: { select: categorySelect },
+          productImages: {
+            select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+            orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+          },
+        } },
       },
     });
     if (!updated) {
@@ -410,14 +416,15 @@ export const reactivateProduct = async (req: Request, res: Response) => {
   }
 };
 
-/** PATCH /products/:id/feature — atomically selects the listing as its category feature. */
+/** PATCH /products/by-product/:productId/feature — atomically selects a product as its category feature. */
 export const setFeatureProduct = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: "Listing not found" });
+  const id = Number(req.params.productId);
+  if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ error: "Product not found" });
   try {
     return res.json(await createProductFeatureService().setFeature(id));
   } catch (error) {
-    if (error instanceof FeatureListingNotFoundError) return res.status(404).json({ error: error.message });
+    if (error instanceof FeatureProductNotFoundError) return res.status(404).json({ error: error.message });
+    if (error instanceof FeatureProductCategoryChangedError) return res.status(409).json({ error: error.message });
     console.error("Set feature product error", error);
     return res.status(500).json({ error: "Internal server error" });
   }

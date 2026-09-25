@@ -25,8 +25,8 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
 export function createCatalogueArtworkRouter(storage: ImageStorage = cloudinaryCatalogueArtworkStorage) {
   const controller = createCatalogueArtworkController(storage);
   const router = Router();
-  router.put("/:listingId/catalogue-artwork", authMiddleware, adminOnly, uploadMiddleware, controller.set);
-  router.delete("/:listingId/catalogue-artwork", authMiddleware, adminOnly, controller.remove);
+  router.put("/by-product/:productId/catalogue-artwork", authMiddleware, adminOnly, uploadMiddleware, controller.set);
+  router.delete("/by-product/:productId/catalogue-artwork", authMiddleware, adminOnly, controller.remove);
   return router;
 }
 

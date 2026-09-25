@@ -97,10 +97,10 @@ export type Cart = Prisma.CartModel
  */
 export type CartItem = Prisma.CartItemModel
 /**
- * Model ListingImage
+ * Model ProductImage
  *
  */
-export type ListingImage = Prisma.ListingImageModel
+export type ProductImage = Prisma.ProductImageModel
 /**
  * Model InventoryMovement
  *

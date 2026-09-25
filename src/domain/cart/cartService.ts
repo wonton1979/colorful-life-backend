@@ -4,8 +4,11 @@ import { CartItemNotFoundError, InsufficientAvailableStockError, ProductListingI
 
 const listingSelect = {
   id: true, legoProductId: true, condition: true, originalPrice: true, salePrice: true,
-  currentStock: true, reservedStock: true, active: true, usedLifecycle: true, damageDescription: true, legoProduct: true,
-  listingImages: { orderBy: { sortOrder: "asc" as const } },
+  currentStock: true, reservedStock: true, active: true, usedLifecycle: true, damageDescription: true,
+  legoProduct: { include: { productImages: {
+    select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+    orderBy: [{ sortOrder: "asc" as const }, { id: "asc" as const }],
+  } } },
   usedConditionPhotos: { orderBy: { sortOrder: "asc" as const } },
 };
 

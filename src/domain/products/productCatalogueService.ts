@@ -3,10 +3,15 @@ import { prisma } from "../../prisma/runtime.js";
 import type { ProductCatalogueQuery } from "./productCatalogueValidator.js";
 
 const offerSelect = {
-  id: true, legoProductId: true, catalogueArtworkUrl: true, catalogueArtworkPublicId: true, isFeatureProduct: true,
+  id: true, legoProductId: true,
   active: true, condition: true, usedLifecycle: true, damageDescription: true, originalPrice: true,
-  salePrice: true, currentStock: true, reservedStock: true, listingImages: { orderBy: { sortOrder: "asc" as const } },
+  salePrice: true, currentStock: true, reservedStock: true,
   usedConditionPhotos: { orderBy: { sortOrder: "asc" as const } },
+};
+
+const productImages = {
+  select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+  orderBy: [{ sortOrder: "asc" as const }, { id: "asc" as const }],
 };
 
 function eligibleProductPredicate(query: ProductCatalogueQuery): Prisma.Sql {
@@ -54,7 +59,6 @@ function presentProduct(product: any, query?: ProductCatalogueQuery) {
   return {
     ...shared,
     category: category ?? null,
-    isFeatureProduct: productListings.some((listing: any) => listing.isFeatureProduct),
     offers,
   };
 }
@@ -82,6 +86,7 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
       where: { id: { in: productIds } },
       include: {
         category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } },
+        productImages,
         productListings: { select: offerSelect, orderBy: [{ condition: "asc" }, { id: "asc" }] },
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -99,9 +104,11 @@ export async function getCatalogueProductById(productId: number) {
     where: { id: productId },
     include: {
       category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } },
+      productImages,
       productListings: { select: offerSelect, orderBy: [{ condition: "asc" }, { id: "asc" }] },
     },
   });
   if (!product) return null;
-  return presentProduct(product);
+  const presented = presentProduct(product);
+  return presented.offers.length > 0 ? presented : null;
 }

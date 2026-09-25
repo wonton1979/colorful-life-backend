@@ -3,7 +3,7 @@ import type { PrismaClient } from "../../generated/prisma-client/client.js";
 import { prisma as defaultPrisma } from "../../prisma/runtime.js";
 import type { ImageStorage } from "../../infrastructure/imageStorage/imageStorage.js";
 import { isOwnedCategoryArtworkPublicId } from "../../infrastructure/imageStorage/cloudinaryImageStorage.js";
-import { validateImage } from "../listingImages/listingImageValidator.js";
+import { validateImage } from "../productImages/productImageValidator.js";
 
 export class CategoryNotFoundError extends Error {}
 type Db = PrismaClient;
