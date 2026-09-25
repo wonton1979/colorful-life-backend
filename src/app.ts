@@ -18,6 +18,7 @@ import categoriesRouter from "./routes/categories.js";
 import { createCategoryManagementRouter } from "./routes/categoryManagement.js";
 import { createUsedOffersRouter, createConditionConversionRouter } from "./routes/usedOffers.js";
 import adminProductsRouter from "./routes/adminProducts.js";
+import adminProductListingsRouter from "./routes/adminProductListings.js";
 import type { ImageStorage } from "./infrastructure/imageStorage/imageStorage.js";
 
 export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?: ImageStorage, categoryArtworkStorage?: ImageStorage) {
@@ -34,6 +35,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/products", createListingImagesRouter(imageStorage));
   app.use("/products", createCatalogueArtworkRouter(catalogueArtworkStorage ?? imageStorage));
   app.use("/admin/products", adminProductsRouter);
+  app.use("/admin/product-listings", adminProductListingsRouter);
   app.use("/categories", categoriesRouter);
   app.use("/admin/categories", createCategoryManagementRouter(categoryArtworkStorage));
   app.use("/purchases", purchasesRouter);

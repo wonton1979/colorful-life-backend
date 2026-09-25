@@ -75,6 +75,56 @@ Listing detail (`GET /products/:id`) and product create/update responses expose
 it as `legoProduct.isRetired`. Admin should provide one shared product toggle,
 independent of offer condition and `UsedOfferLifecycle.RETIRED`.
 
+### Admin Presentation Listing Feed
+
+`GET /admin/product-listings` requires a Bearer token for an ADMIN account
+(401 for missing/invalid authentication, 403 for a non-Admin). It returns one
+record per ProductListing, including zero-stock, fully reserved, inactive, and
+historical Used listings. Products without listings have no record in this feed.
+This read-only endpoint does not apply public catalogue sellability filters.
+`GET /products` and the LegoProduct search contract of `GET /admin/products`
+remain unchanged.
+
+Query parameters follow Admin lookup pagination: `page` defaults to 1 and must
+be an integer from 1 to 10,000; `pageSize` defaults to 20 and must be an integer
+from 1 to 50. Invalid or unknown parameters return 400. Listings are ordered by
+`id` ascending. Pages beyond the end return empty `items` with accurate totals.
+Each request reads its count and page from the same database snapshot; separate
+page requests may reflect intervening writes.
+
+The exact response shape is:
+
+```ts
+{
+  items: Array<{
+    id: number; // ProductListing ID for existing feature/artwork operations
+    condition: "NEW" | "USED_LIKE_NEW";
+    active: boolean;
+    usedLifecycle: "AVAILABLE" | "SOLD" | "RETIRED" | null;
+    currentStock: number;
+    availableStock: number; // Math.max(0, currentStock - reservedStock)
+    isFeatureProduct: boolean;
+    catalogueArtworkUrl: string | null;
+    catalogueArtworkPublicId: string | null;
+    legoProduct: {
+      id: number;
+      setNumber: string;
+      title: string;
+      category: { id: number; name: string } | null;
+    };
+  }>;
+  pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+}
+```
+
+Categories come directly from the backend Category relation, including newly
+created categories such as Juniors. `availableStock` describes inventory only;
+it does not imply that an inactive or historical listing is sellable. Feature
+and artwork values belong to the exact listing, not an aggregation of its offers.
+Admin Presentation Management must separately switch to this endpoint, paginate
+through the results, and use `items[].id` for existing listing feature/artwork
+actions. This Backend change does not update the Admin consumer.
+
 ### Customer Accounts
 
 - Registration and authentication
