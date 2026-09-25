@@ -66,89 +66,116 @@ function request(path: string, token?: string, init: RequestInit = {}) {
   return fetch(`${url}${path}`, { ...init, headers });
 }
 
+async function adminRowsForProduct(token: string, productId: number) {
+  const firstResponse = await request("/admin/product-listings?pageSize=50", token);
+  assert.equal(firstResponse.status, 200);
+  const firstPage = await firstResponse.json();
+  const rows = [...firstPage.items];
+  for (let page = 2; page <= firstPage.pagination.totalPages; page++) {
+    rows.push(...(await (await request(`/admin/product-listings?pageSize=50&page=${page}`, token)).json()).items);
+  }
+  return rows.filter((row: any) => row.legoProduct.id === productId);
+}
+
 function artworkForm() {
   const form = new FormData();
   form.append("file", new Blob([Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, 74, 70, 73, 70, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0xff, 0xd9])], { type: "image/jpeg" }), "artwork.jpg");
   return form;
 }
 
-describe("catalogue presentation administration", () => {
-  it("keeps feature selection explicit, atomic, category-scoped, and admin-only", async () => {
+describe("product presentation administration", () => {
+  it("selects one Feature Product per category by LegoProduct identity with category locking", async () => {
     const admin = await user("ADMIN");
     const customer = await user("CUSTOMER");
     const first = await listing("VEHICLES", "Speed Champions");
+    const siblingOffer = await prisma.productListing.create({ data: { legoProductId: first.legoProductId, condition: "USED_LIKE_NEW", originalPrice: 9, currentStock: 1, usedLifecycle: "AVAILABLE", damageDescription: "Small crease", usedConditionPhotos: { create: { url: "https://x/condition.jpg", publicId: randomUUID(), sortOrder: 0 } } } });
+    ids.listings.push(siblingOffer.id);
     const second = await listing("VEHICLES", "Technic");
     const otherCategory = await listing("CITY", "City");
 
-    assert.equal(first.isFeatureProduct, false);
-    assert.equal((await request(`/products/${first.id}/feature`, undefined, { method: "PATCH" })).status, 401);
-    assert.equal((await request(`/products/${first.id}/feature`, customer, { method: "PATCH" })).status, 403);
-    assert.equal((await request("/products/999999/feature", admin, { method: "PATCH" })).status, 404);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: first.legoProductId } })).isFeatureProduct, false);
+    assert.equal((await request(`/products/by-product/${first.legoProductId}/feature`, undefined, { method: "PATCH" })).status, 401);
+    assert.equal((await request(`/products/by-product/${first.legoProductId}/feature`, customer, { method: "PATCH" })).status, 403);
+    assert.equal((await request("/products/by-product/999999/feature", admin, { method: "PATCH" })).status, 404);
 
-    assert.equal((await request(`/products/${first.id}/feature`, admin, { method: "PATCH" })).status, 200);
-    assert.equal((await request(`/products/${second.id}/feature`, admin, { method: "PATCH" })).status, 200);
-    assert.equal((await prisma.productListing.findUnique({ where: { id: first.id } }))?.isFeatureProduct, false);
-    assert.equal((await prisma.productListing.findUnique({ where: { id: second.id } }))?.isFeatureProduct, true);
-    assert.equal((await request(`/products/${second.id}/feature`, admin, { method: "PATCH" })).status, 200);
-    assert.equal((await prisma.productListing.findUnique({ where: { id: otherCategory.id } }))?.isFeatureProduct, false);
+    assert.equal((await request(`/products/by-product/${first.legoProductId}/feature`, admin, { method: "PATCH" })).status, 200);
+    assert.equal((await request(`/products/by-product/${second.legoProductId}/feature`, admin, { method: "PATCH" })).status, 200);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: first.legoProductId } })).isFeatureProduct, false);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: second.legoProductId } })).isFeatureProduct, true);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: otherCategory.legoProductId } })).isFeatureProduct, false);
+    assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: first.legoProductId } })).isFeatureProduct, false, "a sibling offer has no independent Feature state");
 
     const third = await listing("CITY", "Icons");
     const fourth = await listing("CITY", "Creator");
-    await prisma.productListing.update({ where: { id: third.id }, data: { isFeatureProduct: true } });
+    const concurrentSelections = await Promise.all([
+      request(`/products/by-product/${third.legoProductId}/feature`, admin, { method: "PATCH" }),
+      request(`/products/by-product/${fourth.legoProductId}/feature`, admin, { method: "PATCH" }),
+    ]);
+    assert.ok(concurrentSelections.every((response) => response.status === 200));
+    const selectedProducts = await prisma.legoProduct.findMany({ where: { id: { in: [third.legoProductId, fourth.legoProductId] } } });
+    assert.equal(selectedProducts.filter((product) => product.isFeatureProduct).length, 1);
+    const unfeaturedProduct = selectedProducts.find((product) => !product.isFeatureProduct)!;
     await assert.rejects(
-      prisma.productListing.update({ where: { id: fourth.id }, data: { isFeatureProduct: true } }),
+      prisma.legoProduct.update({ where: { id: unfeaturedProduct.id }, data: { isFeatureProduct: true } }),
       (error: any) => error.code === "P2002",
     );
   });
 
-  it("uploads, replaces, exposes, and removes artwork without touching ListingImages", async () => {
+  it("uploads, replaces, and removes one product artwork shared by all sibling offers", async () => {
     const admin = await user("ADMIN");
     const created = await listing();
-    const image = await prisma.listingImage.create({ data: { listingId: created.id, url: "https://cdn.example/product.jpg", publicId: `colorful-life/products/${created.id}-image`, sortOrder: 0, altText: "product" } });
+    const productId = created.legoProductId;
+    const legacyArtworkPublicId = `colorful-life/catalogue-artwork/${created.id}-${randomUUID()}`;
+    await prisma.legoProduct.update({ where: { id: productId }, data: {
+      catalogueArtworkUrl: `https://cdn.example/${legacyArtworkPublicId}.jpg`,
+      catalogueArtworkPublicId: legacyArtworkPublicId,
+    } });
+    const image = await prisma.productImage.create({ data: { legoProductId: productId, url: "https://cdn.example/product.jpg", publicId: `colorful-life/products/${created.id}-legacy`, sortOrder: 0, altText: "product" } });
+    const sibling = await prisma.productListing.create({ data: { legoProductId: productId, condition: "USED_LIKE_NEW", originalPrice: 8, currentStock: 1, usedLifecycle: "AVAILABLE", damageDescription: "Box wear", usedConditionPhotos: { create: { url: "https://x/condition.jpg", publicId: randomUUID(), sortOrder: 0 } } } });
+    ids.listings.push(sibling.id);
 
     const initialRead = await (await request(`/products/${created.id}`)).json();
-    assert.equal(initialRead.catalogueArtworkUrl, null);
-    assert.equal(initialRead.catalogueArtworkPublicId, null);
-    assert.equal(initialRead.isFeatureProduct, false);
+    assert.equal(initialRead.legoProduct.catalogueArtworkPublicId, legacyArtworkPublicId);
+    assert.equal(initialRead.legoProduct.isFeatureProduct, false);
 
-    const firstUpload = await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() });
+    const firstUpload = await request(`/products/by-product/${productId}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() });
     assert.equal(firstUpload.status, 200);
     const firstArtwork = (await firstUpload.json()).catalogueArtwork;
-    assert.ok(firstArtwork.publicId.startsWith(`colorful-life/catalogue-artwork/${created.id}-`));
-    assert.equal((await prisma.listingImage.findUnique({ where: { id: image.id } }))?.publicId, image.publicId);
+    assert.ok(firstArtwork.publicId.startsWith(`colorful-life/catalogue-artwork/${productId}-`));
+    assert.equal((await prisma.productImage.findUnique({ where: { id: image.id } }))?.publicId, image.publicId);
 
-    const secondUpload = await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() });
+    const secondUpload = await request(`/products/by-product/${productId}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() });
     assert.equal(secondUpload.status, 200);
     const secondArtwork = (await secondUpload.json()).catalogueArtwork;
     assert.notEqual(secondArtwork.publicId, firstArtwork.publicId);
-    assert.deepEqual(artworkStorage.deletions, [firstArtwork.publicId]);
+    assert.deepEqual(artworkStorage.deletions, [legacyArtworkPublicId, firstArtwork.publicId]);
 
-    const vehicles = await prisma.category.findUniqueOrThrow({ where: { name: "Vehicles" } });
-    const catalogue = await (await request(`/products?categoryId=${vehicles.id}&theme=Technic`)).json();
-    const product = await prisma.productListing.findUniqueOrThrow({ where: { id: created.id }, select: { legoProductId: true } });
-    const productCard = catalogue.items.find((entry: any) => entry.id === product.legoProductId);
-    const offer = productCard.offers.find((entry: any) => entry.id === created.id);
-    assert.equal(offer.catalogueArtworkUrl, secondArtwork.url);
-    assert.equal(offer.catalogueArtworkPublicId, secondArtwork.publicId);
-    assert.deepEqual(offer.listingImages.map((entry: any) => entry.id), [image.id]);
+    const catalogue = await (await request(`/products/by-product/${productId}`)).json();
+    assert.equal(catalogue.catalogueArtworkUrl, secondArtwork.url);
+    assert.equal(catalogue.catalogueArtworkPublicId, secondArtwork.publicId);
+    assert.ok(!Object.hasOwn(catalogue.offers.find((offer: any) => offer.id === created.id), "catalogueArtworkUrl"));
+    const adminRows = await adminRowsForProduct(admin, productId);
+    assert.equal(adminRows.length, 2);
+    assert.ok(adminRows.every((row: any) => row.legoProduct.catalogueArtworkPublicId === secondArtwork.publicId));
+    assert.ok(adminRows.every((row: any) => row.legoProduct.productImages.some((entry: any) => entry.id === image.id)));
 
-    assert.equal((await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "DELETE" })).status, 204);
-    const removed = await prisma.productListing.findUnique({ where: { id: created.id } });
+    assert.equal((await request(`/products/by-product/${productId}/catalogue-artwork`, admin, { method: "DELETE" })).status, 204);
+    const removed = await prisma.legoProduct.findUnique({ where: { id: productId } });
     assert.equal(removed?.catalogueArtworkUrl, null);
     assert.equal(removed?.catalogueArtworkPublicId, null);
-    assert.deepEqual(artworkStorage.deletions, [firstArtwork.publicId, secondArtwork.publicId]);
-    assert.equal((await request(`/products/${created.id}/catalogue-artwork`, undefined, { method: "DELETE" })).status, 401);
+    assert.deepEqual(artworkStorage.deletions, [legacyArtworkPublicId, firstArtwork.publicId, secondArtwork.publicId]);
+    assert.equal((await request(`/products/by-product/${productId}/catalogue-artwork`, undefined, { method: "DELETE" })).status, 401);
   });
 
-  it("rejects invalid artwork and leaves the database unchanged when storage fails", async () => {
+  it("rejects invalid artwork and leaves product presentation unchanged when storage fails", async () => {
     const admin = await user("ADMIN");
     const created = await listing();
     const invalid = new FormData();
     invalid.append("file", new Blob(["not an image"], { type: "image/jpeg" }), "bad.jpg");
-    assert.equal((await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "PUT", body: invalid })).status, 400);
+    assert.equal((await request(`/products/by-product/${created.legoProductId}/catalogue-artwork`, admin, { method: "PUT", body: invalid })).status, 400);
     artworkStorage.failUpload = true;
-    assert.equal((await request(`/products/${created.id}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() })).status, 500);
-    const unchanged = await prisma.productListing.findUnique({ where: { id: created.id } });
+    assert.equal((await request(`/products/by-product/${created.legoProductId}/catalogue-artwork`, admin, { method: "PUT", body: artworkForm() })).status, 500);
+    const unchanged = await prisma.legoProduct.findUnique({ where: { id: created.legoProductId } });
     assert.equal(unchanged?.catalogueArtworkUrl, null);
     assert.equal(unchanged?.catalogueArtworkPublicId, null);
   });

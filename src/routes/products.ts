@@ -15,7 +15,7 @@ router.get("/", getProducts);
 router.get("/by-product/:productId", getCatalogueProduct);
 // Register inventory movements route before the generic :id route to avoid conflict
 router.get("/:id/inventory-movements", authMiddleware, adminOnly, getInventoryMovements);
-router.patch("/:id/feature", authMiddleware, adminOnly, setFeatureProduct);
+router.patch("/by-product/:productId/feature", authMiddleware, adminOnly, setFeatureProduct);
 router.get("/:id", getProductById);
 router.post("/", authMiddleware, adminOnly, createProduct);
 router.patch("/:id", authMiddleware, adminOnly, updateProduct);

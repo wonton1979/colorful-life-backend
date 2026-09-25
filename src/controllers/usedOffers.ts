@@ -3,7 +3,7 @@ import { Prisma } from "../generated/prisma-client/client.js";
 import { InventoryAdjustmentReason } from "../generated/prisma-client/enums.js";
 import type { ImageStorage } from "../infrastructure/imageStorage/imageStorage.js";
 import { createUsedOfferService, UsedOfferConflictError, UsedOfferInsufficientNewStockError, UsedOfferProductNotFoundError, UsedOfferValidationError } from "../domain/usedOffers/usedOfferService.js";
-import { ImageValidationError } from "../domain/listingImages/listingImageErrors.js";
+import { ImageValidationError } from "../domain/productImages/productImageErrors.js";
 
 function positiveId(value: string | undefined) { const parsed = Number(value); return Number.isInteger(parsed) && parsed > 0 ? parsed : null; }
 

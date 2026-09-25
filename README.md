@@ -46,20 +46,32 @@ RDS PostgreSQL
 - Product search
 - Filtering
 - Pagination
-- Listing images
+- Product Images shared by all condition offers
 - Inventory-aware catalogue data
 
 Public `GET /products` returns `{ items, pagination }` with one product card per
-LegoProduct. A card's top-level `id` is the LegoProduct/product-card identity.
-Its `offers` array contains the separately purchasable ProductListings, and each
-`offers[].id` is the ProductListing identity. Offer `availableStock` is calculated
-as `Math.max(0, currentStock - reservedStock)`; reserved stock is not exposed.
-The product-level `GET /products/by-product/:productId` route returns the same
-product identity with its currently available offers. The existing `GET
-/products/:id` route remains a listing-level lookup by ProductListing ID.
-Cart and order requests also use ProductListing IDs (`offers[].id`), never the
-top-level product-card ID. Availability reflects inventory at read time; order
-creation still checks and reserves stock atomically.
+LegoProduct. A card's top-level `id` is the product identity; its shared
+`catalogueArtworkUrl`, `catalogueArtworkPublicId`, `productImages`, and
+`isFeatureProduct` describe that LegoProduct. The `offers` array contains the
+separately purchasable ProductListings, and each `offers[].id` is the offer
+identity. Offer `availableStock` is calculated as
+`Math.max(0, currentStock - reservedStock)`; reserved stock is not exposed.
+Presentation fields are not duplicated inside offers. Used offer details and
+`usedConditionPhotos` remain scoped to their exact ProductListing. The
+product-level `GET /products/by-product/:productId` route returns the same
+shape, and returns 404 when the product has no sellable offers. The existing
+`GET /products/:id` route remains a listing-level lookup by ProductListing ID;
+its `legoProduct` object contains shared presentation. Cart and order requests
+also use ProductListing IDs (`offers[].id`), never the top-level product ID.
+Availability reflects inventory at read time; order creation still checks and
+reserves stock atomically.
+
+Presentation ownership follows the domain model: Catalogue Artwork, Product
+Images, and Feature Product state belong to LegoProduct and survive offer stock
+or lifecycle changes. `ProductImage.legoProductId` links each image directly to
+the product. `UsedConditionPhoto.listingId` intentionally links evidence to one
+physical Used offer, and order items snapshot condition, damage description, and
+condition-photo metadata when purchased.
 
 `LegoProduct.isRetired` is manually managed Admin metadata shared by every NEW
 and USED_LIKE_NEW offer for that set. Admin `POST /products` accepts an optional
@@ -80,10 +92,14 @@ independent of offer condition and `UsedOfferLifecycle.RETIRED`.
 `GET /admin/product-listings` requires a Bearer token for an ADMIN account
 (401 for missing/invalid authentication, 403 for a non-Admin). It returns one
 record per ProductListing, including zero-stock, fully reserved, inactive, and
-historical Used listings. Products without listings have no record in this feed.
-This read-only endpoint does not apply public catalogue sellability filters.
-`GET /products` and the LegoProduct search contract of `GET /admin/products`
-remain unchanged.
+historical Used listings. Each row keeps its ProductListing identity and nests
+shared presentation under `legoProduct`; sibling rows therefore return the same
+artwork, image set, and Feature Product state. Products without listings have no
+record in this feed. This read-only endpoint does not apply public catalogue
+sellability filters.
+`GET /products` keeps its route, query, pagination, and sellability behavior;
+its response exposes presentation once at the LegoProduct root. The LegoProduct
+search contract of `GET /admin/products` remains unchanged.
 
 Query parameters follow Admin lookup pagination: `page` defaults to 1 and must
 be an integer from 1 to 10,000; `pageSize` defaults to 20 and must be an integer
@@ -97,19 +113,22 @@ The exact response shape is:
 ```ts
 {
   items: Array<{
-    id: number; // ProductListing ID for existing feature/artwork operations
+    id: number; // ProductListing ID for offer/inventory operations
     condition: "NEW" | "USED_LIKE_NEW";
     active: boolean;
     usedLifecycle: "AVAILABLE" | "SOLD" | "RETIRED" | null;
     currentStock: number;
     availableStock: number; // Math.max(0, currentStock - reservedStock)
-    isFeatureProduct: boolean;
-    catalogueArtworkUrl: string | null;
-    catalogueArtworkPublicId: string | null;
     legoProduct: {
       id: number;
       setNumber: string;
       title: string;
+      isFeatureProduct: boolean;
+      catalogueArtworkUrl: string | null;
+      catalogueArtworkPublicId: string | null;
+      productImages: Array<{
+        id: number; url: string; publicId: string; altText: string | null; sortOrder: number;
+      }>;
       category: { id: number; name: string } | null;
     };
   }>;
@@ -120,10 +139,70 @@ The exact response shape is:
 Categories come directly from the backend Category relation, including newly
 created categories such as Juniors. `availableStock` describes inventory only;
 it does not imply that an inactive or historical listing is sellable. Feature
-and artwork values belong to the exact listing, not an aggregation of its offers.
-Admin Presentation Management must separately switch to this endpoint, paginate
-through the results, and use `items[].id` for existing listing feature/artwork
-actions. This Backend change does not update the Admin consumer.
+and artwork values belong to LegoProduct. Admin Presentation Management uses
+`items[].legoProduct.id` for presentation actions and `items[].id` for
+offer/inventory actions.
+
+### Admin Product Presentation Endpoints
+
+All endpoints below require an ADMIN Bearer token. Product identity is explicit
+in the route; clients must use LegoProduct IDs for presentation operations.
+
+- `GET /products/by-product/:productId/images` returns `{ productImages }`.
+- `POST /products/by-product/:productId/images` uploads multipart field `file`
+  and optional `altText`; it returns `{ image }`.
+- `PATCH /products/by-product/:productId/images/order` accepts
+  `{ imageIds: number[] }` and returns `{ productImages }`.
+- `PATCH /products/by-product/:productId/images/:imageId` accepts
+  `{ altText: string | null }` and returns `{ image }`.
+- `DELETE /products/by-product/:productId/images/:imageId` removes one product
+  image and returns 204.
+- `PUT /products/by-product/:productId/catalogue-artwork` uploads multipart
+  field `file` and returns `{ catalogueArtwork: { url, publicId } }`.
+- `DELETE /products/by-product/:productId/catalogue-artwork` removes the shared
+  artwork and returns 204.
+- `PATCH /products/by-product/:productId/feature` selects that LegoProduct as
+  the one featured product for its category and returns `{ id, isFeatureProduct }`.
+  If its category changes while selection waits for locks, it returns 409;
+  reload the product and retry the selection.
+
+Product image limits and content validation are unchanged. A migration preflight
+preserves unambiguous legacy artwork and image rows, including image IDs, sort
+order, and alt text. It aborts transactionally when sibling artwork differs,
+multiple sibling listings own Product Images, image public IDs or sort orders
+collide, artwork storage IDs are shared between products, or Feature state
+conflicts within a category or a featured product has no category. Existing
+Cloudinary public IDs remain unchanged; future uploads use the LegoProduct ID
+prefix. Operators must resolve each reported LegoProduct ID explicitly before
+retrying migration.
+
+Before deploying this ownership migration, stop and drain all old Backend
+instances/workers and other database clients using these tables. The migration
+takes `ACCESS EXCLUSIVE NOWAIT` locks on `LegoProduct`, `ProductListing`, and
+`ListingImage` before reading any legacy state and holds them through commit.
+An active reader/writer makes lock acquisition fail immediately; roll back and
+resolve the failed Prisma migration according to the controlled deployment
+procedure before retrying. No source data is changed on preflight/lock failure.
+Do not resume old application instances after contraction; deploy the new
+Backend and coordinated clients before accepting traffic.
+
+Feature uniqueness is enforced by a product/category partial unique index and
+a CHECK requiring a category for featured products. Application selections and
+automatic first-Feature creation still serialize with category advisory locks.
+Direct writes are constrained by the database without a row trigger acquiring
+advisory locks after row locks. Category moves into an already-featured category
+must first clear the moving product's Feature state (or are rejected atomically).
+
+### Client contract migration for Issue #118
+
+**Admin:** send LegoProduct IDs to Product Image and Catalogue Artwork routes
+and Feature selection. Read shared Feature, artwork, and Product Images from
+`items[].legoProduct`; retain `items[].id` for offer and inventory actions.
+
+**Storefront:** read `productImages`, `catalogueArtworkUrl`,
+`catalogueArtworkPublicId`, and `isFeatureProduct` once from the product card
+root. Offer price, stock, condition, lifecycle, and damage description remain
+inside `offers[]`. Used Condition Photos remain inside the exact Used offer.
 
 ### Customer Accounts
 

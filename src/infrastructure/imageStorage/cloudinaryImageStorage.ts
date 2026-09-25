@@ -18,12 +18,17 @@ function configureCloudinary() {
   return cloudinary;
 }
 
-export function isOwnedProductPublicId(publicId: string, listingId: number): boolean {
-  return new RegExp(`^${PRODUCT_IMAGE_FOLDER}/${listingId}-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
+export function isProductImagePublicId(publicId: string): boolean {
+  // The database row's LegoProduct relation is the owner check. Numeric
+  // prefixes support both pre-migration listing-scoped assets and new
+  // product-scoped assets while all resources remain in the product folder.
+  return new RegExp(`^${PRODUCT_IMAGE_FOLDER}/[1-9][0-9]*-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
 }
 
-export function isOwnedCatalogueArtworkPublicId(publicId: string, listingId: number): boolean {
-  return new RegExp(`^${CATALOGUE_ARTWORK_FOLDER}/${listingId}-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
+export function isCatalogueArtworkPublicId(publicId: string): boolean {
+  // See isProductImagePublicId: migrated resources retain their original
+  // public IDs, while the LegoProduct row is the authoritative owner.
+  return new RegExp(`^${CATALOGUE_ARTWORK_FOLDER}/[1-9][0-9]*-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i").test(publicId);
 }
 
 export function isOwnedCategoryArtworkPublicId(publicId: string, categoryId: number): boolean {

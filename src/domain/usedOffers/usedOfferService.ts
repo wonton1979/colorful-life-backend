@@ -3,7 +3,7 @@ import type { PrismaClient } from "../../generated/prisma-client/client.js";
 import { InventoryAuditAction, InventoryAdjustmentReason, InventoryMovementType, ListingCondition, UsedOfferLifecycle } from "../../generated/prisma-client/enums.js";
 import { prisma as defaultPrisma } from "../../prisma/runtime.js";
 import type { ImageStorage } from "../../infrastructure/imageStorage/imageStorage.js";
-import { validateImage } from "../listingImages/listingImageValidator.js";
+import { validateImage } from "../productImages/productImageValidator.js";
 import { hasCategoryFeatureProduct, lockCategoryFeatureSelection } from "../products/productListingCreationService.js";
 
 export class UsedOfferValidationError extends Error {}
@@ -73,7 +73,9 @@ export function createUsedOfferService(storage: ImageStorage, db: PrismaClient =
         const initialProduct = await tx.legoProduct.findUnique({ where: { id: input.legoProductId }, select: { categoryId: true } });
         if (!initialProduct) throw new UsedOfferProductNotFoundError();
         if (initialProduct.categoryId !== null) await lockCategoryFeatureSelection(tx, initialProduct.categoryId);
-        const isFeatureProduct = initialProduct.categoryId !== null && !(await hasCategoryFeatureProduct(tx, initialProduct.categoryId));
+        if (initialProduct.categoryId !== null && !(await hasCategoryFeatureProduct(tx, initialProduct.categoryId))) {
+          await tx.legoProduct.update({ where: { id: input.legoProductId }, data: { isFeatureProduct: true } });
+        }
 
         // Serialize all offers for this product, including categories without a feature lock.
         const products = await tx.$queryRaw<Array<{ id: number }>>`SELECT id FROM "LegoProduct" WHERE id = ${input.legoProductId} FOR UPDATE`;
@@ -105,11 +107,18 @@ export function createUsedOfferService(storage: ImageStorage, db: PrismaClient =
             originalPrice: input.originalPrice,
             salePrice: input.salePrice,
             currentStock: 1,
-            isFeatureProduct,
-            listingImages: undefined,
             usedConditionPhotos: { create: uploaded.map((photo, sortOrder) => ({ url: photo.secureUrl, publicId: photo.publicId, sortOrder })) },
           },
-          include: { usedConditionPhotos: { orderBy: { sortOrder: "asc" } }, listingImages: { orderBy: { sortOrder: "asc" } }, legoProduct: true },
+          include: {
+            usedConditionPhotos: { orderBy: { sortOrder: "asc" } },
+            legoProduct: { include: {
+              productImages: {
+                select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+                orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+              },
+              category: true,
+            } },
+          },
         });
 
         if (source) {

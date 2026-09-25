@@ -240,20 +240,25 @@ model Address {
 }
 
 model LegoProduct {
-  id                Int              @id @default(autoincrement())
-  setNumber         String           @unique
+  id                       Int              @id @default(autoincrement())
+  setNumber                String           @unique
   // Nullable during the expand phase: historical orphan products have no listing-derived category.
-  categoryId        Int?
-  category          Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  title             String
-  description       String?
-  theme             String
-  ageRecommendation String
-  pieceCount        Int
-  isRetired         Boolean          @default(false)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  productListings   ProductListing[]
+  categoryId               Int?
+  category                 Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  title                    String
+  description              String?
+  theme                    String
+  ageRecommendation        String
+  pieceCount               Int
+  isRetired                Boolean          @default(false)
+  catalogueArtworkUrl      String?
+  catalogueArtworkPublicId String?
+  // The migration-managed partial unique index permits one featured product per Category.
+  isFeatureProduct         Boolean          @default(false)
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  productListings          ProductListing[]
+  productImages            ProductImage[]
 
   @@index([theme])
   @@index([categoryId])
@@ -270,30 +275,26 @@ model Category {
 }
 
 model ProductListing {
-  id                       Int                  @id @default(autoincrement())
-  legoProductId            Int
-  legoProduct              LegoProduct          @relation(fields: [legoProductId], references: [id])
-  catalogueArtworkUrl      String?
-  catalogueArtworkPublicId String?
-  isFeatureProduct         Boolean              @default(false)
-  condition                ListingCondition
-  damageDescription        String?
-  usedLifecycle            UsedOfferLifecycle?
-  originalPrice            Decimal              @db.Decimal(10, 2)
-  salePrice                Decimal?             @db.Decimal(10, 2)
-  currentStock             Int                  @default(0)
-  reservedStock            Int                  @default(0)
-  active                   Boolean              @default(true)
-  createdAt                DateTime             @default(now())
-  updatedAt                DateTime             @updatedAt
-  listingImages            ListingImage[]
-  usedConditionPhotos      UsedConditionPhoto[]
-  inventoryMovements       InventoryMovement[]
-  purchaseItems            PurchaseItem[]
-  orderItems               OrderItem[]
-  cartItems                CartItem[]
-  sourceInventoryAudits    InventoryAudit[]     @relation("InventoryAuditSourceListing")
-  targetInventoryAudits    InventoryAudit[]     @relation("InventoryAuditTargetListing")
+  id                    Int                  @id @default(autoincrement())
+  legoProductId         Int
+  legoProduct           LegoProduct          @relation(fields: [legoProductId], references: [id])
+  condition             ListingCondition
+  damageDescription     String?
+  usedLifecycle         UsedOfferLifecycle?
+  originalPrice         Decimal              @db.Decimal(10, 2)
+  salePrice             Decimal?             @db.Decimal(10, 2)
+  currentStock          Int                  @default(0)
+  reservedStock         Int                  @default(0)
+  active                Boolean              @default(true)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  usedConditionPhotos   UsedConditionPhoto[]
+  inventoryMovements    InventoryMovement[]
+  purchaseItems         PurchaseItem[]
+  orderItems            OrderItem[]
+  cartItems             CartItem[]
+  sourceInventoryAudits InventoryAudit[]     @relation("InventoryAuditSourceListing")
+  targetInventoryAudits InventoryAudit[]     @relation("InventoryAuditTargetListing")
 
   @@index([legoProductId])
   @@index([condition])
@@ -337,18 +338,18 @@ model CartItem {
   @@index([productListingId])
 }
 
-model ListingImage {
-  id        Int            @id @default(autoincrement())
-  listingId Int
-  listing   ProductListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  url       String
-  publicId  String
-  altText   String?
-  sortOrder Int            @default(0)
-  createdAt DateTime       @default(now())
+model ProductImage {
+  id            Int         @id @default(autoincrement())
+  legoProductId Int
+  legoProduct   LegoProduct @relation(fields: [legoProductId], references: [id], onDelete: Cascade)
+  url           String
+  publicId      String
+  altText       String?
+  sortOrder     Int         @default(0)
+  createdAt     DateTime    @default(now())
 
-  @@index([listingId])
-  @@index([listingId, sortOrder])
+  @@index([legoProductId])
+  @@index([legoProductId, sortOrder])
 }
 
 model InventoryMovement {

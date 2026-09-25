@@ -148,9 +148,9 @@ describe("Category relation catalogue and feature behavior", () => {
     const filtered = await request(`/products?categoryId=${vehicles.id}&q=${encodeURIComponent("CATEGORY-FEATURE")}`);
     assert.equal(filtered.status, 200);
     assert.equal((await filtered.json()).items.length, 2);
-    assert.equal((await request(`/products/${listings[0].id}/feature`, token, { method: "PATCH" })).status, 200);
-    assert.equal((await request(`/products/${listings[1].id}/feature`, token, { method: "PATCH" })).status, 200);
-    const state = await prisma.productListing.findMany({ where: { id: { in: listings.map((listing) => listing.id) } }, orderBy: { id: "asc" } });
-    assert.equal(state.filter((listing) => listing.isFeatureProduct).length, 1);
+    assert.equal((await request(`/products/by-product/${products[0].id}/feature`, token, { method: "PATCH" })).status, 200);
+    assert.equal((await request(`/products/by-product/${products[1].id}/feature`, token, { method: "PATCH" })).status, 200);
+    const state = await prisma.legoProduct.findMany({ where: { id: { in: products.map((product) => product.id) } }, orderBy: { id: "asc" } });
+    assert.equal(state.filter((product) => product.isFeatureProduct).length, 1);
   });
 });

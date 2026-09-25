@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import { Prisma } from "../generated/prisma-client/client.js";
 import { z } from "zod";
 import { CategoryNotFoundError, createCategoryManagementService } from "../domain/categories/categoryManagementService.js";
-import { ImageValidationError } from "../domain/listingImages/listingImageErrors.js";
+import { ImageValidationError } from "../domain/productImages/productImageErrors.js";
 import type { ImageStorage } from "../infrastructure/imageStorage/imageStorage.js";
 
 const text = (max: number) => z.preprocess((value) => typeof value === "string" ? value.trim() || null : value, z.string().max(max).nullable());

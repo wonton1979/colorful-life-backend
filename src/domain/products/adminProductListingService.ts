@@ -17,14 +17,18 @@ export function createAdminProductListingService(db = defaultPrisma) {
               usedLifecycle: true,
               currentStock: true,
               reservedStock: true,
-              isFeatureProduct: true,
-              catalogueArtworkUrl: true,
-              catalogueArtworkPublicId: true,
               legoProduct: {
                 select: {
                   id: true,
                   setNumber: true,
                   title: true,
+                  isFeatureProduct: true,
+                  catalogueArtworkUrl: true,
+                  catalogueArtworkPublicId: true,
+                  productImages: {
+                    select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
+                    orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+                  },
                   category: { select: { id: true, name: true } },
                 },
               },

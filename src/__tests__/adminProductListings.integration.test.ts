@@ -122,11 +122,12 @@ describe("Admin ProductListing feed", () => {
     const category = await prisma.category.create({ data: { name: `Juniors ${randomUUID()}` } });
     ids.categories.push(category.id);
     const zeroProduct = await product(category.id);
-    const zero = await listing(zeroProduct.id, {
+    const zero = await listing(zeroProduct.id);
+    await prisma.legoProduct.update({ where: { id: zeroProduct.id }, data: {
       isFeatureProduct: true,
       catalogueArtworkUrl: "https://images.test/juniors.jpg",
       catalogueArtworkPublicId: "colorful-life/catalogue-artwork/juniors",
-    });
+    } });
     const stockedProduct = await product(category.id);
     const stocked = await listing(stockedProduct.id, { currentStock: 5, reservedStock: 2 });
     const before = await snapshot();
@@ -134,15 +135,23 @@ describe("Admin ProductListing feed", () => {
     const items = await allItems();
     assert.deepEqual(items.find((item) => item.id === zero.id), {
       id: zero.id, condition: "NEW", active: true, usedLifecycle: null,
-      currentStock: 0, availableStock: 0, isFeatureProduct: true,
-      catalogueArtworkUrl: zero.catalogueArtworkUrl, catalogueArtworkPublicId: zero.catalogueArtworkPublicId,
-      legoProduct: { id: zeroProduct.id, setNumber: zeroProduct.setNumber, title: zeroProduct.title, category: { id: category.id, name: category.name } },
+      currentStock: 0, availableStock: 0,
+      legoProduct: {
+        id: zeroProduct.id, setNumber: zeroProduct.setNumber, title: zeroProduct.title,
+        isFeatureProduct: true,
+        catalogueArtworkUrl: "https://images.test/juniors.jpg",
+        catalogueArtworkPublicId: "colorful-life/catalogue-artwork/juniors",
+        productImages: [], category: { id: category.id, name: category.name },
+      },
     });
     assert.deepEqual(items.find((item) => item.id === stocked.id), {
       id: stocked.id, condition: "NEW", active: true, usedLifecycle: null,
-      currentStock: 5, availableStock: 3, isFeatureProduct: false,
-      catalogueArtworkUrl: null, catalogueArtworkPublicId: null,
-      legoProduct: { id: stockedProduct.id, setNumber: stockedProduct.setNumber, title: stockedProduct.title, category: { id: category.id, name: category.name } },
+      currentStock: 5, availableStock: 3,
+      legoProduct: {
+        id: stockedProduct.id, setNumber: stockedProduct.setNumber, title: stockedProduct.title,
+        isFeatureProduct: false, catalogueArtworkUrl: null, catalogueArtworkPublicId: null,
+        productImages: [], category: { id: category.id, name: category.name },
+      },
     });
     const publicZero = await get(`/products?q=${zeroProduct.setNumber}`);
     assert.deepEqual(publicZero.items, []);

@@ -1,8 +1,8 @@
 import { fileTypeFromBuffer } from "file-type";
-import { ImageValidationError } from "./listingImageErrors.js";
+import { ImageValidationError } from "./productImageErrors.js";
 
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-export const MAX_IMAGES_PER_LISTING = 10;
+export const MAX_IMAGES_PER_PRODUCT = 10;
 export const SUPPORTED_IMAGE_TYPES = {
   "image/jpeg": "jpg",
   "image/png": "png",
