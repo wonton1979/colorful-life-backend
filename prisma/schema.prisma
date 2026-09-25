@@ -250,6 +250,7 @@ model LegoProduct {
   theme             String
   ageRecommendation String
   pieceCount        Int
+  isRetired         Boolean          @default(false)
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   productListings   ProductListing[]

@@ -124,6 +124,7 @@ describe("Admin LegoProduct lookup", () => {
       ageRecommendation: "8+",
       pieceCount: 100,
       category: { id: product.categoryId, name: "Others" },
+      isRetired: false,
       usedOfferStatus: "NONE",
     });
     assert.equal(bySetNumber.pagination.totalItems, 1);
@@ -171,6 +172,7 @@ describe("Admin LegoProduct lookup", () => {
       const result = (await response.json()).items[0];
       assert.equal(result.id, product.id);
       assert.equal(result.usedOfferStatus, expectedStatus);
+      assert.equal(result.isRetired, false, "Used offer lifecycle must not infer product retirement");
     }
 
     for (const product of [soldProduct, retiredProduct]) {
@@ -178,6 +180,55 @@ describe("Admin LegoProduct lookup", () => {
       assert.deepEqual(publicCatalogue.items, []);
     }
     assert.equal(available.usedLifecycle, "AVAILABLE");
+  });
+
+  it("toggles shared retirement through either offer without changing inventory, lifecycle or sellability", async () => {
+    const product = await makeProduct({ currentStock: 3 });
+    assert.equal(product.isRetired, false);
+    const newListing = await prisma.productListing.findFirstOrThrow({ where: { legoProductId: product.id, condition: "NEW" } });
+    const used = await createUsed(product.id);
+    assert.equal(used.legoProduct.isRetired, false);
+    const listingsBefore = await prisma.productListing.findMany({ where: { legoProductId: product.id }, orderBy: { id: "asc" } });
+    const movementsBefore = await prisma.inventoryMovement.findMany({ where: { listingId: { in: [newListing.id, used.id] } }, orderBy: { id: "asc" } });
+    const publicBefore = await (await request(`/products/by-product/${product.id}`)).json();
+    assert.equal(publicBefore.offers.length, 2);
+
+    for (const [listingId, isRetired] of [[newListing.id, true], [used.id, false]] as const) {
+      const response = await request(`/products/${listingId}`, adminToken, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isRetired }),
+      });
+      assert.equal(response.status, 200, await response.clone().text());
+      assert.equal((await response.json()).legoProduct.isRetired, isRetired);
+      assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: product.id } })).isRetired, isRetired);
+      // An unrelated shared edit must preserve the manually selected value.
+      assert.equal((await request(`/products/${listingId}`, adminToken, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: product.title }),
+      })).status, 200);
+
+      const lookup = (await (await search(product.setNumber)).json()).items[0];
+      assert.equal(lookup.isRetired, isRetired);
+      assert.equal(lookup.usedOfferStatus, "AVAILABLE");
+      const catalogue = await (await request(`/products?q=${encodeURIComponent(product.setNumber)}`)).json();
+      assert.equal(catalogue.pagination.totalItems, 1);
+      const detail = await (await request(`/products/by-product/${product.id}`)).json();
+      for (const result of [catalogue.items[0], detail]) {
+        assert.equal(result.isRetired, isRetired);
+        assert.deepEqual(result.offers, publicBefore.offers);
+        assert.equal(result.isFeatureProduct, publicBefore.isFeatureProduct);
+        assert.ok(result.offers.every((offer: any) => !Object.hasOwn(offer, "isRetired")));
+      }
+      for (const id of [newListing.id, used.id]) {
+        const listingResponse = await request(`/products/${id}`);
+        assert.equal(listingResponse.status, 200);
+        const listing = await listingResponse.json();
+        assert.equal(listing.legoProduct.isRetired, isRetired);
+        assert.equal(Object.hasOwn(listing, "isRetired"), false);
+      }
+      const withoutTimestamp = ({ updatedAt, ...listing }: typeof newListing) => listing;
+      const listingsAfter = await prisma.productListing.findMany({ where: { legoProductId: product.id }, orderBy: { id: "asc" } });
+      assert.deepEqual(listingsAfter.map(withoutTimestamp), listingsBefore.map(withoutTimestamp));
+      assert.deepEqual(await prisma.inventoryMovement.findMany({ where: { listingId: { in: [newListing.id, used.id] } }, orderBy: { id: "asc" } }), movementsBefore);
+    }
   });
 
   it("bounds queries and paginates matches", async () => {

@@ -58,6 +58,7 @@ export const getCatalogueProduct = async (req: Request, res: Response) => {
  *   - categoryId: existing Category ID
  *   - ageRecommendation: string
  *   - pieceCount: number
+ *   - isRetired?: boolean (manually managed shared product metadata)
  *   - condition: "NEW" | "USED_LIKE_NEW"
  *   - originalPrice: number
  *   - salePrice?: number
@@ -72,6 +73,7 @@ export const createProduct = async (req: Request, res: Response) => {
     categoryId: z.number().int().positive(),
     ageRecommendation: z.string().nonempty({ message: "ageRecommendation is required" }),
     pieceCount: z.number().int().positive({ message: "pieceCount must be a positive integer" }),
+    isRetired: z.boolean().optional(),
     condition: z.nativeEnum(ListingCondition),
     originalPrice: z.number().positive({ message: "originalPrice must be positive" }),
     salePrice: z.number().nonnegative().optional(),
@@ -93,6 +95,7 @@ export const createProduct = async (req: Request, res: Response) => {
     categoryId,
     ageRecommendation,
     pieceCount,
+    isRetired,
     condition,
     originalPrice,
     salePrice,
@@ -121,6 +124,7 @@ export const createProduct = async (req: Request, res: Response) => {
               theme,
               ageRecommendation,
               pieceCount,
+              isRetired,
             },
           },
         },
@@ -162,7 +166,7 @@ export const createProduct = async (req: Request, res: Response) => {
  * PATCH /products/:id
  * Partially updates a product listing and its associated LegoProduct.
  * Supports updates to the following fields:
- *   - LegoProduct: setNumber, title, description, theme, ageRecommendation, pieceCount
+ *   - LegoProduct: setNumber, title, description, theme, ageRecommendation, pieceCount, isRetired
  *   - ProductListing: condition, originalPrice, salePrice
  * Non‑updatable fields (IDs, timestamps, active flag, etc.) are ignored.
  */
@@ -187,6 +191,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         .string()
         .nonempty({ message: "ageRecommendation cannot be empty" }),
       pieceCount: z.number().int().positive({ message: "pieceCount must be a positive integer" }),
+      isRetired: z.boolean(),
       condition: z.nativeEnum(ListingCondition),
       originalPrice: z.number().positive({ message: "originalPrice must be positive" }),
       salePrice: z.number().nonnegative().optional(),
@@ -219,6 +224,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     "theme",
     "ageRecommendation",
     "pieceCount",
+    "isRetired",
   ] as const;
   legoFields.forEach((field) => {
     if (body[field] !== undefined) {

@@ -2263,6 +2263,7 @@ export const LegoProductScalarFieldEnum = {
   theme: 'theme',
   ageRecommendation: 'ageRecommendation',
   pieceCount: 'pieceCount',
+  isRetired: 'isRetired',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

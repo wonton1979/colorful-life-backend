@@ -47,6 +47,7 @@ export type LegoProductMinAggregateOutputType = {
   theme: string | null
   ageRecommendation: string | null
   pieceCount: number | null
+  isRetired: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +61,7 @@ export type LegoProductMaxAggregateOutputType = {
   theme: string | null
   ageRecommendation: string | null
   pieceCount: number | null
+  isRetired: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -73,6 +75,7 @@ export type LegoProductCountAggregateOutputType = {
   theme: number
   ageRecommendation: number
   pieceCount: number
+  isRetired: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -100,6 +103,7 @@ export type LegoProductMinAggregateInputType = {
   theme?: true
   ageRecommendation?: true
   pieceCount?: true
+  isRetired?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -113,6 +117,7 @@ export type LegoProductMaxAggregateInputType = {
   theme?: true
   ageRecommendation?: true
   pieceCount?: true
+  isRetired?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -126,6 +131,7 @@ export type LegoProductCountAggregateInputType = {
   theme?: true
   ageRecommendation?: true
   pieceCount?: true
+  isRetired?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -226,6 +232,7 @@ export type LegoProductGroupByOutputType = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired: boolean
   createdAt: Date
   updatedAt: Date
   _count: LegoProductCountAggregateOutputType | null
@@ -262,6 +269,7 @@ export type LegoProductWhereInput = {
   theme?: Prisma.StringFilter<"LegoProduct"> | string
   ageRecommendation?: Prisma.StringFilter<"LegoProduct"> | string
   pieceCount?: Prisma.IntFilter<"LegoProduct"> | number
+  isRetired?: Prisma.BoolFilter<"LegoProduct"> | boolean
   createdAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
   category?: Prisma.XOR<Prisma.CategoryNullableScalarRelationFilter, Prisma.CategoryWhereInput> | null
@@ -277,6 +285,7 @@ export type LegoProductOrderByWithRelationInput = {
   theme?: Prisma.SortOrder
   ageRecommendation?: Prisma.SortOrder
   pieceCount?: Prisma.SortOrder
+  isRetired?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   category?: Prisma.CategoryOrderByWithRelationInput
@@ -295,6 +304,7 @@ export type LegoProductWhereUniqueInput = Prisma.AtLeast<{
   theme?: Prisma.StringFilter<"LegoProduct"> | string
   ageRecommendation?: Prisma.StringFilter<"LegoProduct"> | string
   pieceCount?: Prisma.IntFilter<"LegoProduct"> | number
+  isRetired?: Prisma.BoolFilter<"LegoProduct"> | boolean
   createdAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
   category?: Prisma.XOR<Prisma.CategoryNullableScalarRelationFilter, Prisma.CategoryWhereInput> | null
@@ -310,6 +320,7 @@ export type LegoProductOrderByWithAggregationInput = {
   theme?: Prisma.SortOrder
   ageRecommendation?: Prisma.SortOrder
   pieceCount?: Prisma.SortOrder
+  isRetired?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.LegoProductCountOrderByAggregateInput
@@ -331,6 +342,7 @@ export type LegoProductScalarWhereWithAggregatesInput = {
   theme?: Prisma.StringWithAggregatesFilter<"LegoProduct"> | string
   ageRecommendation?: Prisma.StringWithAggregatesFilter<"LegoProduct"> | string
   pieceCount?: Prisma.IntWithAggregatesFilter<"LegoProduct"> | number
+  isRetired?: Prisma.BoolWithAggregatesFilter<"LegoProduct"> | boolean
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"LegoProduct"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LegoProduct"> | Date | string
 }
@@ -342,6 +354,7 @@ export type LegoProductCreateInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   category?: Prisma.CategoryCreateNestedOneWithoutLegoProductsInput
@@ -357,6 +370,7 @@ export type LegoProductUncheckedCreateInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   productListings?: Prisma.ProductListingUncheckedCreateNestedManyWithoutLegoProductInput
@@ -369,6 +383,7 @@ export type LegoProductUpdateInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.CategoryUpdateOneWithoutLegoProductsNestedInput
@@ -384,6 +399,7 @@ export type LegoProductUncheckedUpdateInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   productListings?: Prisma.ProductListingUncheckedUpdateManyWithoutLegoProductNestedInput
@@ -398,6 +414,7 @@ export type LegoProductCreateManyInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -409,6 +426,7 @@ export type LegoProductUpdateManyMutationInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -422,6 +440,7 @@ export type LegoProductUncheckedUpdateManyInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -435,6 +454,7 @@ export type LegoProductCountOrderByAggregateInput = {
   theme?: Prisma.SortOrder
   ageRecommendation?: Prisma.SortOrder
   pieceCount?: Prisma.SortOrder
+  isRetired?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -454,6 +474,7 @@ export type LegoProductMaxOrderByAggregateInput = {
   theme?: Prisma.SortOrder
   ageRecommendation?: Prisma.SortOrder
   pieceCount?: Prisma.SortOrder
+  isRetired?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -467,6 +488,7 @@ export type LegoProductMinOrderByAggregateInput = {
   theme?: Prisma.SortOrder
   ageRecommendation?: Prisma.SortOrder
   pieceCount?: Prisma.SortOrder
+  isRetired?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -555,6 +577,7 @@ export type LegoProductCreateWithoutCategoryInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   productListings?: Prisma.ProductListingCreateNestedManyWithoutLegoProductInput
@@ -568,6 +591,7 @@ export type LegoProductUncheckedCreateWithoutCategoryInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   productListings?: Prisma.ProductListingUncheckedCreateNestedManyWithoutLegoProductInput
@@ -611,6 +635,7 @@ export type LegoProductScalarWhereInput = {
   theme?: Prisma.StringFilter<"LegoProduct"> | string
   ageRecommendation?: Prisma.StringFilter<"LegoProduct"> | string
   pieceCount?: Prisma.IntFilter<"LegoProduct"> | number
+  isRetired?: Prisma.BoolFilter<"LegoProduct"> | boolean
   createdAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LegoProduct"> | Date | string
 }
@@ -622,6 +647,7 @@ export type LegoProductCreateWithoutProductListingsInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
   category?: Prisma.CategoryCreateNestedOneWithoutLegoProductsInput
@@ -636,6 +662,7 @@ export type LegoProductUncheckedCreateWithoutProductListingsInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -663,6 +690,7 @@ export type LegoProductUpdateWithoutProductListingsInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.CategoryUpdateOneWithoutLegoProductsNestedInput
@@ -677,6 +705,7 @@ export type LegoProductUncheckedUpdateWithoutProductListingsInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -689,6 +718,7 @@ export type LegoProductCreateManyCategoryInput = {
   theme: string
   ageRecommendation: string
   pieceCount: number
+  isRetired?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -700,6 +730,7 @@ export type LegoProductUpdateWithoutCategoryInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   productListings?: Prisma.ProductListingUpdateManyWithoutLegoProductNestedInput
@@ -713,6 +744,7 @@ export type LegoProductUncheckedUpdateWithoutCategoryInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   productListings?: Prisma.ProductListingUncheckedUpdateManyWithoutLegoProductNestedInput
@@ -726,6 +758,7 @@ export type LegoProductUncheckedUpdateManyWithoutCategoryInput = {
   theme?: Prisma.StringFieldUpdateOperationsInput | string
   ageRecommendation?: Prisma.StringFieldUpdateOperationsInput | string
   pieceCount?: Prisma.IntFieldUpdateOperationsInput | number
+  isRetired?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -770,6 +803,7 @@ export type LegoProductSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   theme?: boolean
   ageRecommendation?: boolean
   pieceCount?: boolean
+  isRetired?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   category?: boolean | Prisma.LegoProduct$categoryArgs<ExtArgs>
@@ -786,6 +820,7 @@ export type LegoProductSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   theme?: boolean
   ageRecommendation?: boolean
   pieceCount?: boolean
+  isRetired?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   category?: boolean | Prisma.LegoProduct$categoryArgs<ExtArgs>
@@ -800,6 +835,7 @@ export type LegoProductSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   theme?: boolean
   ageRecommendation?: boolean
   pieceCount?: boolean
+  isRetired?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   category?: boolean | Prisma.LegoProduct$categoryArgs<ExtArgs>
@@ -814,11 +850,12 @@ export type LegoProductSelectScalar = {
   theme?: boolean
   ageRecommendation?: boolean
   pieceCount?: boolean
+  isRetired?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LegoProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "setNumber" | "categoryId" | "title" | "description" | "theme" | "ageRecommendation" | "pieceCount" | "createdAt" | "updatedAt", ExtArgs["result"]["legoProduct"]>
+export type LegoProductOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "setNumber" | "categoryId" | "title" | "description" | "theme" | "ageRecommendation" | "pieceCount" | "isRetired" | "createdAt" | "updatedAt", ExtArgs["result"]["legoProduct"]>
 export type LegoProductInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   category?: boolean | Prisma.LegoProduct$categoryArgs<ExtArgs>
   productListings?: boolean | Prisma.LegoProduct$productListingsArgs<ExtArgs>
@@ -846,6 +883,7 @@ export type $LegoProductPayload<ExtArgs extends runtime.Types.Extensions.Interna
     theme: string
     ageRecommendation: string
     pieceCount: number
+    isRetired: boolean
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["legoProduct"]>
@@ -1281,6 +1319,7 @@ export interface LegoProductFieldRefs {
   readonly theme: Prisma.FieldRef<"LegoProduct", 'String'>
   readonly ageRecommendation: Prisma.FieldRef<"LegoProduct", 'String'>
   readonly pieceCount: Prisma.FieldRef<"LegoProduct", 'Int'>
+  readonly isRetired: Prisma.FieldRef<"LegoProduct", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"LegoProduct", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LegoProduct", 'DateTime'>
 }
