@@ -27,10 +27,10 @@ afterEach(async () => {
 
 after(async () => { await prisma.$disconnect(); server.close(); });
 
-async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date; currentStock?: number; reservedStock?: number }) {
+async function makeListing(data: { setNumber: string; title: string; theme: string; originalPrice: number; category?: "VEHICLES" | "CITY" | "OTHERS"; salePrice?: number; active?: boolean; createdAt?: Date; currentStock?: number; reservedStock?: number; isRetired?: boolean }) {
   const category = await prisma.category.findUniqueOrThrow({ where: { name: data.category === "VEHICLES" ? "Vehicles" : data.category === "CITY" ? "City" : "Others" } });
   const product = await prisma.legoProduct.create({
-    data: { setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100, categoryId: category.id },
+    data: { setNumber: data.setNumber, title: data.title, theme: data.theme, ageRecommendation: "8+", pieceCount: 100, categoryId: category.id, isRetired: data.isRetired },
   });
   productIds.push(product.id);
   const listing = await prisma.productListing.create({
@@ -85,6 +85,7 @@ describe("Product catalogue HTTP integration", () => {
     assert.equal(item.id, listing.legoProductId);
     assert.equal(item.setNumber, product.setNumber);
     assert.equal(item.title, product.title);
+    assert.equal(item.isRetired, false);
     assert.equal(item.category.name, "Others");
     assert.equal(item.offers.length, 1);
     assert.equal(item.offers[0].id, listing.id);
@@ -107,6 +108,28 @@ describe("Product catalogue HTTP integration", () => {
     await prisma.productListing.update({ where: { id: listing.id }, data: { currentStock: 2, reservedStock: 0 } });
     assert.strictEqual((await get(path)).body.items[0].offers[0].availableStock, 2);
   });
+
+  for (const isRetired of [false, true]) {
+    it(`preserves catalogue eligibility and price filters with isRetired=${isRetired}`, async () => {
+      const prefix = `RETIREMENT-${randomUUID()}`;
+      const available = await makeListing({ setNumber: `${prefix}-available`, title: "Available", theme: "City", originalPrice: 20, salePrice: 12, currentStock: 3, reservedStock: 1, isRetired });
+      await makeListing({ setNumber: `${prefix}-inactive`, title: "Inactive", theme: "City", originalPrice: 12, active: false, isRetired });
+      await makeListing({ setNumber: `${prefix}-empty`, title: "Empty", theme: "City", originalPrice: 12, currentStock: 0, isRetired });
+      await makeListing({ setNumber: `${prefix}-reserved`, title: "Reserved", theme: "City", originalPrice: 12, currentStock: 1, reservedStock: 1, isRetired });
+      const catalogue = await get(`/products?q=${prefix}&minPrice=12&maxPrice=12`);
+      assert.equal(catalogue.response.status, 200);
+      assert.equal(catalogue.body.pagination.totalItems, 1);
+      assert.deepEqual(catalogue.body.items.map((item: any) => item.id), [available.legoProductId]);
+      assert.equal(catalogue.body.items[0].isRetired, isRetired);
+      assert.equal(catalogue.body.items[0].offers[0].availableStock, 2);
+      assert.equal(Number(catalogue.body.items[0].offers[0].effectivePrice), 12);
+      assert.deepEqual((await get(`/products?q=${prefix}&minPrice=13`)).body.items, []);
+      const detail = await get(`/products/by-product/${available.legoProductId}`);
+      assert.equal(detail.response.status, 200);
+      assert.equal(detail.body.isRetired, isRetired);
+      assert.deepEqual(detail.body.offers, catalogue.body.items[0].offers);
+    });
+  }
 
   it("is public and returns the default paginated active catalogue", async () => {
     await makeListing({ setNumber: `CAT-${randomUUID()}`, title: "Active", theme: "City", originalPrice: 10 });

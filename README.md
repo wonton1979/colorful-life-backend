@@ -61,6 +61,20 @@ Cart and order requests also use ProductListing IDs (`offers[].id`), never the
 top-level product-card ID. Availability reflects inventory at read time; order
 creation still checks and reserves stock atomically.
 
+`LegoProduct.isRetired` is manually managed Admin metadata shared by every NEW
+and USED_LIKE_NEW offer for that set. Admin `POST /products` accepts an optional
+JSON boolean `isRetired` (omission uses the database default `false`); Admin
+`PATCH /products/:id` accepts either `true` or `false` to edit the shared product
+through a listing ID. Omitting the field during an edit preserves its value.
+Strings, numbers, and `null` are rejected. Retirement has no automatic effect on
+inventory, availability, pricing, feature selection, or Used offer lifecycle.
+
+`GET /admin/products`, `GET /products`, and
+`GET /products/by-product/:productId` expose `isRetired` on each product.
+Listing detail (`GET /products/:id`) and product create/update responses expose
+it as `legoProduct.isRetired`. Admin should provide one shared product toggle,
+independent of offer condition and `UsedOfferLifecycle.RETIRED`.
+
 ### Customer Accounts
 
 - Registration and authentication

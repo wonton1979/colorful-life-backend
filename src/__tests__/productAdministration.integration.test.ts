@@ -108,6 +108,7 @@ describe("product administration authorization", () => {
     const protectedRequests: Array<{ path: string; method: string; body?: unknown }> = [
       { path: "/products", method: "POST", body: productBody(vehicles.id) },
       { path: `/products/${listing.id}`, method: "PATCH", body: { title: "Changed" } },
+      { path: `/products/${listing.id}`, method: "PATCH", body: { isRetired: true } },
       { path: `/products/${listing.id}/deactivate`, method: "PATCH" },
       { path: `/products/${listing.id}/reactivate`, method: "PATCH" },
       { path: `/products/${listing.id}/inventory-adjustments`, method: "POST", body: { quantity: 1 } },
@@ -123,6 +124,7 @@ describe("product administration authorization", () => {
     assert.strictEqual(createdResponse.status, 201);
     const created = await createdResponse.json();
     assert.strictEqual(created.category.name, "Vehicles");
+    assert.strictEqual(created.legoProduct.isRetired, false);
     listingIds.push(created.id);
     productIds.push(created.legoProductId);
 
@@ -153,6 +155,50 @@ describe("product administration authorization", () => {
 
     const invalid = { ...productBody(vehicles.id), setNumber: `ADMIN-INVALID-${randomUUID()}`, categoryId: 999999999 };
     assert.strictEqual((await request("/products", admin.token, { method: "POST", body: JSON.stringify(invalid) })).status, 400);
+  });
+
+  it("creates manually retired and explicitly non-retired products", async () => {
+    const admin = await makeUser("ADMIN");
+    const category = await makeCategory();
+    for (const isRetired of [true, false]) {
+      const response = await request("/products", admin.token, {
+        method: "POST",
+        body: JSON.stringify({ ...productBody(category.id), setNumber: `RETIRED-${randomUUID()}`, isRetired }),
+      });
+      assert.equal(response.status, 201, await response.clone().text());
+      const created = await response.json();
+      listingIds.push(created.id);
+      productIds.push(created.legoProductId);
+      assert.equal(created.legoProduct.isRetired, isRetired);
+      assert.equal(Object.hasOwn(created, "isRetired"), false);
+      assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: created.legoProductId } })).isRetired, isRetired);
+      const detail = await request(`/products/${created.id}`, undefined);
+      assert.equal(detail.status, 200);
+      assert.equal((await detail.json()).legoProduct.isRetired, isRetired);
+    }
+  });
+
+  it("rejects non-boolean retirement values on create and shared edits without partial writes", async () => {
+    const admin = await makeUser("ADMIN");
+    const category = await makeCategory();
+    const listing = await makeListing();
+    const productBefore = await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } });
+    for (const isRetired of ["true", "false", 0, 1, null, {}, []]) {
+      const setNumber = `INVALID-RETIRED-${randomUUID()}`;
+      const create = await request("/products", admin.token, {
+        method: "POST", body: JSON.stringify({ ...productBody(category.id), setNumber, isRetired }),
+      });
+      assert.equal(create.status, 400);
+      assert.ok((await create.json()).error.isRetired);
+      assert.equal(await prisma.legoProduct.count({ where: { setNumber } }), 0);
+      const update = await request(`/products/${listing.id}`, admin.token, {
+        method: "PATCH", body: JSON.stringify({ isRetired, title: "Must not change", originalPrice: 99 }),
+      });
+      assert.equal(update.status, 400);
+      assert.ok((await update.json()).error.isRetired);
+    }
+    assert.deepEqual(await prisma.legoProduct.findUniqueOrThrow({ where: { id: listing.legoProductId } }), productBefore);
+    assert.deepEqual(await prisma.productListing.findUniqueOrThrow({ where: { id: listing.id } }), listing);
   });
 
   it("automatically features the first listing per category, preserves it, and serializes concurrent creation", async () => {

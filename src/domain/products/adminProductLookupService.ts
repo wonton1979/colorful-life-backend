@@ -26,6 +26,7 @@ export function createAdminProductLookupService(db = defaultPrisma) {
               theme: true,
               ageRecommendation: true,
               pieceCount: true,
+              isRetired: true,
               category: { select: { id: true, name: true } },
               productListings: {
                 where: { condition: ListingCondition.USED_LIKE_NEW },
