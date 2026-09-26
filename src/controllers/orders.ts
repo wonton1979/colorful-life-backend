@@ -61,6 +61,7 @@ import {
 import { OrderNotFoundError as OrderNotFoundErrorDispatch, OrderNotDispatchableError } from "../domain/orders/orderDispatchErrors.js";
 import { sendDispatchNotification } from "../services/emailService.js";
 import { getCustomerOrder, listCustomerOrders } from "../domain/orders/orderReadService.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 export const listCustomerOrdersHandler = async (req: Request, res: Response) => {
   const userId = (req.user as { id: number }).id;
@@ -99,7 +100,7 @@ export const createOrderHandler = async (req: Request, res: Response) => {
     return res.status(201).json(order);
   } catch (err: unknown) {
       if (err instanceof EmailVerificationRequiredError) {
-        return res.status(403).json({ error: err.message });
+        return sendApiError(res, 403, "EMAIL_VERIFICATION_REQUIRED", err.message);
       }
       if (err instanceof OrderUserNotFoundError) {
         return res.status(404).json({ error: err.message });
@@ -125,7 +126,7 @@ export const createOrderHandler = async (req: Request, res: Response) => {
 export const cancelOrderBySellerHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   const parseResult = SellerCancelOrderSchema.safeParse(req.body);
   if (!parseResult.success) {
@@ -154,7 +155,7 @@ export const cancelOrderBySellerHandler = async (req: Request, res: Response) =>
 export const confirmOrderHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   const orderId = Number(req.params.orderId);
   if (!Number.isInteger(orderId) || orderId < 1) {
@@ -185,7 +186,7 @@ export const confirmOrderHandler = async (req: Request, res: Response) => {
 export const completeOrderHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   const orderId = Number(req.params.orderId);
   if (!Number.isInteger(orderId) || orderId < 1) {
@@ -235,7 +236,7 @@ export const cancelOrderHandler = async (req: Request, res: Response) => {
 export const processOrderReturnHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const parseResult = OrderReturnSchema.safeParse(req.body);
@@ -295,7 +296,7 @@ export const processOrderReturnHandler = async (req: Request, res: Response) => 
 export const authorizeOrderReturnHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);
@@ -328,7 +329,7 @@ export const authorizeOrderReturnHandler = async (req: Request, res: Response) =
 
 export const cancelOrderReturnHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
-  if (userRole !== "ADMIN") return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  if (userRole !== "ADMIN") return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   const orderId = Number(req.params.orderId);
   const returnId = Number(req.params.returnId);
   if (!Number.isInteger(orderId) || orderId < 1) return res.status(400).json({ error: "Invalid order id" });
@@ -347,7 +348,7 @@ export const cancelOrderReturnHandler = async (req: Request, res: Response) => {
 export const receiveOrderReturnHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);
@@ -382,7 +383,7 @@ export const receiveOrderReturnHandler = async (req: Request, res: Response) => 
 export const inspectOrderReturnHandler = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };
   if (user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);
@@ -436,7 +437,7 @@ export const inspectOrderReturnHandler = async (req: Request, res: Response) => 
 export const completeOrderReturnHandler = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };
   if (user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);
@@ -478,7 +479,7 @@ export const completeOrderReturnHandler = async (req: Request, res: Response) =>
   export const dispatchOrderHandler = async (req: Request, res: Response) => {
     const userRole = (req.user as { role: string }).role;
     if (userRole !== "ADMIN") {
-      return res.status(403).json({ error: "Forbidden: ADMIN only" });
+      return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
     }
     const parseResult = DispatchOrderSchema.safeParse(req.body);
     if (!parseResult.success) {

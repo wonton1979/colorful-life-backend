@@ -16,10 +16,11 @@ import {
   StocktakeListingNotFoundError,
 } from "../domain/inventory/inventoryAdjustmentService.js";
 import { z } from "zod";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 export const reconcileStocktakeInventory = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };
-  if (user.role !== "ADMIN") return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  if (user.role !== "ADMIN") return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
 
   const parsed = z.object({
     productListingId: z.number().int().positive(),
@@ -43,7 +44,7 @@ export const reconcileStocktakeInventory = async (req: Request, res: Response) =
 export const createInventoryAdjustment = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };
   if (user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const parsed = InventoryAdjustmentRequestSchema.safeParse(req.body);

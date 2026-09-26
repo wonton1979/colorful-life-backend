@@ -1,30 +1,57 @@
-import { Request, Response, NextFunction } from "express";
+import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config/index.js";
 import { prisma } from "../prisma/runtime.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
-interface JwtPayload {
-  id: number;
-  role: string;
-  iat: number;
-  exp: number;
-}
+type AuthenticatedUser = { id: number; role: string; deletedAt: Date | null };
+type AuthenticatedUserLookup = (userId: number) => Promise<AuthenticatedUser | null>;
+
+const databaseUserLookup: AuthenticatedUserLookup = (userId) =>
+  prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true, deletedAt: true } });
+
+let lookupUser: AuthenticatedUserLookup = databaseUserLookup;
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers["authorization"];
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Missing or invalid authorization header" });
+  const bearerMatch = authHeader?.match(/^Bearer\s+(\S+)$/i);
+  if (!bearerMatch) {
+    return sendApiError(res, 401, "AUTH_REQUIRED", "Missing or invalid authorization header");
   }
-  const token = authHeader.split(" ")[1];
+
+  let payload: unknown;
   try {
-    const payload = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
-    const user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, role: true, deletedAt: true } });
-    if (!user || user.deletedAt !== null) {
-      return res.status(401).json({ error: "Invalid or expired token" });
-    }
-    req.user = { id: payload.id, role: payload.role };
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: "Invalid or expired token" });
+    payload = jwt.verify(bearerMatch[1], config.JWT_SECRET);
+  } catch (_error) {
+    return sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
   }
+
+  const userId = typeof payload === "object" && payload !== null && "id" in payload
+    ? (payload as { id?: unknown }).id
+    : undefined;
+  if (typeof userId !== "number" || !Number.isInteger(userId) || userId < 1) {
+    return sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
+  }
+
+  let user: AuthenticatedUser | null;
+  try {
+    user = await lookupUser(userId);
+  } catch (error) {
+    console.error("Authentication user lookup failed", error);
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
+  }
+
+  if (!user || user.deletedAt !== null) {
+    return sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
+  }
+
+  // The database is authoritative: JWT role claims can become stale after a role change.
+  req.user = { id: user.id, role: user.role };
+  return next();
 };
+
+export function setAuthenticatedUserLookupForTests(testLookup: AuthenticatedUserLookup): () => void {
+  const previous = lookupUser;
+  lookupUser = testLookup;
+  return () => { lookupUser = previous; };
+}

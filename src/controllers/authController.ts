@@ -12,6 +12,7 @@ import { sendPasswordResetEmail } from "../services/emailService.js";
 import { createOrReplacePasswordResetToken } from "../domain/auth/passwordResetService.js";
 import { resetPassword } from "../domain/auth/passwordResetService.js";
 import { InvalidOrExpiredPasswordResetTokenError } from "../domain/auth/passwordResetErrors.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 
 export const signup = async (req: Request, res: Response) => {
@@ -65,7 +66,7 @@ export const signup = async (req: Request, res: Response) => {
         }
       }
      console.error("Signup error", err);
-     return res.status(500).json({ error: "Internal server error" });
+     return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
    }
 };
 
@@ -79,11 +80,11 @@ export const login = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findFirst({ where: { email: normalizedEmail, deletedAt: null } });
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return sendApiError(res, 401, "INVALID_CREDENTIALS", "Invalid credentials");
     }
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return sendApiError(res, 401, "INVALID_CREDENTIALS", "Invalid credentials");
     }
     const token = jwt.sign(
       { id: user.id, role: user.role },
@@ -93,7 +94,7 @@ export const login = async (req: Request, res: Response) => {
     return res.json({ token });
   } catch (err) {
     console.error("Login error", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };
 
@@ -108,13 +109,13 @@ export const verifyEmail = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid or expired verification token" });
     }
     console.error("Email verification error", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };
 
 export const resendVerification = async (req: Request, res: Response) => {
   const userId = req.user?.id;
-  if (!userId) return res.status(401).json({ error: "Unauthorized" });
+  if (!userId) return sendApiError(res, 401, "AUTH_REQUIRED", "Missing or invalid authorization header");
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId, deletedAt: null },
@@ -135,7 +136,7 @@ export const resendVerification = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "If verification is required, a verification email has been sent" });
   } catch (err) {
     console.error("Verification resend error", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };
 
@@ -160,7 +161,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     return res.status(200).json(genericResponse);
   } catch (err) {
     console.error("Forgot password error", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };
 
@@ -175,6 +176,6 @@ export const resetPasswordHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid or expired password reset token" });
     }
     console.error("Password reset error", err);
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };
