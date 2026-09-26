@@ -13,6 +13,50 @@ import { createOrReplacePasswordResetToken } from "../domain/auth/passwordResetS
 import { resetPassword } from "../domain/auth/passwordResetService.js";
 import { InvalidOrExpiredPasswordResetTokenError } from "../domain/auth/passwordResetErrors.js";
 import { sendApiError } from "../utils/apiErrorResponse.js";
+import {
+  createRefreshSession,
+  InvalidRefreshSessionError,
+  revokeRefreshSession,
+  rotateRefreshSession,
+  type RefreshSessionUser,
+} from "../domain/auth/refreshSessionService.js";
+
+const REFRESH_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
+
+function issueAccessToken(user: Pick<RefreshSessionUser, "id" | "role">) {
+  const token = jwt.sign(
+    { id: user.id, role: user.role },
+    config.JWT_SECRET,
+    { expiresIn: config.JWT_EXPIRES_IN } as SignOptions,
+  );
+  const payload = jwt.decode(token);
+  if (!payload || typeof payload === "string" || typeof payload.exp !== "number") {
+    throw new Error("Configured access token has no expiry");
+  }
+  return { token, accessTokenExpiresAt: new Date(payload.exp * 1000).toISOString() };
+}
+
+function parseRefreshToken(req: Request, res: Response): string | null {
+  const value = req.body?.refreshToken;
+  if (value === undefined || value === null || value === "") {
+    sendApiError(res, 401, "AUTH_REQUIRED", "Refresh token is required");
+    return null;
+  }
+  if (typeof value !== "string" || !REFRESH_TOKEN_PATTERN.test(value)) {
+    sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
+    return null;
+  }
+  return value;
+}
+
+type RefreshRotation = typeof rotateRefreshSession;
+let rotateSession: RefreshRotation = rotateRefreshSession;
+
+export function setRefreshSessionRotationForTests(testRotation: RefreshRotation): () => void {
+  const previous = rotateSession;
+  rotateSession = testRotation;
+  return () => { rotateSession = previous; };
+}
 
 
 export const signup = async (req: Request, res: Response) => {
@@ -86,14 +130,46 @@ export const login = async (req: Request, res: Response) => {
     if (!passwordMatches) {
       return sendApiError(res, 401, "INVALID_CREDENTIALS", "Invalid credentials");
     }
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      config.JWT_SECRET,
-      { expiresIn: config.JWT_EXPIRES_IN } as SignOptions
-    );
-    return res.json({ token });
+    const accessToken = issueAccessToken(user);
+    const refreshSession = await createRefreshSession(user.id);
+    return res.json({
+      ...accessToken,
+      ...refreshSession,
+      refreshExpiresAt: refreshSession.refreshExpiresAt.toISOString(),
+    });
   } catch (err) {
     console.error("Login error", err);
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
+  }
+};
+
+export const refreshSession = async (req: Request, res: Response) => {
+  const refreshToken = parseRefreshToken(req, res);
+  if (!refreshToken) return;
+  try {
+    const rotated = await rotateSession(refreshToken, issueAccessToken);
+    return res.status(200).json({
+      ...rotated.accessToken,
+      refreshToken: rotated.refreshToken,
+      refreshExpiresAt: rotated.refreshExpiresAt.toISOString(),
+    });
+  } catch (error) {
+    if (error instanceof InvalidRefreshSessionError) {
+      return sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
+    }
+    console.error("Refresh session error", error instanceof Error ? error.message : "unknown error");
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  const refreshToken = parseRefreshToken(req, res);
+  if (!refreshToken) return;
+  try {
+    await revokeRefreshSession(refreshToken);
+    return res.status(204).send();
+  } catch (error) {
+    console.error("Refresh session revocation error", error instanceof Error ? error.message : "unknown error");
     return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 };

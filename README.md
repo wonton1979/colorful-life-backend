@@ -628,6 +628,14 @@ Security-related behaviour includes:
 
 Sensitive credentials are supplied through environment variables and must never be committed to the repository.
 
+### Renewable login sessions
+
+`POST /auth/login` returns the existing access `token` plus `accessTokenExpiresAt`, an opaque `refreshToken`, and `refreshExpiresAt`. Access tokens continue to use `JWT_EXPIRES_IN` (default `1h`). Renewable sessions have a fixed absolute lifetime configured by `REFRESH_SESSION_TTL_DAYS` (default `30`, allowed range `1`–`365` days); refresh does not extend that deadline.
+
+Refresh credentials are random opaque values. The backend stores only their SHA-256 hashes. `POST /auth/refresh` accepts `{ "refreshToken": "..." }` without requiring an access token and returns a new `token`, `accessTokenExpiresAt`, rotated `refreshToken`, and the original `refreshExpiresAt`. The submitted refresh credential becomes invalid after successful rotation. Invalid, expired, revoked, or deleted-user sessions return HTTP 401 with the structured `SESSION_INVALID` error; unexpected database/service failures return HTTP 500 with `INTERNAL_SERVER_ERROR`.
+
+`POST /auth/logout` accepts `{ "refreshToken": "..." }`, revokes that renewable session, and returns HTTP 204. It is safe to repeat for a validly formatted credential. Clients should discard both access and refresh credentials on logout and replace both credentials after every successful refresh. They should schedule an access-expiry warning using `accessTokenExpiresAt` (for example, expiry minus 60 seconds), and must not retry an old refresh credential after rotation. The fixed refresh expiry is the point at which the user must authenticate again.
+
 ---
 
 ## API Structure

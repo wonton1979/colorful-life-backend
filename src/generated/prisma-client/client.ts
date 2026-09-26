@@ -52,6 +52,11 @@ export type BusinessExpense = Prisma.BusinessExpenseModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model RefreshSession
+ *
+ */
+export type RefreshSession = Prisma.RefreshSessionModel
+/**
  * Model EmailVerificationToken
  *
  */
