@@ -197,7 +197,20 @@ model User {
   inventoryAudits        InventoryAudit[]        @relation("InventoryAuditPerformedBy")
   emailVerificationToken EmailVerificationToken?
   passwordResetToken     PasswordResetToken?
+  refreshSessions        RefreshSession[]
   cart                   Cart?
+}
+
+model RefreshSession {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  refreshTokenHash String    @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model EmailVerificationToken {

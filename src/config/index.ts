@@ -14,6 +14,7 @@ const configSchema = z.object({
     DATABASE_URL: z.string().nonempty(),
     JWT_SECRET: z.string().nonempty(),
     JWT_EXPIRES_IN: z.string().nonempty().default("1h"),
+    REFRESH_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
     AWS_REGION: z.string().nonempty().default("eu-west-2"),
     SES_FROM_EMAIL: z.string().email().default("noreply@example.com"),
     FRONTEND_URL: z.string().url().default("http://localhost:3000"),
