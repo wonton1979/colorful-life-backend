@@ -7,6 +7,7 @@ import { ProductCatalogueQuerySchema } from "../domain/products/productCatalogue
 import { getCatalogueProductById, listCatalogueProducts } from "../domain/products/productCatalogueService.js";
 import { createProductFeatureService, FeatureProductNotFoundError, FeatureProductCategoryChangedError } from "../domain/products/productFeatureService.js";
 import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
+import { productMetadataUpdateFields } from "../domain/products/productMetadataUpdateValidator.js";
 
 const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true } as const;
 
@@ -183,19 +184,12 @@ export const updateProduct = async (req: Request, res: Response) => {
   // Define partial schema for validation
   const updateSchema = z
     .object({
-      setNumber: z.string().nonempty({ message: "setNumber cannot be empty" }),
-      title: z.string().nonempty({ message: "title cannot be empty" }),
-      description: z.string().optional(),
-      theme: z.string().nonempty({ message: "theme cannot be empty" }),
-      ageRecommendation: z
-        .string()
-        .nonempty({ message: "ageRecommendation cannot be empty" }),
-      pieceCount: z.number().int().positive({ message: "pieceCount must be a positive integer" }),
-      isRetired: z.boolean(),
+      ...productMetadataUpdateFields,
       condition: z.nativeEnum(ListingCondition),
       originalPrice: z.number().positive({ message: "originalPrice must be positive" }),
       salePrice: z.number().nonnegative().optional(),
     })
+    .omit({ categoryId: true })
     .partial();
 
   const parseResult = updateSchema.safeParse(req.body);

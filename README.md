@@ -87,6 +87,17 @@ Listing detail (`GET /products/:id`) and product create/update responses expose
 it as `legoProduct.isRetired`. Admin should provide one shared product toggle,
 independent of offer condition and `UsedOfferLifecycle.RETIRED`.
 
+Admin product editing uses `PATCH /admin/products/:productId`, where the path
+ID is the LegoProduct ID returned by `GET /admin/products`. The request is a
+partial JSON object containing one or more of `setNumber`, `title`,
+`description`, `theme`, `ageRecommendation`, `pieceCount`, `isRetired`, and
+`categoryId`. A successful response is the updated LegoProduct with its
+`category` and ordered `productImages`. Missing products return 404, invalid or
+missing categories return 400, duplicate set numbers return 409, and empty or
+unsupported updates return 400. This route updates no ProductListing or
+inventory fields. The existing `PATCH /products/:id` remains listing-ID based
+for compatibility.
+
 ### Admin Presentation Listing Feed
 
 `GET /admin/product-listings` requires a Bearer token for an ADMIN account
