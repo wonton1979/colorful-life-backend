@@ -4,6 +4,7 @@ import {
   AccountDeletionAdminNotAllowedError,
   AccountDeletionUserNotFoundError,
 } from "../domain/auth/accountDeletionErrors.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 export const deleteCurrentUserAccount = async (req: Request, res: Response) => {
   const userId = req.user?.id;
@@ -16,7 +17,7 @@ export const deleteCurrentUserAccount = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User not found" });
     }
     if (error instanceof AccountDeletionAdminNotAllowedError) {
-      return res.status(403).json({ error: "Not allowed" });
+      return sendApiError(res, 403, "FORBIDDEN", "Not allowed");
     }
     console.error("Account deletion error", error);
     return res.status(500).json({ error: "Internal server error" });

@@ -191,13 +191,13 @@ describe("Auth API", () => {
     await signup(url, email, password);
     const { res, body } = await login(url, email, "WrongPass1!");
     assert.strictEqual(res.status, 401);
-    assert.strictEqual(body.error, "Invalid credentials");
+    assert.deepEqual(body, { error: { code: "INVALID_CREDENTIALS", message: "Invalid credentials" } });
   });
 
   it("login with unknown email returns 401", async () => {
     const { res, body } = await login(url, `unknown-${randomUUID()}@example.com`, "Abcdef1!");
     assert.strictEqual(res.status, 401);
-    assert.strictEqual(body.error, "Invalid credentials");
+    assert.deepEqual(body, { error: { code: "INVALID_CREDENTIALS", message: "Invalid credentials" } });
   });
 
   it("login payload validation – missing or malformed fields", async () => {
@@ -246,13 +246,26 @@ describe("Auth API", () => {
   it("profile missing Authorization header returns 401", async () => {
     const res = await fetch(`${url}/profile`);
     assert.strictEqual(res.status, 401);
+    assert.deepEqual(await res.json(), { error: { code: "AUTH_REQUIRED", message: "Missing or invalid authorization header" } });
+
+    const malformedHeader = await fetch(`${url}/profile`, { headers: { Authorization: "Basic abc123" } });
+    assert.strictEqual(malformedHeader.status, 401);
+    assert.deepEqual(await malformedHeader.json(), { error: { code: "AUTH_REQUIRED", message: "Missing or invalid authorization header" } });
   });
 
-  it("profile with invalid token returns 401", async () => {
+  it("profile with malformed and invalid-signature tokens returns SESSION_INVALID", async () => {
     const res = await fetch(`${url}/profile`, {
       headers: { Authorization: "Bearer invalid.token.here" },
     });
     assert.strictEqual(res.status, 401);
+    assert.deepEqual(await res.json(), { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } });
+
+    const invalidSignature = jwt.sign({ id: 1, role: "ADMIN" }, "not-the-configured-secret");
+    const invalidSignatureResponse = await fetch(`${url}/profile`, {
+      headers: { Authorization: `Bearer ${invalidSignature}` },
+    });
+    assert.strictEqual(invalidSignatureResponse.status, 401);
+    assert.deepEqual(await invalidSignatureResponse.json(), { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } });
   });
 
   it("profile with expired token returns 401", async () => {
@@ -265,6 +278,7 @@ describe("Auth API", () => {
       headers: { Authorization: `Bearer ${expiredToken}` },
     });
     assert.strictEqual(res.status, 401);
+    assert.deepEqual(await res.json(), { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } });
   });
 });
 

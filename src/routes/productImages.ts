@@ -4,6 +4,7 @@ import { authMiddleware } from "../middleware/auth.js";
 import { cloudinaryImageStorage } from "../infrastructure/imageStorage/cloudinaryImageStorage.js";
 import { createProductImageController } from "../controllers/productImages.js";
 import type { ImageStorage } from "../infrastructure/imageStorage/imageStorage.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024, files: 1 }, fileFilter: (_req, file, cb) => {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) return cb(new Error("Unsupported image format"));
@@ -11,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 *
 } });
 
 const adminOnly = (req: Request, res: Response, next: NextFunction) => {
-  if ((req.user as { role: string }).role !== "ADMIN") return res.status(403).json({ error: "Forbidden: ADMIN only" });
+  if ((req.user as { role: string }).role !== "ADMIN") return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   next();
 };
 

@@ -110,12 +110,24 @@ describe("Admin ProductListing feed", () => {
   it("requires ADMIN authentication according to existing auth conventions", async () => {
     const unauthenticated = await request("/admin/product-listings", "");
     assert.equal(unauthenticated.status, 401);
-    assert.deepEqual(await unauthenticated.json(), { error: "Missing or invalid authorization header" });
+    assert.deepEqual(await unauthenticated.json(), { error: { code: "AUTH_REQUIRED", message: "Missing or invalid authorization header" } });
     assert.equal((await request("/admin/product-listings", "invalid-token")).status, 401);
     const customer = await request("/admin/product-listings", customerToken);
     assert.equal(customer.status, 403);
-    assert.deepEqual(await customer.json(), { error: "Forbidden: ADMIN only" });
+    assert.deepEqual(await customer.json(), { error: { code: "FORBIDDEN", message: "Forbidden: ADMIN only" } });
     assert.equal((await request("/admin/product-listings")).status, 200);
+  });
+
+  it("uses the current database role rather than an ADMIN role embedded in an old JWT", async () => {
+    const adminId = (jwt.verify(adminToken, config.JWT_SECRET) as { id: number }).id;
+    await prisma.user.update({ where: { id: adminId }, data: { role: "CUSTOMER" } });
+    try {
+      const downgraded = await request("/admin/product-listings", adminToken);
+      assert.equal(downgraded.status, 403);
+      assert.deepEqual(await downgraded.json(), { error: { code: "FORBIDDEN", message: "Forbidden: ADMIN only" } });
+    } finally {
+      await prisma.user.update({ where: { id: adminId }, data: { role: "ADMIN" } });
+    }
   });
 
   it("returns exact zero-stock listing metadata and dynamic categories while preserving public sellability and Admin lookup", async () => {

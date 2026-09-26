@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { BusinessExpenseCreateSchema } from "../domain/businessExpenseValidator.js";
 import { prisma } from "../prisma/runtime.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 /**
  * POST /business-expenses
@@ -9,7 +10,7 @@ import { prisma } from "../prisma/runtime.js";
 export const createBusinessExpense = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const parseResult = BusinessExpenseCreateSchema.safeParse(req.body);
@@ -43,7 +44,7 @@ export const createBusinessExpense = async (req: Request, res: Response) => {
 export const listBusinessExpenses = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   try {
     const expenses = await prisma.businessExpense.findMany({

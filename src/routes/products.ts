@@ -1,12 +1,13 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { getProducts, getProductById, getCatalogueProduct, createProduct, updateProduct, deactivateProduct, reactivateProduct, adjustInventory, getInventoryMovements, setFeatureProduct } from "../controllers/products.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 const router = Router();
 
 const adminOnly = (req: Request, res: Response, next: NextFunction) => {
   if ((req.user as { role: string }).role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   next();
 };

@@ -161,15 +161,19 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
   await new Promise<void>(resolve => server.once("listening", resolve));
   const address = server.address(); assert(address && typeof address !== "string");
   const base = "http://127.0.0.1:" + address.port;
+  let customerId: number | undefined;
   try {
-    const token = (role: string) => jwt.sign({ id: userId, role }, config.JWT_SECRET);
+    customerId = (await prisma.user.create({ data: {
+      email: randomUUID() + "@test.invalid", passwordHash: "test", emailVerified: true, role: "CUSTOMER",
+    } })).id;
+    const token = (id: number, role: string) => jwt.sign({ id, role }, config.JWT_SECRET);
     for (const [method, path] of [["GET", "/purchases/" + purchaseId + "/review"], ["PATCH", "/purchases/" + purchaseId + "/review/items/" + ids[0]], ["PATCH", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/listing"], ["POST", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/return"]]) {
-      assert.equal((await fetch(base + path, { method, headers: { Authorization: "Bearer " + token("CUSTOMER") } })).status, 403);
+      assert.equal((await fetch(base + path, { method, headers: { Authorization: "Bearer " + token(customerId, "CUSTOMER") } })).status, 403);
     }
-    const response = await fetch(base + "/purchases/" + purchaseId + "/review", { headers: { Authorization: "Bearer " + token("ADMIN") } });
+    const response = await fetch(base + "/purchases/" + purchaseId + "/review", { headers: { Authorization: "Bearer " + token(userId, "ADMIN") } });
     assert.equal(response.status, 200);
     assert.equal((await response.json()).groups[0].quantity, 3);
-    const headers = { Authorization: "Bearer " + token("ADMIN"), "Content-Type": "application/json" };
+    const headers = { Authorization: "Bearer " + token(userId, "ADMIN"), "Content-Type": "application/json" };
     const r = await review();
     const resolved = await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/listing",
       { method: "PATCH", headers, body: JSON.stringify({ revision: r.revision, productListingId: listingId }) });
@@ -227,5 +231,8 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
     });
     assert.equal(createdAgain.status, 400);
     assert.equal((await prisma.legoProduct.findUniqueOrThrow({ where: { id: existingProduct.id } })).isFeatureProduct, true);
-  } finally { await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve())); }
+  } finally {
+    if (customerId !== undefined) await prisma.user.delete({ where: { id: customerId } });
+    await new Promise<void>((resolve, reject) => server.close(e => e ? reject(e) : resolve()));
+  }
 });

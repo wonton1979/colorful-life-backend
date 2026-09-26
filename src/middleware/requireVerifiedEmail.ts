@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../prisma/runtime.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 type VerifiedUserLookup = (userId: number) => Promise<{ emailVerified: boolean } | null>;
 
@@ -11,7 +12,7 @@ let lookupUser: VerifiedUserLookup = databaseLookup;
 /** Restricts customer member routes using the current database User state. */
 export async function requireVerifiedEmail(req: Request, res: Response, next: NextFunction) {
   const user = req.user;
-  if (!user) return res.status(401).json({ error: "Missing or invalid authorization header" });
+  if (!user) return sendApiError(res, 401, "AUTH_REQUIRED", "Missing or invalid authorization header");
 
   // ADMIN routes are not expected to mount this middleware. Passing them through
   // keeps the middleware customer-oriented and preserves existing ADMIN policy.
@@ -19,11 +20,11 @@ export async function requireVerifiedEmail(req: Request, res: Response, next: Ne
 
   try {
     const currentUser = await lookupUser(user.id);
-    if (!currentUser) return res.status(404).json({ error: "User not found" });
-    if (!currentUser.emailVerified) return res.status(403).json({ error: "Email verification required" });
+    if (!currentUser) return sendApiError(res, 401, "SESSION_INVALID", "Invalid or expired token");
+    if (!currentUser.emailVerified) return sendApiError(res, 403, "EMAIL_VERIFICATION_REQUIRED", "Email verification required");
     return next();
   } catch (_error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return sendApiError(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error");
   }
 }
 

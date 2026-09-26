@@ -5,6 +5,7 @@ import { createOrReuseStripeRefund, StripeRefundProviderError, StripeRefundValid
 import { prisma } from "../prisma/runtime.js";
 import { PaymentProvider } from "../generated/prisma-client/enums.js";
 import { CreateRefundSchema } from "../domain/refunds/refundValidator.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 import {
   RefundAmountExceededError,
   RefundInvalidAmountError,
@@ -19,7 +20,7 @@ import {
 export const createRefundHandler = async (req: Request, res: Response) => {
   const user = req.user as { id: number; role: string };
   if (user.role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);
@@ -91,7 +92,7 @@ export const createRefundHandler = async (req: Request, res: Response) => {
 export const listRefundsHandler = async (req: Request, res: Response) => {
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   const orderId = Number(req.params.orderId);

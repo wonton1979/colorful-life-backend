@@ -5,13 +5,14 @@ import type { Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../middleware/auth.js";
 import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import { importPurchaseInvoice, listPurchases, getPurchaseById, createManualPurchase } from "../controllers/purchases.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 const router = Router();
 router.use("/:id/review", purchaseReviewRouter);
 
 const adminOnly = (req: Request, res: Response, next: NextFunction) => {
   if ((req.user as { role: string }).role !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
   next();
 };

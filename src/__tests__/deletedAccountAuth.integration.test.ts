@@ -3,7 +3,7 @@ import { afterEach, describe, it } from "node:test";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "node:crypto";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, setAuthenticatedUserLookupForTests } from "../middleware/auth.js";
 import { config } from "../config/index.js";
 import { prisma } from "../prisma/runtime.js";
 import { createOrReplaceEmailVerificationToken, verifyEmailVerificationToken } from "../domain/auth/emailVerificationService.js";
@@ -12,10 +12,12 @@ import { forgotPassword, login, resendVerification } from "../controllers/authCo
 import { setPasswordResetEmailSenderForTests, setVerificationEmailSenderForTests } from "../services/emailService.js";
 
 const ids: number[] = [];
+const restores: Array<() => void> = [];
 let restoreReset: (() => void) | undefined;
 let restoreVerification: (() => void) | undefined;
 
 afterEach(async () => {
+  while (restores.length) restores.pop()!();
   restoreReset?.(); restoreReset = undefined;
   restoreVerification?.(); restoreVerification = undefined;
   if (ids.length) await prisma.user.deleteMany({ where: { id: { in: ids } } });
@@ -39,18 +41,27 @@ describe("deleted-account authentication regressions", () => {
     await prisma.user.update({ where: { id: user.id }, data: { deletedAt: new Date() } });
     const denied = responseMock(); let reached = false;
     await authMiddleware(authRequest(oldJwt), denied.res, (() => { reached = true; }) as any);
-    assert.deepEqual(denied.result(), { statusCode: 401, body: { error: "Invalid or expired token" } }); assert.equal(reached, false);
+    assert.deepEqual(denied.result(), { statusCode: 401, body: { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } } }); assert.equal(reached, false);
     const missing = await makeUser(); const missingJwt = tokenFor(missing);
     await prisma.user.delete({ where: { id: missing.id } }); ids.splice(ids.indexOf(missing.id), 1);
     const missingResponse = responseMock(); await authMiddleware(authRequest(missingJwt), missingResponse.res, (() => { reached = true; }) as any);
-    assert.equal(missingResponse.result().statusCode, 401); assert.equal(reached, false);
+    assert.deepEqual(missingResponse.result(), { statusCode: 401, body: { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } } }); assert.equal(reached, false);
   });
 
   it("rejects a tombstoned Admin JWT through shared authentication", async () => {
     const user = await makeUser("ADMIN"); const jwtToken = tokenFor(user);
     await prisma.user.update({ where: { id: user.id }, data: { deletedAt: new Date() } });
     const result = responseMock(); await authMiddleware(authRequest(jwtToken), result.res, (() => { throw new Error("must not continue"); }) as any);
-    assert.equal(result.result().statusCode, 401);
+    assert.deepEqual(result.result(), { statusCode: 401, body: { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } } });
+  });
+
+  it("returns an internal server error when the authenticated-user database lookup fails", async () => {
+    restores.push(setAuthenticatedUserLookupForTests(async () => { throw new Error("database unavailable"); }));
+    const validShapeToken = tokenFor({ id: 987654321, role: "CUSTOMER" });
+    const result = responseMock(); let reached = false;
+    await authMiddleware(authRequest(validShapeToken), result.res, (() => { reached = true; }) as any);
+    assert.deepEqual(result.result(), { statusCode: 500, body: { error: { code: "INTERNAL_SERVER_ERROR", message: "Internal server error" } } });
+    assert.equal(reached, false);
   });
 
   it("keeps active login working but blocks tombstoned login and keeps forgot-password generic", async () => {

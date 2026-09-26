@@ -5,10 +5,11 @@ import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
 import { ReviewError, getPurchaseReview, amendReviewLine, resolveReviewGroup, receiveReviewGroup } from "../domain/purchases/purchaseReview.js";
 import { ValidationError } from "../domain/purchases/purchaseImport.js";
 import { purchaseListingsRouter } from "./purchaseListings.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 export const purchaseReviewRouter = Router({ mergeParams: true });
 purchaseReviewRouter.use(authMiddleware, requireVerifiedEmail, (req, res, next) => {
-  if (req.user?.role !== "ADMIN") { res.status(403).json({ error: "Forbidden: ADMIN only" }); return; }
+  if (req.user?.role !== "ADMIN") { sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only"); return; }
   next();
 });
 purchaseReviewRouter.use(purchaseListingsRouter);

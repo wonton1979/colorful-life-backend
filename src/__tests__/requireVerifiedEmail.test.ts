@@ -26,7 +26,7 @@ describe("requireVerifiedEmail", () => {
     const output = response(); let reached = false;
     await requireVerifiedEmail(request(1), output.res, (() => { reached = true; }) as NextFunction);
     assert.equal(output.statusCode, 403);
-    assert.deepEqual(output.body, { error: "Email verification required" });
+    assert.deepEqual(output.body, { error: { code: "EMAIL_VERIFICATION_REQUIRED", message: "Email verification required" } });
     assert.equal(reached, false);
   });
 
@@ -57,11 +57,13 @@ describe("requireVerifiedEmail", () => {
     let reached = false;
     const missing = response();
     await requireVerifiedEmail(request(99), missing.res, (() => { reached = true; }) as NextFunction);
-    assert.equal(missing.statusCode, 404);
+    assert.equal(missing.statusCode, 401);
+    assert.deepEqual(missing.body, { error: { code: "SESSION_INVALID", message: "Invalid or expired token" } });
     assert.equal(reached, false);
     const unauthenticated = response();
     await requireVerifiedEmail(request(), unauthenticated.res, (() => { reached = true; }) as NextFunction);
     assert.equal(unauthenticated.statusCode, 401);
+    assert.deepEqual(unauthenticated.body, { error: { code: "AUTH_REQUIRED", message: "Missing or invalid authorization header" } });
   });
 
   it("passes ADMIN without imposing customer verification", async () => {

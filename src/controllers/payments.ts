@@ -16,6 +16,7 @@ import { createPayment } from "../domain/payments/paymentService.js";
 import { CreatePaymentSchema } from "../domain/payments/paymentValidator.js";
 import { PaymentNotFoundError, PaymentConflictError, PaymentAlreadySucceededError, PaymentExpiredError } from "../domain/payments/paymentErrors.js";
 import { prisma } from "../prisma/runtime.js";
+import { sendApiError } from "../utils/apiErrorResponse.js";
 
 /**
  * POST /orders/:orderId/payments
@@ -25,7 +26,7 @@ export const createPaymentHandler = async (req: Request, res: Response) => {
   // ADMIN only
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   // Validate orderId
@@ -69,7 +70,7 @@ export const listPaymentsHandler = async (req: Request, res: Response) => {
   // ADMIN only
   const userRole = (req.user as { role: string }).role;
   if (userRole !== "ADMIN") {
-    return res.status(403).json({ error: "Forbidden: ADMIN only" });
+    return sendApiError(res, 403, "FORBIDDEN", "Forbidden: ADMIN only");
   }
 
   // Validate orderId
