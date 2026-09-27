@@ -693,6 +693,22 @@ whitespace, stores whitespace-only values as `null`, and continues to accept
 custom names outside the canonical options. Imported purchase suppliers remain
 unrestricted.
 
+Purchase import stages every parsed `PurchaseItem` and does not create or
+receive catalogue inventory. Each item has an `inventoryDisposition` of
+`INVENTORY` (the default, including for historical unmatched rows) or
+`NON_INVENTORY`. A null `productListingId` still means only that no listing is
+linked; it does not mean the line is excluded. Admin can deliberately exclude
+or restore an unreceived review group with
+`PATCH /purchases/:id/review/groups/:itemId/disposition`, sending
+`{ "revision": "<current-review-revision>", "inventoryDisposition": "NON_INVENTORY" }`
+or `INVENTORY`. Excluded groups appear as `state: "EXCLUDED"`, stop counting as
+unresolved purchase work, and cannot be received. Restoring `INVENTORY` clears
+any listing link and returns the group to `UNRESOLVED` for explicit matching.
+Received groups cannot change disposition. Exclusion does not remove or rewrite
+the purchase lines, document totals, or allocated costs. Purchase analytics
+continues to count the actual document spend, while its purchased-unit total
+counts only `INVENTORY` items.
+
 ---
 
 ## Testing

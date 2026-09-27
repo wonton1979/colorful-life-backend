@@ -145,6 +145,11 @@ enum ReturnCondition {
   OTHER
 }
 
+enum PurchaseItemDisposition {
+  INVENTORY
+  NON_INVENTORY
+}
+
 // -----------------------------------------------------------------------------
 // Business expense domain enums
 // -----------------------------------------------------------------------------
@@ -613,8 +618,9 @@ model PurchaseItem {
   purchaseDocumentId Int
   purchaseDocument   PurchaseDocument @relation(fields: [purchaseDocumentId], references: [id], onDelete: Restrict)
 
-  productListingId Int?
-  productListing   ProductListing? @relation(fields: [productListingId], references: [id], onDelete: SetNull)
+  productListingId     Int?
+  productListing       ProductListing?         @relation(fields: [productListingId], references: [id], onDelete: SetNull)
+  inventoryDisposition PurchaseItemDisposition @default(INVENTORY)
 
   externalProductId String?
   sourceDescription String

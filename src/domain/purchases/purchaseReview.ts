@@ -13,6 +13,9 @@ const id = z.number().int().positive();
 const money = z.string().regex(/^\d{1,10}(\.\d{1,2})?$/);
 export const revisionSchema = z.object({ revision: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export const resolutionSchema = revisionSchema.extend({ productListingId: id.nullable() }).strict();
+export const dispositionSchema = revisionSchema.extend({
+  inventoryDisposition: z.enum(["INVENTORY", "NON_INVENTORY"]),
+}).strict();
 export const amendmentSchema = revisionSchema.extend({
   sourceDescription: z.string().trim().min(1).max(2000),
   sourceSetNumber: z.string().trim().min(1).max(100).nullable(),
@@ -60,7 +63,9 @@ function represent(purchase: ReviewPurchase) {
       const pendingQuantity = lines.filter(l => !l.receivedAt).reduce((n, l) => n + l.quantity, 0);
       const total = sum(lines.map(l => l.finalLineCost));
       const listing = lines[0].productListing;
-      const consistent = listing !== null && lines.every(l => l.productListingId === listing.id);
+      const allInventory = lines.every(l => l.inventoryDisposition === "INVENTORY");
+      const allNonInventory = lines.every(l => l.inventoryDisposition === "NON_INVENTORY");
+      const consistent = allInventory && listing !== null && lines.every(l => l.productListingId === listing.id);
       return {
         id: lines[0].id, sourceItemIds: lines.map(l => l.id),
         description: lines[0].sourceDescription, externalProductId: lines[0].externalProductId,
@@ -68,8 +73,9 @@ function represent(purchase: ReviewPurchase) {
         quantity, pendingQuantity, totalCost: total.toFixed(2),
         unitCost: total.div(quantity).toFixed(6),
         costKind: lines.every(l => l.finalLineCost.div(l.quantity).equals(lines[0].finalLineCost.div(lines[0].quantity))) ? "UNIT" : "WEIGHTED_AVERAGE",
+        inventoryDisposition: allNonInventory ? "NON_INVENTORY" : allInventory ? "INVENTORY" : "MIXED",
         listing: consistent ? { id: listing.id, condition: listing.condition, active: listing.active, ...listing.legoProduct } : null,
-        state: lines.every(l => l.receivedAt !== null) ? "RECEIVED" : consistent ? "MATCHED" : "UNRESOLVED",
+        state: lines.every(l => l.receivedAt !== null) ? "RECEIVED" : allNonInventory ? "EXCLUDED" : consistent ? "MATCHED" : "UNRESOLVED",
         canResolve: lines.every(l => l.receivedAt === null),
         lines: lines.map(l => {
           const doc = purchase.purchaseDocuments.find(d => d.id === l.purchaseDocumentId)!;
@@ -109,15 +115,38 @@ export async function resolveReviewGroup(userId: number, purchaseId: number, gro
       throw new ReviewError(400, "Select an existing active product listing");
     const changed = await tx.purchaseItem.updateMany({
       where: { id: { in: lines.map(l => l.id) }, receivedAt: null },
-      data: { productListingId: body.productListingId },
+      data: { productListingId: body.productListingId, inventoryDisposition: "INVENTORY" },
     });
     if (changed.count !== lines.length) throw new ReviewError(409, "Purchase changed. Refresh before resolving.");
+  });
+}
+export async function setReviewGroupDisposition(userId: number, purchaseId: number, groupId: number, input: unknown) {
+  const body = dispositionSchema.parse(input);
+  return mutate(userId, purchaseId, body.revision, async (tx, purchase) => {
+    const lines = findGroup(purchase, groupId);
+    if (lines.some(l => l.receivedAt)) throw new ReviewError(409, "Received items cannot change inventory disposition");
+    const clearListing = body.inventoryDisposition === "NON_INVENTORY" ||
+      lines.some(l => l.inventoryDisposition === "NON_INVENTORY");
+    const changed = await tx.purchaseItem.updateMany({
+      where: { id: { in: lines.map(l => l.id) }, receivedAt: null },
+      data: {
+        inventoryDisposition: body.inventoryDisposition,
+        // An excluded group was unlinked when it was excluded, so restoring it
+        // remains unresolved. Preserve an existing inventory match if an Admin
+        // repeats the INVENTORY disposition on an already-matched group.
+        ...(clearListing ? { productListingId: null } : {}),
+      },
+    });
+    if (changed.count !== lines.length) throw new ReviewError(409, "Purchase changed. Refresh before updating disposition.");
   });
 }
 export async function receiveReviewGroup(userId: number, purchaseId: number, groupId: number, input: unknown) {
   const body = revisionSchema.parse(input);
   try { return await mutate(userId, purchaseId, body.revision, async (tx, purchase) => {
     const lines = findGroup(purchase, groupId);
+    if (lines.some(l => l.inventoryDisposition === "NON_INVENTORY")) {
+      throw new ReviewError(409, "Non-inventory purchase items cannot be received");
+    }
     const listing = lines[0].productListing;
     if (!listing?.active || lines.some(l => l.productListingId !== listing.id)) throw new ReviewError(400, "Resolve all source lines to one active listing before receiving");
     const pending = lines.filter(l => !l.receivedAt);

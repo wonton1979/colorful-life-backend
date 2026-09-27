@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import { authMiddleware } from "../middleware/auth.js";
 import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
-import { ReviewError, getPurchaseReview, amendReviewLine, resolveReviewGroup, receiveReviewGroup } from "../domain/purchases/purchaseReview.js";
+import { ReviewError, getPurchaseReview, amendReviewLine, resolveReviewGroup, setReviewGroupDisposition, receiveReviewGroup } from "../domain/purchases/purchaseReview.js";
 import { ValidationError } from "../domain/purchases/purchaseImport.js";
 import { purchaseListingsRouter } from "./purchaseListings.js";
 import { sendApiError } from "../utils/apiErrorResponse.js";
@@ -17,6 +17,7 @@ for (const [method, path, action] of [
   ["get", "/", getPurchaseReview],
   ["patch", "/items/:itemId", amendReviewLine],
   ["patch", "/groups/:itemId/listing", resolveReviewGroup],
+  ["patch", "/groups/:itemId/disposition", setReviewGroupDisposition],
   ["post", "/groups/:itemId/receive", receiveReviewGroup],
 ] as const) {
   purchaseReviewRouter[method](path, async (req: Request, res: Response) => {

@@ -45,6 +45,13 @@ export class ProductListingMissingError extends Error {
   }
 }
 
+export class NonInventoryPurchaseItemError extends Error {
+  constructor() {
+    super("Non-inventory purchase items cannot be received");
+    this.name = "NonInventoryPurchaseItemError";
+  }
+}
+
 export class UsedOfferPurchaseReceiptError extends Error {
   constructor() { super("Used physical offers cannot receive pooled purchase stock"); this.name = "UsedOfferPurchaseReceiptError"; }
 }
@@ -84,6 +91,7 @@ export interface ReceiveResult {
  * @throws AlreadyReceivedError        If the item has already been received.
  * @throws InvalidQuantityError        If the item quantity is <= 0.
  * @throws ProductListingMissingError  If the item is not linked to a product listing.
+ * @throws NonInventoryPurchaseItemError If the item was deliberately excluded from inventory.
  */
 export async function receivePurchaseItem(
   userId: number,
@@ -103,12 +111,16 @@ export async function receivePurchaseItemInTransaction(tx: Prisma.TransactionCli
       where: { id: purchaseItemId },
       select: {
         id: true,
+        inventoryDisposition: true,
         purchaseDocument: { select: { importedByUserId: true } },
       },
     });
 
     if (!preliminary || preliminary.purchaseDocument.importedByUserId !== userId) {
       throw new PurchaseItemNotFoundError();
+    }
+    if (preliminary.inventoryDisposition === "NON_INVENTORY") {
+      throw new NonInventoryPurchaseItemError();
     }
 
     // 2️⃣  Claim the item – set receivedAt only if it is currently NULL.

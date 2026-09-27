@@ -22,6 +22,7 @@ import {
   AlreadyReceivedError,
   InvalidQuantityError,
   ProductListingMissingError,
+  NonInventoryPurchaseItemError,
   UsedOfferPurchaseReceiptError,
 } from "../domain/purchases/purchaseItemReceiving.js";
 // Domain service and error classes for purchase item return
@@ -116,6 +117,9 @@ export const receivePurchaseItem = async (req: Request, res: Response) => {
     }
     if (err instanceof ProductListingMissingError) {
       return res.status(400).json({ error: err.message });
+    }
+    if (err instanceof NonInventoryPurchaseItemError) {
+      return res.status(409).json({ error: err.message });
     }
     if (err instanceof UsedOfferPurchaseReceiptError) return res.status(409).json({ error: err.message });
     console.error("Receive purchase item error", err);
@@ -247,7 +251,7 @@ export const listPurchases = async (req: Request, res: Response) => {
         purchaseDocuments: {
           where: { importedByUserId: userId },
           include: {
-            purchaseItems: { select: { productListingId: true } },
+            purchaseItems: { select: { productListingId: true, inventoryDisposition: true } },
           },
         },
       },
@@ -260,7 +264,9 @@ export const listPurchases = async (req: Request, res: Response) => {
     // sorting keeps that order within each resolution group.
     const prioritized = purchases.map((purchase, index) => {
       const items = purchase.purchaseDocuments.flatMap((document) => document.purchaseItems);
-      const resolvedCount = items.filter((item) => item.productListingId !== null).length;
+      const resolvedCount = items.filter((item) =>
+        item.inventoryDisposition === "NON_INVENTORY" || item.productListingId !== null,
+      ).length;
       const priority = resolvedCount === 0 ? 0 : resolvedCount < items.length ? 1 : 2;
       return { purchase, index, priority };
     }).sort((a, b) => a.priority - b.priority || a.index - b.index);

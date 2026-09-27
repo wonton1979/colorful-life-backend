@@ -58,6 +58,7 @@ export type PurchaseItemMinAggregateOutputType = {
   id: number | null
   purchaseDocumentId: number | null
   productListingId: number | null
+  inventoryDisposition: $Enums.PurchaseItemDisposition | null
   externalProductId: string | null
   sourceDescription: string | null
   sourceSetNumber: string | null
@@ -79,6 +80,7 @@ export type PurchaseItemMaxAggregateOutputType = {
   id: number | null
   purchaseDocumentId: number | null
   productListingId: number | null
+  inventoryDisposition: $Enums.PurchaseItemDisposition | null
   externalProductId: string | null
   sourceDescription: string | null
   sourceSetNumber: string | null
@@ -100,6 +102,7 @@ export type PurchaseItemCountAggregateOutputType = {
   id: number
   purchaseDocumentId: number
   productListingId: number
+  inventoryDisposition: number
   externalProductId: number
   sourceDescription: number
   sourceSetNumber: number
@@ -151,6 +154,7 @@ export type PurchaseItemMinAggregateInputType = {
   id?: true
   purchaseDocumentId?: true
   productListingId?: true
+  inventoryDisposition?: true
   externalProductId?: true
   sourceDescription?: true
   sourceSetNumber?: true
@@ -172,6 +176,7 @@ export type PurchaseItemMaxAggregateInputType = {
   id?: true
   purchaseDocumentId?: true
   productListingId?: true
+  inventoryDisposition?: true
   externalProductId?: true
   sourceDescription?: true
   sourceSetNumber?: true
@@ -193,6 +198,7 @@ export type PurchaseItemCountAggregateInputType = {
   id?: true
   purchaseDocumentId?: true
   productListingId?: true
+  inventoryDisposition?: true
   externalProductId?: true
   sourceDescription?: true
   sourceSetNumber?: true
@@ -301,6 +307,7 @@ export type PurchaseItemGroupByOutputType = {
   id: number
   purchaseDocumentId: number
   productListingId: number | null
+  inventoryDisposition: $Enums.PurchaseItemDisposition
   externalProductId: string | null
   sourceDescription: string
   sourceSetNumber: string | null
@@ -345,6 +352,7 @@ export type PurchaseItemWhereInput = {
   id?: Prisma.IntFilter<"PurchaseItem"> | number
   purchaseDocumentId?: Prisma.IntFilter<"PurchaseItem"> | number
   productListingId?: Prisma.IntNullableFilter<"PurchaseItem"> | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFilter<"PurchaseItem"> | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
   sourceDescription?: Prisma.StringFilter<"PurchaseItem"> | string
   sourceSetNumber?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
@@ -368,6 +376,7 @@ export type PurchaseItemOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   purchaseDocumentId?: Prisma.SortOrder
   productListingId?: Prisma.SortOrderInput | Prisma.SortOrder
+  inventoryDisposition?: Prisma.SortOrder
   externalProductId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceDescription?: Prisma.SortOrder
   sourceSetNumber?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -394,6 +403,7 @@ export type PurchaseItemWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.PurchaseItemWhereInput | Prisma.PurchaseItemWhereInput[]
   purchaseDocumentId?: Prisma.IntFilter<"PurchaseItem"> | number
   productListingId?: Prisma.IntNullableFilter<"PurchaseItem"> | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFilter<"PurchaseItem"> | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
   sourceDescription?: Prisma.StringFilter<"PurchaseItem"> | string
   sourceSetNumber?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
@@ -417,6 +427,7 @@ export type PurchaseItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   purchaseDocumentId?: Prisma.SortOrder
   productListingId?: Prisma.SortOrderInput | Prisma.SortOrder
+  inventoryDisposition?: Prisma.SortOrder
   externalProductId?: Prisma.SortOrderInput | Prisma.SortOrder
   sourceDescription?: Prisma.SortOrder
   sourceSetNumber?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -446,6 +457,7 @@ export type PurchaseItemScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"PurchaseItem"> | number
   purchaseDocumentId?: Prisma.IntWithAggregatesFilter<"PurchaseItem"> | number
   productListingId?: Prisma.IntNullableWithAggregatesFilter<"PurchaseItem"> | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionWithAggregatesFilter<"PurchaseItem"> | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.StringNullableWithAggregatesFilter<"PurchaseItem"> | string | null
   sourceDescription?: Prisma.StringWithAggregatesFilter<"PurchaseItem"> | string
   sourceSetNumber?: Prisma.StringNullableWithAggregatesFilter<"PurchaseItem"> | string | null
@@ -464,6 +476,7 @@ export type PurchaseItemScalarWhereWithAggregatesInput = {
 }
 
 export type PurchaseItemCreateInput = {
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -487,6 +500,7 @@ export type PurchaseItemUncheckedCreateInput = {
   id?: number
   purchaseDocumentId: number
   productListingId?: number | null
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -505,6 +519,7 @@ export type PurchaseItemUncheckedCreateInput = {
 }
 
 export type PurchaseItemUpdateInput = {
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -528,6 +543,7 @@ export type PurchaseItemUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDocumentId?: Prisma.IntFieldUpdateOperationsInput | number
   productListingId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -549,6 +565,7 @@ export type PurchaseItemCreateManyInput = {
   id?: number
   purchaseDocumentId: number
   productListingId?: number | null
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -567,6 +584,7 @@ export type PurchaseItemCreateManyInput = {
 }
 
 export type PurchaseItemUpdateManyMutationInput = {
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -588,6 +606,7 @@ export type PurchaseItemUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDocumentId?: Prisma.IntFieldUpdateOperationsInput | number
   productListingId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -619,6 +638,7 @@ export type PurchaseItemCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   purchaseDocumentId?: Prisma.SortOrder
   productListingId?: Prisma.SortOrder
+  inventoryDisposition?: Prisma.SortOrder
   externalProductId?: Prisma.SortOrder
   sourceDescription?: Prisma.SortOrder
   sourceSetNumber?: Prisma.SortOrder
@@ -654,6 +674,7 @@ export type PurchaseItemMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   purchaseDocumentId?: Prisma.SortOrder
   productListingId?: Prisma.SortOrder
+  inventoryDisposition?: Prisma.SortOrder
   externalProductId?: Prisma.SortOrder
   sourceDescription?: Prisma.SortOrder
   sourceSetNumber?: Prisma.SortOrder
@@ -675,6 +696,7 @@ export type PurchaseItemMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   purchaseDocumentId?: Prisma.SortOrder
   productListingId?: Prisma.SortOrder
+  inventoryDisposition?: Prisma.SortOrder
   externalProductId?: Prisma.SortOrder
   sourceDescription?: Prisma.SortOrder
   sourceSetNumber?: Prisma.SortOrder
@@ -790,7 +812,12 @@ export type PurchaseItemUncheckedUpdateManyWithoutPurchaseDocumentNestedInput = 
   deleteMany?: Prisma.PurchaseItemScalarWhereInput | Prisma.PurchaseItemScalarWhereInput[]
 }
 
+export type EnumPurchaseItemDispositionFieldUpdateOperationsInput = {
+  set?: $Enums.PurchaseItemDisposition
+}
+
 export type PurchaseItemCreateWithoutProductListingInput = {
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -812,6 +839,7 @@ export type PurchaseItemCreateWithoutProductListingInput = {
 export type PurchaseItemUncheckedCreateWithoutProductListingInput = {
   id?: number
   purchaseDocumentId: number
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -862,6 +890,7 @@ export type PurchaseItemScalarWhereInput = {
   id?: Prisma.IntFilter<"PurchaseItem"> | number
   purchaseDocumentId?: Prisma.IntFilter<"PurchaseItem"> | number
   productListingId?: Prisma.IntNullableFilter<"PurchaseItem"> | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFilter<"PurchaseItem"> | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
   sourceDescription?: Prisma.StringFilter<"PurchaseItem"> | string
   sourceSetNumber?: Prisma.StringNullableFilter<"PurchaseItem"> | string | null
@@ -880,6 +909,7 @@ export type PurchaseItemScalarWhereInput = {
 }
 
 export type PurchaseItemCreateWithoutPurchaseDocumentInput = {
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -901,6 +931,7 @@ export type PurchaseItemCreateWithoutPurchaseDocumentInput = {
 export type PurchaseItemUncheckedCreateWithoutPurchaseDocumentInput = {
   id?: number
   productListingId?: number | null
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -947,6 +978,7 @@ export type PurchaseItemUpdateManyWithWhereWithoutPurchaseDocumentInput = {
 export type PurchaseItemCreateManyProductListingInput = {
   id?: number
   purchaseDocumentId: number
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -965,6 +997,7 @@ export type PurchaseItemCreateManyProductListingInput = {
 }
 
 export type PurchaseItemUpdateWithoutProductListingInput = {
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -986,6 +1019,7 @@ export type PurchaseItemUpdateWithoutProductListingInput = {
 export type PurchaseItemUncheckedUpdateWithoutProductListingInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDocumentId?: Prisma.IntFieldUpdateOperationsInput | number
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1006,6 +1040,7 @@ export type PurchaseItemUncheckedUpdateWithoutProductListingInput = {
 export type PurchaseItemUncheckedUpdateManyWithoutProductListingInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   purchaseDocumentId?: Prisma.IntFieldUpdateOperationsInput | number
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1026,6 +1061,7 @@ export type PurchaseItemUncheckedUpdateManyWithoutProductListingInput = {
 export type PurchaseItemCreateManyPurchaseDocumentInput = {
   id?: number
   productListingId?: number | null
+  inventoryDisposition?: $Enums.PurchaseItemDisposition
   externalProductId?: string | null
   sourceDescription: string
   sourceSetNumber?: string | null
@@ -1044,6 +1080,7 @@ export type PurchaseItemCreateManyPurchaseDocumentInput = {
 }
 
 export type PurchaseItemUpdateWithoutPurchaseDocumentInput = {
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1065,6 +1102,7 @@ export type PurchaseItemUpdateWithoutPurchaseDocumentInput = {
 export type PurchaseItemUncheckedUpdateWithoutPurchaseDocumentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   productListingId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1085,6 +1123,7 @@ export type PurchaseItemUncheckedUpdateWithoutPurchaseDocumentInput = {
 export type PurchaseItemUncheckedUpdateManyWithoutPurchaseDocumentInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   productListingId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  inventoryDisposition?: Prisma.EnumPurchaseItemDispositionFieldUpdateOperationsInput | $Enums.PurchaseItemDisposition
   externalProductId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sourceDescription?: Prisma.StringFieldUpdateOperationsInput | string
   sourceSetNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1108,6 +1147,7 @@ export type PurchaseItemSelect<ExtArgs extends runtime.Types.Extensions.Internal
   id?: boolean
   purchaseDocumentId?: boolean
   productListingId?: boolean
+  inventoryDisposition?: boolean
   externalProductId?: boolean
   sourceDescription?: boolean
   sourceSetNumber?: boolean
@@ -1131,6 +1171,7 @@ export type PurchaseItemSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   purchaseDocumentId?: boolean
   productListingId?: boolean
+  inventoryDisposition?: boolean
   externalProductId?: boolean
   sourceDescription?: boolean
   sourceSetNumber?: boolean
@@ -1154,6 +1195,7 @@ export type PurchaseItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   id?: boolean
   purchaseDocumentId?: boolean
   productListingId?: boolean
+  inventoryDisposition?: boolean
   externalProductId?: boolean
   sourceDescription?: boolean
   sourceSetNumber?: boolean
@@ -1177,6 +1219,7 @@ export type PurchaseItemSelectScalar = {
   id?: boolean
   purchaseDocumentId?: boolean
   productListingId?: boolean
+  inventoryDisposition?: boolean
   externalProductId?: boolean
   sourceDescription?: boolean
   sourceSetNumber?: boolean
@@ -1194,7 +1237,7 @@ export type PurchaseItemSelectScalar = {
   returnedAt?: boolean
 }
 
-export type PurchaseItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "purchaseDocumentId" | "productListingId" | "externalProductId" | "sourceDescription" | "sourceSetNumber" | "sourceLineNumber" | "quantity" | "originalGrossUnitCost" | "originalGrossLineTotal" | "allocatedShipping" | "allocatedDiscount" | "finalLineCost" | "finalUnitCost" | "createdAt" | "updatedAt" | "receivedAt" | "returnedAt", ExtArgs["result"]["purchaseItem"]>
+export type PurchaseItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "purchaseDocumentId" | "productListingId" | "inventoryDisposition" | "externalProductId" | "sourceDescription" | "sourceSetNumber" | "sourceLineNumber" | "quantity" | "originalGrossUnitCost" | "originalGrossLineTotal" | "allocatedShipping" | "allocatedDiscount" | "finalLineCost" | "finalUnitCost" | "createdAt" | "updatedAt" | "receivedAt" | "returnedAt", ExtArgs["result"]["purchaseItem"]>
 export type PurchaseItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   purchaseDocument?: boolean | Prisma.PurchaseDocumentDefaultArgs<ExtArgs>
   productListing?: boolean | Prisma.PurchaseItem$productListingArgs<ExtArgs>
@@ -1218,6 +1261,7 @@ export type $PurchaseItemPayload<ExtArgs extends runtime.Types.Extensions.Intern
     id: number
     purchaseDocumentId: number
     productListingId: number | null
+    inventoryDisposition: $Enums.PurchaseItemDisposition
     externalProductId: string | null
     sourceDescription: string
     sourceSetNumber: string | null
@@ -1661,6 +1705,7 @@ export interface PurchaseItemFieldRefs {
   readonly id: Prisma.FieldRef<"PurchaseItem", 'Int'>
   readonly purchaseDocumentId: Prisma.FieldRef<"PurchaseItem", 'Int'>
   readonly productListingId: Prisma.FieldRef<"PurchaseItem", 'Int'>
+  readonly inventoryDisposition: Prisma.FieldRef<"PurchaseItem", 'PurchaseItemDisposition'>
   readonly externalProductId: Prisma.FieldRef<"PurchaseItem", 'String'>
   readonly sourceDescription: Prisma.FieldRef<"PurchaseItem", 'String'>
   readonly sourceSetNumber: Prisma.FieldRef<"PurchaseItem", 'String'>

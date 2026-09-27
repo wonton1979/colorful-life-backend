@@ -191,6 +191,14 @@ export const ReturnCondition = {
 export type ReturnCondition = (typeof ReturnCondition)[keyof typeof ReturnCondition]
 
 
+export const PurchaseItemDisposition = {
+  INVENTORY: 'INVENTORY',
+  NON_INVENTORY: 'NON_INVENTORY'
+} as const
+
+export type PurchaseItemDisposition = (typeof PurchaseItemDisposition)[keyof typeof PurchaseItemDisposition]
+
+
 export const BusinessExpenseCategory = {
   PURCHASE: 'PURCHASE',
   SHIPPING: 'SHIPPING',

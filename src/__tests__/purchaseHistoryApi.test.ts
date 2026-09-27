@@ -97,6 +97,7 @@ async function createPurchase(
         quantity: number;
         finalUnitCost: number;
         productListingId?: number | null;
+        inventoryDisposition?: "INVENTORY" | "NON_INVENTORY";
       }>
     }>;
   }
@@ -125,6 +126,7 @@ async function createPurchase(
               sourceSetNumber: null,
               externalProductId: null,
               productListingId: i.productListingId ?? null,
+              ...(i.inventoryDisposition ? { inventoryDisposition: i.inventoryDisposition } : {}),
               originalGrossUnitCost: 0,
               originalGrossLineTotal: 0,
               allocatedShipping: 0,
@@ -309,7 +311,7 @@ describe("Purchase History API", () => {
     assert.strictEqual(body.purchases[2].id, Math.min(olderId1, olderId2));
   });
 
-  it("prioritizes unresolved, partial, then resolved purchases before date pagination", async () => {
+  it("prioritizes unresolved and partial inventory work while treating excluded lines as resolved", async () => {
     const product = await prisma.legoProduct.create({
       data: { setNumber: `history-${Date.now()}`, title: "History fixture", theme: "Test", ageRecommendation: "8+", pieceCount: 1 },
     });
@@ -319,7 +321,7 @@ describe("Purchase History API", () => {
     });
     listingIds.push(listing.id);
 
-    const make = (label: string, date: string, state: "unresolved" | "partial" | "resolved") => createPurchase(userId, {
+    const make = (label: string, date: string, state: "unresolved" | "partial" | "resolved" | "excluded") => createPurchase(userId, {
       reference: label,
       orderDate: new Date(date),
       docs: [{ partNumber: 1, importHash: `history-${label}-${Math.random()}`, items: state === "partial"
@@ -328,7 +330,8 @@ describe("Purchase History API", () => {
           { sourceLineNumber: 2, sourceDescription: "Unresolved line", quantity: 1, finalUnitCost: 10 },
         ]
         : [{ sourceLineNumber: 1, sourceDescription: `${state} line`, quantity: 1, finalUnitCost: 10,
-          ...(state === "resolved" ? { productListingId: listing.id } : {}) }],
+          ...(state === "resolved" ? { productListingId: listing.id } : {}),
+          ...(state === "excluded" ? { inventoryDisposition: "NON_INVENTORY" as const } : {}) }],
       }],
     });
 
@@ -338,19 +341,20 @@ describe("Purchase History API", () => {
     const unresolvedNew = await make("unresolved-new", "2024-01-01", "unresolved");
     const partialNew = await make("partial-new", "2025-01-01", "partial");
     const resolvedNew = await make("resolved-new", "2026-01-01", "resolved");
+    const excluded = await make("excluded", "2023-01-01", "excluded");
 
     const ids: number[] = [];
-    for (let page = 1; page <= 3; page++) {
+    for (let page = 1; page <= 4; page++) {
       const response = await fetch(`${url}/purchases?page=${page}&limit=2`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       assert.equal(response.status, 200);
       const body = await response.json();
-      assert.equal(body.pagination.total, 6);
+      assert.equal(body.pagination.total, 7);
       ids.push(...body.purchases.map((purchase: { id: number }) => purchase.id));
       assert.equal("purchaseItems" in body.purchases[0].purchaseDocuments[0], false);
     }
-    assert.deepEqual(ids, [unresolvedNew, unresolvedOld, partialNew, partialOld, resolvedNew, resolvedOld]);
+    assert.deepEqual(ids, [unresolvedNew, unresolvedOld, partialNew, partialOld, resolvedNew, excluded, resolvedOld]);
   });
 
   // 7. GET /purchases/:id returns owned purchase

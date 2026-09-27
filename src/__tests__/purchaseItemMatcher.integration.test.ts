@@ -156,6 +156,78 @@ describe("purchaseItemMatcher persistence integration", () => {
     assert.strictEqual(item.productListingId, null);
   });
 
+  it("stages every mixed-document line without creating inventory or excluding unmatched items", async () => {
+    const product = await prisma.legoProduct.create({
+      data: { setNumber: `mixed-${randomUUID()}`, title: "Recognized LEGO", theme: "Test", ageRecommendation: "8+", pieceCount: 100 },
+    });
+    productIds.push(product.id);
+    const listing = await prisma.productListing.create({
+      data: { legoProductId: product.id, condition: "NEW", originalPrice: 20, currentStock: 5 },
+    });
+    listingIds.push(listing.id);
+    const sourceSetNumber = `unmatched-${randomUUID()}`;
+    const doc = makeBaseDoc({
+      originalGrossMerchandiseTotal: 3700,
+      shippingTotal: 300,
+      discountTotal: 100,
+      finalTotalPaid: 3900,
+      merchantName: "Mixed retailer",
+      items: [
+        { sourceDescription: "LEGO recognized set", sourceSetNumber: product.setNumber, externalProductId: "ASIN-LEGO-1", quantity: 1, originalGrossUnitCost: 1000, originalGrossLineTotal: 1000 },
+        { sourceDescription: "LEGO genuine set not in catalogue", sourceSetNumber, externalProductId: "ASIN-LEGO-2", quantity: 2, originalGrossUnitCost: 1000, originalGrossLineTotal: 2000 },
+        { sourceDescription: "Fairy washing-up liquid - 76917", externalProductId: "ASIN-FAIRY", quantity: 2, originalGrossUnitCost: 200, originalGrossLineTotal: 400 },
+        { sourceDescription: "Packaging tape - 42090", externalProductId: "ASIN-TAPE", quantity: 1, originalGrossUnitCost: 300, originalGrossLineTotal: 300 },
+      ],
+    });
+    trackedOrderReferences.push(doc.sourceOrderReference);
+
+    await persistCalculatedPurchaseDocument(calculatePurchaseCosts(doc), userId);
+
+    const purchase = await prisma.purchase.findUniqueOrThrow({
+      where: { sourceOrderReference: doc.sourceOrderReference },
+      include: { purchaseDocuments: { include: { purchaseItems: { orderBy: { id: "asc" } } } } },
+    });
+    const persistedDocument = purchase.purchaseDocuments[0];
+    assert.equal(persistedDocument.finalTotalPaid.toFixed(2), "39.00");
+    assert.equal(persistedDocument.purchaseItems.length, 4);
+    assert.equal(persistedDocument.purchaseItems[0].productListingId, listing.id);
+    assert.equal(persistedDocument.purchaseItems[1].productListingId, null);
+    assert.equal(persistedDocument.purchaseItems[1].sourceSetNumber, sourceSetNumber);
+    assert(persistedDocument.purchaseItems.slice(1).every(item => item.inventoryDisposition === "INVENTORY"));
+    assert(persistedDocument.purchaseItems.slice(1).every(item => item.receivedAt === null));
+    assert.equal(persistedDocument.purchaseItems[2].sourceSetNumber, null);
+    assert.equal(persistedDocument.purchaseItems[3].sourceSetNumber, null);
+    assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: listing.id } })).currentStock, 5);
+    assert.equal(await prisma.inventoryMovement.count({ where: { listingId: listing.id } }), 0);
+  });
+
+  it("persists a non-LEGO-only purchase line without requiring catalogue inventory", async () => {
+    const beforeProducts = await prisma.legoProduct.count();
+    const beforeListings = await prisma.productListing.count();
+    const doc = makeBaseDoc({
+      originalGrossMerchandiseTotal: 450,
+      shippingTotal: 0,
+      discountTotal: 0,
+      finalTotalPaid: 450,
+      items: [{ sourceDescription: "Fairy washing-up liquid - 76917", externalProductId: "ASIN-FAIRY-ONLY", quantity: 3, originalGrossUnitCost: 150, originalGrossLineTotal: 450 }],
+    });
+    trackedOrderReferences.push(doc.sourceOrderReference);
+
+    await persistCalculatedPurchaseDocument(calculatePurchaseCosts(doc), userId);
+
+    const purchase = await prisma.purchase.findUniqueOrThrow({
+      where: { sourceOrderReference: doc.sourceOrderReference },
+      include: { purchaseDocuments: { include: { purchaseItems: true } } },
+    });
+    const item = purchase.purchaseDocuments[0].purchaseItems[0];
+    assert.equal(item.sourceDescription, "Fairy washing-up liquid - 76917");
+    assert.equal(item.sourceSetNumber, null);
+    assert.equal(item.productListingId, null);
+    assert.equal(item.inventoryDisposition, "INVENTORY");
+    assert.equal(await prisma.legoProduct.count(), beforeProducts);
+    assert.equal(await prisma.productListing.count(), beforeListings);
+  });
+
   it("preserves explicitly supplied productListingId over a different valid automatic match", async () => {
     const productA = await prisma.legoProduct.create({
       data: { setNumber: randomUUID(), title: "Prod A", theme: "Test", ageRecommendation: "8+", pieceCount: 100 },

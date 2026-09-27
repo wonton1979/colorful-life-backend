@@ -476,6 +476,7 @@ export const PurchaseItemScalarFieldEnum = {
   id: 'id',
   purchaseDocumentId: 'purchaseDocumentId',
   productListingId: 'productListingId',
+  inventoryDisposition: 'inventoryDisposition',
   externalProductId: 'externalProductId',
   sourceDescription: 'sourceDescription',
   sourceSetNumber: 'sourceSetNumber',
