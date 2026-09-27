@@ -4,6 +4,7 @@ import profileRouter from "./routes/profile.js";
 import usersRouter from "./routes/users.js";
 import productsRouter from "./routes/products.js";
 import purchasesRouter from "./routes/purchases.js";
+import purchaseAnalyticsRouter from "./routes/purchaseAnalytics.js";
 import purchaseItemsRouter from "./routes/purchaseItems.js";
 import ordersRouter from "./routes/orders.js";
 import businessExpensesRouter from "./routes/businessExpenses.js";
@@ -39,6 +40,7 @@ export function createApp(imageStorage?: ImageStorage, catalogueArtworkStorage?:
   app.use("/categories", categoriesRouter);
   app.use("/admin/categories", createCategoryManagementRouter(categoryArtworkStorage));
   app.use("/purchases", purchasesRouter);
+  app.use("/purchase-analytics", purchaseAnalyticsRouter);
   app.use("/purchase-items", purchaseItemsRouter);
   app.use("/orders", ordersRouter);
   app.use("/cart", cartRouter);
