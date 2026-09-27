@@ -154,6 +154,14 @@ and artwork values belong to LegoProduct. Admin Presentation Management uses
 `items[].legoProduct.id` for presentation actions and `items[].id` for
 offer/inventory actions.
 
+`GET /admin/categories/:id/product-availability` returns category-wide
+`totalProducts`, `activeProducts`, and `inactiveProducts`. Counts are over
+distinct LegoProduct rows, including products without listings. A product is
+active when it has at least one listing accepted by the same storefront
+sellability predicate used by `GET /products`; retired-set status does not
+exclude an otherwise sellable product. This summary is independent of the
+paginated listing feed.
+
 ### Admin Product Presentation Endpoints
 
 All endpoints below require an ADMIN Bearer token. Product identity is explicit

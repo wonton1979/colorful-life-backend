@@ -1,6 +1,7 @@
 import { Prisma } from "../../generated/prisma-client/client.js";
 import { prisma } from "../../prisma/runtime.js";
 import type { ProductCatalogueQuery } from "./productCatalogueValidator.js";
+import { storefrontSellableListingExistsPredicate } from "./storefrontSellability.js";
 
 const offerSelect = {
   id: true, legoProductId: true,
@@ -23,19 +24,7 @@ function eligibleProductPredicate(query: ProductCatalogueQuery): Prisma.Sql {
   if (query.theme) predicates.push(Prisma.sql`lower(lp."theme") = lower(${query.theme})`);
   if (query.categoryId !== undefined) predicates.push(Prisma.sql`lp."categoryId" = ${query.categoryId}`);
 
-  const pricePredicates: Prisma.Sql[] = [];
-  if (query.minPrice !== undefined) pricePredicates.push(Prisma.sql`COALESCE(pl."salePrice", pl."originalPrice") >= ${query.minPrice}`);
-  if (query.maxPrice !== undefined) pricePredicates.push(Prisma.sql`COALESCE(pl."salePrice", pl."originalPrice") <= ${query.maxPrice}`);
-  const pricePredicate = pricePredicates.length ? Prisma.sql`AND ${Prisma.join(pricePredicates, " AND ")}` : Prisma.empty;
-
-  predicates.push(Prisma.sql`EXISTS (
-    SELECT 1 FROM "ProductListing" pl
-    WHERE pl."legoProductId" = lp."id"
-      AND pl."active" = TRUE
-      AND pl."currentStock" > pl."reservedStock"
-      AND (pl."condition" = 'NEW' OR (pl."condition" = 'USED_LIKE_NEW' AND pl."usedLifecycle" = 'AVAILABLE'))
-      ${pricePredicate}
-  )`);
+  predicates.push(storefrontSellableListingExistsPredicate(query));
   return Prisma.join(predicates, " AND ");
 }
 

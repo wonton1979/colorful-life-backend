@@ -21,6 +21,17 @@ export function createCategoryManagementController(storage: ImageStorage) {
   };
   return {
     list: async (_req: Request, res: Response) => { try { return res.json(await service.list()); } catch (error) { return mapError(res, error); } },
+    productAvailabilitySummary: async (req: Request, res: Response) => {
+      const id = categoryId(req.params.id);
+      if (!id) return res.status(404).json({ error: "Category not found" });
+      try {
+        const summary = await service.productAvailabilitySummary(id);
+        if (!summary) return res.status(404).json({ error: "Category not found" });
+        return res.json(summary);
+      } catch (error) {
+        return mapError(res, error);
+      }
+    },
     create: async (req: Request, res: Response) => {
       const parsed = createSchema.safeParse(req.body);
       if (!parsed.success) return res.status(400).json({ error: parsed.error.format() });

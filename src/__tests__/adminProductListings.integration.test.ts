@@ -118,6 +118,16 @@ describe("Admin ProductListing feed", () => {
     assert.equal((await request("/admin/product-listings")).status, 200);
   });
 
+  it("requires ADMIN authentication for category product availability summaries", async () => {
+    const category = await prisma.category.create({ data: { name: `Summary auth ${randomUUID()}` } });
+    ids.categories.push(category.id);
+    const path = `/admin/categories/${category.id}/product-availability`;
+    assert.equal((await request(path, "")).status, 401);
+    assert.equal((await request(path, customerToken)).status, 403);
+    assert.deepEqual(await get(path), { totalProducts: 0, activeProducts: 0, inactiveProducts: 0 });
+    assert.equal((await request(`/admin/categories/2147483647/product-availability`)).status, 404);
+  });
+
   it("uses the current database role rather than an ADMIN role embedded in an old JWT", async () => {
     const adminId = (jwt.verify(adminToken, config.JWT_SECRET) as { id: number }).id;
     await prisma.user.update({ where: { id: adminId }, data: { role: "CUSTOMER" } });
@@ -226,6 +236,66 @@ describe("Admin ProductListing feed", () => {
     assert.equal(catalogue.items[0].id, lego.id);
     assert.deepEqual(catalogue.items[0].offers.map((offer: any) => offer.id), [available.id]);
     assert.deepEqual(await snapshot(), before);
+  });
+
+  it("summarizes distinct category products using storefront sellability independently of listing pagination", async () => {
+    const category = await prisma.category.create({ data: { name: `Availability ${randomUUID()}` } });
+    const otherCategory = await prisma.category.create({ data: { name: `Other ${randomUUID()}` } });
+    ids.categories.push(category.id, otherCategory.id);
+
+    const multiOfferProduct = await product(category.id);
+    await listing(multiOfferProduct.id, { currentStock: 3, reservedStock: 1 });
+    await listing(multiOfferProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/summary-condition.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+
+    const zeroStockProduct = await product(category.id);
+    await listing(zeroStockProduct.id);
+
+    const fullyReservedProduct = await product(category.id);
+    await listing(fullyReservedProduct.id, { currentStock: 2, reservedStock: 2 });
+
+    const inactiveListingProduct = await product(category.id);
+    await listing(inactiveListingProduct.id, { active: false, currentStock: 4 });
+
+    const soldUsedProduct = await product(category.id);
+    const soldUsedListing = await listing(soldUsedProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/summary-condition.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+    await prisma.productListing.update({
+      where: { id: soldUsedListing.id },
+      data: { usedLifecycle: "SOLD", currentStock: 0 },
+    });
+
+    const noListingProduct = await product(category.id);
+
+    const retiredProduct = await product(category.id);
+    await prisma.legoProduct.update({ where: { id: retiredProduct.id }, data: { isRetired: true } });
+    await listing(retiredProduct.id, { currentStock: 1 });
+
+    const otherCategoryProduct = await product(otherCategory.id);
+    await listing(otherCategoryProduct.id, { currentStock: 3 });
+
+    const path = `/admin/categories/${category.id}/product-availability`;
+    const summary = await get(path);
+    assert.deepEqual(summary, {
+      totalProducts: 7,
+      activeProducts: 2,
+      inactiveProducts: 5,
+    });
+    assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: noListingProduct.id } }), 0);
+
+    const firstListingPage = await get("/admin/product-listings?page=1&pageSize=1");
+    assert.equal(firstListingPage.items.length, 1);
+    assert.deepEqual(await get(path), summary);
+    const laterListingPage = await get("/admin/product-listings?page=2&pageSize=1");
+    assert.equal(laterListingPage.pagination.page, 2);
+    assert.deepEqual(await get(path), summary);
   });
 
   it("bounds and paginates listings in stable ID order, including pages beyond the end", async () => {
