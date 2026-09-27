@@ -57,6 +57,12 @@ describe("Amazon UK purchase invoice parser", () => {
     assert.strictEqual(extractLegoSetNumber("LEGO City 1000 pieces £24.99 quantity 2 2024"), undefined);
   });
 
+  it("requires a LEGO signal before trusting the trailing numeric suffix", () => {
+    assert.strictEqual(extractLegoSetNumber("LEGO City set - 76917"), "76917");
+    assert.strictEqual(extractLegoSetNumber("Fairy washing-up liquid - 76917"), undefined);
+    assert.strictEqual(extractLegoSetNumber("Fairy washing-up liquid suitable for LEGO - 76917"), undefined);
+  });
+
   it("rejects ambiguous contextual candidates", () => {
     assert.strictEqual(
       extractLegoSetNumber("LEGO Star Wars 75446 Grogu and LEGO Star Wars 75375 Falcon"),
@@ -88,6 +94,39 @@ describe("Amazon UK purchase invoice parser", () => {
     ]), "TEST_HASH");
     assert.deepStrictEqual(parsed.items.map((item) => item.sourceSetNumber), ["75446", "75446"]);
     assert.deepStrictEqual(parsed.items.map((item) => item.quantity), [1, 2]);
+  });
+
+  it("keeps mixed LEGO and non-inventory invoice lines while only extracting LEGO identities", () => {
+    const parsed = parseAmazonPurchaseInvoice(buildSyntheticPdfText([
+      "Order # MIXEDORDER",
+      "Order date 01 Aug 2026",
+      "Sold by Amazon EU S.à r.l., UK Branch",
+      "Invoice # MIXEDINV",
+      "Invoice date / Delivery date 02 Aug 2026",
+      "Description Qty Unit price",
+      "(excl. VAT)",
+      "VAT rate Unit price",
+      "(incl. VAT)",
+      "Item subtotal",
+      "(incl. VAT)",
+      "LEGO City 76917 Nissan Skyline GT-R - 76917",
+      "ASIN: B0LEGO76917",
+      "1 £20.00 0% £20.00 £20.00",
+      "LEGO Star Wars unknown set - 99999",
+      "ASIN: B0LEGO99999",
+      "1 £25.00 0% £25.00 £25.00",
+      "Fairy washing-up liquid - 76917",
+      "ASIN: B0FAIRY76917",
+      "2 £2.00 0% £2.00 £4.00",
+      "Packaging tape - 42090",
+      "ASIN: B0TAPE42090",
+      "1 £3.00 0% £3.00 £3.00",
+      "Invoice total £52.00",
+    ]), "MIXED_HASH");
+
+    assert.equal(parsed.items.length, 4);
+    assert.deepEqual(parsed.items.map(item => item.sourceSetNumber), ["76917", "99999", undefined, undefined]);
+    assert.deepEqual(parsed.items.map(item => item.quantity), [1, 1, 2, 1]);
   });
 
   it("parses the real PDF fixture to match the golden fixture", async () => {

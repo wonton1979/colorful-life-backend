@@ -5,8 +5,8 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../prisma/runtime.js";
 import { config } from "../config/index.js";
 import app from "../app.js";
-import { getPurchaseReview, resolveReviewGroup, receiveReviewGroup, amendReviewLine } from "../domain/purchases/purchaseReview.js";
-import { receivePurchaseItem } from "../domain/purchases/purchaseItemReceiving.js";
+import { getPurchaseReview, resolveReviewGroup, setReviewGroupDisposition, receiveReviewGroup, amendReviewLine } from "../domain/purchases/purchaseReview.js";
+import { NonInventoryPurchaseItemError, receivePurchaseItem } from "../domain/purchases/purchaseItemReceiving.js";
 
 let userId: number, purchaseId: number, listingId: number, productId: number;
 let ids: number[];
@@ -53,11 +53,69 @@ async function matched() {
 it("groups exact identities 1 + 2 without merging source lines or costs", async () => {
   const r = await review();
   assert.equal(r.groups.length, 1);
+  assert.equal(r.groups[0].inventoryDisposition, "INVENTORY");
+  assert.equal(r.groups[0].state, "UNRESOLVED");
   assert.equal(r.groups[0].quantity, 3);
   assert.equal(r.groups[0].unitCost, "69.990000");
   assert.equal(r.totalCost, "209.97");
   assert.deepEqual(r.groups[0].sourceItemIds, ids);
   assert.equal(await prisma.inventoryMovement.count({ where: { listingId } }), 0);
+});
+it("excludes an inventory review group without changing purchase or catalogue data, blocks receipt, and can restore it", async () => {
+  const beforeListing = await prisma.productListing.findUniqueOrThrow({ where: { id: listingId } });
+  const beforeProductCount = await prisma.legoProduct.count();
+  const beforeListingCount = await prisma.productListing.count();
+  const beforeDocument = (await review()).purchase.purchaseDocuments[0];
+  let r = await review();
+
+  const excluded = await setReviewGroupDisposition(userId, purchaseId, ids[0], {
+    revision: r.revision,
+    inventoryDisposition: "NON_INVENTORY",
+  });
+  assert.equal(excluded.groups[0].inventoryDisposition, "NON_INVENTORY");
+  assert.equal(excluded.groups[0].state, "EXCLUDED");
+  assert.equal(excluded.groups[0].listing, null);
+  assert(excluded.groups[0].lines.every(line => line.productListingId === null));
+  assert(excluded.groups[0].lines.every(line => line.receivedAt === null));
+  assert.equal(excluded.totalCost, "209.97");
+  assert.equal(excluded.groups[0].totalCost, "209.97");
+  assert.equal(excluded.groups[0].quantity, 3);
+  await assert.rejects(
+    () => receiveReviewGroup(userId, purchaseId, ids[0], { revision: excluded.revision }),
+    { status: 409 },
+  );
+  await assert.rejects(
+    () => receivePurchaseItem(userId, ids[0]),
+    error => error instanceof NonInventoryPurchaseItemError,
+  );
+  const [afterListing, afterItems, movementCount] = await Promise.all([
+    prisma.productListing.findUniqueOrThrow({ where: { id: listingId } }),
+    prisma.purchaseItem.findMany({ where: { id: { in: ids } } }),
+    prisma.inventoryMovement.count({ where: { listingId } }),
+  ]);
+  assert.equal(afterListing.currentStock, beforeListing.currentStock);
+  assert.equal(movementCount, 0);
+  assert(afterItems.every(item => item.receivedAt === null && item.inventoryDisposition === "NON_INVENTORY"));
+  assert.equal(await prisma.legoProduct.count(), beforeProductCount);
+  assert.equal(await prisma.productListing.count(), beforeListingCount);
+
+  r = await setReviewGroupDisposition(userId, purchaseId, ids[0], {
+    revision: excluded.revision,
+    inventoryDisposition: "INVENTORY",
+  });
+  assert.equal(r.groups[0].inventoryDisposition, "INVENTORY");
+  assert.equal(r.groups[0].state, "UNRESOLVED");
+  assert(r.groups[0].lines.every(line => line.productListingId === null));
+  assert.equal(r.totalCost, beforeDocument.finalTotalPaid.toFixed(2));
+
+  const resolved = await resolveReviewGroup(userId, purchaseId, ids[0], {
+    revision: r.revision,
+    productListingId: listingId,
+  });
+  assert.equal(resolved.groups[0].state, "MATCHED");
+  const received = await receiveReviewGroup(userId, purchaseId, ids[0], { revision: resolved.revision });
+  assert.equal(received.groups[0].state, "RECEIVED");
+  assert.equal((await prisma.productListing.findUniqueOrThrow({ where: { id: listingId } })).currentStock, 3);
 });
 it("uses exact set fallback and isolates unidentified/different products", async () => {
   await prisma.purchaseItem.updateMany({ where: { id: { in: ids } }, data: { externalProductId: null, sourceSetNumber: "75446" } });
@@ -111,6 +169,11 @@ it("rejects protected fields, invalid amendments and stale revisions", async () 
 });
 it("resolves, reassigns and clears an entire group; invalid targets leave all unchanged", async () => {
   let r = await matched();
+  assert(r.groups[0].lines.every(l => l.productListingId === listingId));
+  r = await setReviewGroupDisposition(userId, purchaseId, ids[0], {
+    revision: r.revision,
+    inventoryDisposition: "INVENTORY",
+  });
   assert(r.groups[0].lines.every(l => l.productListingId === listingId));
   const other = await prisma.productListing.create({ data: { legoProductId: productId, condition: "NEW", originalPrice: "50", currentStock: 0 } });
   r = await resolveReviewGroup(userId, purchaseId, ids[0], { revision: r.revision, productListingId: other.id });
@@ -167,7 +230,7 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
       email: randomUUID() + "@test.invalid", passwordHash: "test", emailVerified: true, role: "CUSTOMER",
     } })).id;
     const token = (id: number, role: string) => jwt.sign({ id, role }, config.JWT_SECRET);
-    for (const [method, path] of [["GET", "/purchases/" + purchaseId + "/review"], ["PATCH", "/purchases/" + purchaseId + "/review/items/" + ids[0]], ["PATCH", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/listing"], ["POST", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/return"]]) {
+    for (const [method, path] of [["GET", "/purchases/" + purchaseId + "/review"], ["PATCH", "/purchases/" + purchaseId + "/review/items/" + ids[0]], ["PATCH", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/listing"], ["PATCH", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/disposition"], ["POST", "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/receive"], ["POST", "/purchase-items/" + ids[0] + "/return"]]) {
       assert.equal((await fetch(base + path, { method, headers: { Authorization: "Bearer " + token(customerId, "CUSTOMER") } })).status, 403);
     }
     const response = await fetch(base + "/purchases/" + purchaseId + "/review", { headers: { Authorization: "Bearer " + token(userId, "ADMIN") } });
@@ -175,8 +238,26 @@ it("enforces ADMIN at review, resolution, amendment, receive and return HTTP bou
     assert.equal((await response.json()).groups[0].quantity, 3);
     const headers = { Authorization: "Bearer " + token(userId, "ADMIN"), "Content-Type": "application/json" };
     const r = await review();
+    const excludedResponse = await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/disposition", {
+      method: "PATCH", headers, body: JSON.stringify({ revision: r.revision, inventoryDisposition: "NON_INVENTORY" }),
+    });
+    assert.equal(excludedResponse.status, 200);
+    const excluded = await excludedResponse.json();
+    assert.equal(excluded.groups[0].state, "EXCLUDED");
+    assert.equal((await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/receive", {
+      method: "POST", headers, body: JSON.stringify({ revision: excluded.revision }),
+    })).status, 409);
+    assert.equal((await fetch(base + "/purchase-items/" + ids[0] + "/receive", {
+      method: "POST", headers,
+    })).status, 409);
+    const restoredResponse = await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/disposition", {
+      method: "PATCH", headers, body: JSON.stringify({ revision: excluded.revision, inventoryDisposition: "INVENTORY" }),
+    });
+    assert.equal(restoredResponse.status, 200);
+    const restored = await restoredResponse.json();
+    assert.equal(restored.groups[0].state, "UNRESOLVED");
     const resolved = await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/listing",
-      { method: "PATCH", headers, body: JSON.stringify({ revision: r.revision, productListingId: listingId }) });
+      { method: "PATCH", headers, body: JSON.stringify({ revision: restored.revision, productListingId: listingId }) });
     assert.equal(resolved.status, 200);
     const next = await resolved.json();
     assert.equal((await fetch(base + "/purchases/" + purchaseId + "/review/groups/" + ids[0] + "/receive",

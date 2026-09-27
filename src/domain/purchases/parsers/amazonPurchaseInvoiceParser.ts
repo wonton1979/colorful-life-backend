@@ -75,7 +75,11 @@ export function extractLegoSetNumber(
   const explicit = explicitSetNumber?.trim();
   if (explicit) return explicit;
 
-  const trailing = description.match(trailingSetNumberRe)?.[1];
+  // Amazon's trailing set-number convention is trusted only when the line
+  // itself identifies LEGO; unrelated products may also end in "- 12345".
+  const trailing = /^\s*LEGO\b/i.test(description)
+    ? description.match(trailingSetNumberRe)?.[1]
+    : undefined;
   if (trailing) return trailing;
 
   const candidates = [...description.matchAll(contextualSetNumberRe)]

@@ -106,7 +106,10 @@ export async function getPurchaseAnalyticsSummary() {
   return prisma.$transaction(async (tx) => {
     const [documentTotals, itemTotals, supplierRows] = await Promise.all([
       tx.purchaseDocument.aggregate({ _sum: { finalTotalPaid: true } }),
-      tx.purchaseItem.aggregate({ _sum: { quantity: true } }),
+      tx.purchaseItem.aggregate({
+        where: { inventoryDisposition: "INVENTORY" },
+        _sum: { quantity: true },
+      }),
       tx.$queryRaw<SupplierSpendRow[]>`
         SELECT p."merchantName" AS "merchantName",
                SUM(pd."finalTotalPaid")::text AS "totalAmount",
@@ -117,8 +120,8 @@ export async function getPurchaseAnalyticsSummary() {
         `,
     ]);
 
-    // Each document contributes once to this total; item quantity is aggregated
-    // independently so neither measure can multiply through a document/item join.
+    // Each document contributes once to spend; only inventory-designated item
+    // quantities count as inventory units. Excluded lines remain in document spend.
     return serializePurchaseAnalyticsSummary(
       itemTotals._sum.quantity,
       documentTotals._sum.finalTotalPaid,

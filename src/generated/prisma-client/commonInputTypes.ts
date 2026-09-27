@@ -647,6 +647,23 @@ export type EnumReturnConditionNullableWithAggregatesFilter<$PrismaModel = never
   _max?: Prisma.NestedEnumReturnConditionNullableFilter<$PrismaModel>
 }
 
+export type EnumPurchaseItemDispositionFilter<$PrismaModel = never> = {
+  equals?: $Enums.PurchaseItemDisposition | Prisma.EnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  in?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel> | $Enums.PurchaseItemDisposition
+}
+
+export type EnumPurchaseItemDispositionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PurchaseItemDisposition | Prisma.EnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  in?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPurchaseItemDispositionWithAggregatesFilter<$PrismaModel> | $Enums.PurchaseItemDisposition
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel>
+}
+
 export type NestedIntFilter<$PrismaModel = never> = {
   equals?: number | Prisma.IntFieldRefInput<$PrismaModel>
   in?: number[] | Prisma.ListIntFieldRefInput<$PrismaModel>
@@ -1264,6 +1281,23 @@ export type NestedEnumReturnConditionNullableWithAggregatesFilter<$PrismaModel =
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumReturnConditionNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumReturnConditionNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumPurchaseItemDispositionFilter<$PrismaModel = never> = {
+  equals?: $Enums.PurchaseItemDisposition | Prisma.EnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  in?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel> | $Enums.PurchaseItemDisposition
+}
+
+export type NestedEnumPurchaseItemDispositionWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.PurchaseItemDisposition | Prisma.EnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  in?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  notIn?: $Enums.PurchaseItemDisposition[] | Prisma.ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumPurchaseItemDispositionWithAggregatesFilter<$PrismaModel> | $Enums.PurchaseItemDisposition
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumPurchaseItemDispositionFilter<$PrismaModel>
 }
 
 

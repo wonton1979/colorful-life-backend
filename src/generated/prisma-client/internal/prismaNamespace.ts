@@ -2638,6 +2638,7 @@ export const PurchaseItemScalarFieldEnum = {
   id: 'id',
   purchaseDocumentId: 'purchaseDocumentId',
   productListingId: 'productListingId',
+  inventoryDisposition: 'inventoryDisposition',
   externalProductId: 'externalProductId',
   sourceDescription: 'sourceDescription',
   sourceSetNumber: 'sourceSetNumber',
@@ -3045,6 +3046,20 @@ export type EnumReturnConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'ReturnCondition[]'
  */
 export type ListEnumReturnConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ReturnCondition[]'>
+
+
+
+/**
+ * Reference to a field of type 'PurchaseItemDisposition'
+ */
+export type EnumPurchaseItemDispositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PurchaseItemDisposition'>
+
+
+
+/**
+ * Reference to a field of type 'PurchaseItemDisposition[]'
+ */
+export type ListEnumPurchaseItemDispositionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PurchaseItemDisposition[]'>
 
 
 

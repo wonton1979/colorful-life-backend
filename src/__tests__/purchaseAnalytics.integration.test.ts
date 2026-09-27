@@ -15,6 +15,7 @@ type ItemFixture = {
   unitCost?: string;
   receivedAt?: Date | null;
   returnedAt?: Date | null;
+  inventoryDisposition?: "INVENTORY" | "NON_INVENTORY";
 };
 
 type DocumentFixture = {
@@ -93,6 +94,7 @@ async function createPurchase(fixture: PurchaseFixture): Promise<{ id: number; i
           finalUnitCost: "1.000000",
           ...(item.receivedAt !== undefined ? { receivedAt: item.receivedAt } : {}),
           ...(item.returnedAt !== undefined ? { returnedAt: item.returnedAt } : {}),
+          ...(item.inventoryDisposition ? { inventoryDisposition: item.inventoryDisposition } : {}),
         },
       });
       itemIds.push(persistedItem.id);
@@ -355,5 +357,26 @@ describe("Admin purchase analytics", () => {
     const afterTotals = await summary();
     assert.equal(afterTotals.totalQuantity - beforeTotals.totalQuantity, 3);
     assert.equal(new Prisma.Decimal(afterTotals.totalAmount).minus(beforeTotals.totalAmount).toFixed(2), "30.00");
+  });
+
+  it("excludes explicitly non-inventory lines from unit totals but retains their actual document spend", async () => {
+    const beforeTotals = await summary();
+    await createPurchase({
+      merchantName: `Mixed inventory ${randomUUID()}`,
+      documents: [{
+        total: "17.35",
+        items: [
+          { quantity: 3, unitCost: "2.00", inventoryDisposition: "INVENTORY" },
+          { quantity: 7, unitCost: "1.05", inventoryDisposition: "NON_INVENTORY" },
+        ],
+      }],
+    });
+
+    const afterTotals = await summary();
+    assert.equal(afterTotals.totalQuantity - beforeTotals.totalQuantity, 3);
+    assert.equal(
+      new Prisma.Decimal(afterTotals.totalAmount).minus(beforeTotals.totalAmount).toFixed(2),
+      "17.35",
+    );
   });
 });
