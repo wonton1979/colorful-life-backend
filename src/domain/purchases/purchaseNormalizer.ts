@@ -28,6 +28,19 @@ export class PurchaseNormalizationError extends Error {
   }
 }
 
+/** Trim an optional purchase string and treat blank values as absent. */
+export function normalizeOptionalPurchaseString(
+  value: unknown,
+  name: string,
+): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string") {
+    throw new PurchaseNormalizationError(`${name} must be a string if provided`);
+  }
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
 /**
  * Raw source contract.
  */
@@ -74,18 +87,6 @@ export function normalizePurchaseDocument(
       throw new PurchaseNormalizationError(`${name} is required and cannot be blank`);
     }
     return trimmed;
-  };
-
-  const optionalString = (
-    value: unknown,
-    name: string,
-  ): string | undefined => {
-    if (value === undefined || value === null) return undefined;
-    if (typeof value !== "string") {
-      throw new PurchaseNormalizationError(`${name} must be a string if provided`);
-    }
-    const trimmed = value.trim();
-    return trimmed === "" ? undefined : trimmed;
   };
 
   const requiredNumber = (
@@ -184,8 +185,8 @@ export function normalizePurchaseDocument(
     src.sourceDocumentDate,
     "sourceDocumentDate",
   );
-  const merchantName = optionalString(src.merchantName, "merchantName");
-  const sourceInvoiceReference = optionalString(
+  const merchantName = normalizeOptionalPurchaseString(src.merchantName, "merchantName");
+  const sourceInvoiceReference = normalizeOptionalPurchaseString(
     src.sourceInvoiceReference,
     "sourceInvoiceReference",
   );
@@ -216,11 +217,11 @@ export function normalizePurchaseDocument(
       it.productListingId,
       `items[${idx}].productListingId`,
     );
-    const externalProductId = optionalString(
+    const externalProductId = normalizeOptionalPurchaseString(
       it.externalProductId,
       `items[${idx}].externalProductId`,
     );
-    const sourceSetNumber = optionalString(
+    const sourceSetNumber = normalizeOptionalPurchaseString(
       it.sourceSetNumber,
       `items[${idx}].sourceSetNumber`,
     );

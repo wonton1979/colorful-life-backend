@@ -94,6 +94,7 @@ describe("purchaseImportService", () => {
     assert.strictEqual(purchaseDoc.finalTotalPaid.toFixed(2), "168.10");
     assert.strictEqual(purchaseDoc.importedByUserId, userId);
     assert.strictEqual(purchaseDoc.partNumber, 1);
+    assert.strictEqual(purchaseDoc.purchase.merchantName, multiPagePurchaseInvoiceFixture.merchantName);
 
     // Items count and content
     assert.strictEqual(purchaseDoc.purchaseItems.length, 5);

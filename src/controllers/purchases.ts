@@ -9,6 +9,10 @@ import { DuplicateImportError } from "../domain/purchases/purchasePersistence.js
 import { PdfTextExtractionError } from "../domain/purchases/pdfTextExtractor.js";
 import { AmazonPurchaseInvoiceParseError } from "../domain/purchases/parsers/amazonPurchaseInvoiceParser.js";
 import { PurchaseNormalizationError } from "../domain/purchases/purchaseNormalizer.js";
+import {
+  MANUAL_PURCHASE_CUSTOM_SUPPLIER_LABEL,
+  MANUAL_PURCHASE_SUPPLIER_OPTIONS,
+} from "../domain/purchases/manualPurchaseSupplierOptions.js";
 import { ValidationError } from "../domain/purchases/purchaseImport.js";
 import { prisma } from "../prisma/runtime.js";
 // Domain service and error classes for purchase item receiving
@@ -193,6 +197,14 @@ export const createManualPurchase = async (req: Request, res: Response) => {
     console.error("Manual purchase error", err);
     return res.status(500).json({ error: "Internal server error" });
   }
+};
+
+/** Admin contract for the canonical options used by manual purchase entry. */
+export const getManualPurchaseSupplierOptions = (_req: Request, res: Response) => {
+  return res.json({
+    canonicalSuppliers: MANUAL_PURCHASE_SUPPLIER_OPTIONS,
+    customSupplierOption: MANUAL_PURCHASE_CUSTOM_SUPPLIER_LABEL,
+  });
 };
 
 /**

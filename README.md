@@ -676,6 +676,15 @@ persisted date value directly, without conversion through a timezone. The
 analytics endpoints are company-wide and do not inherit the importer scope of
 purchase history or review endpoints.
 
+Admin-only `GET /purchases/manual-supplier-options` returns the canonical
+supplier names for manual purchase entry as `canonicalSuppliers`, with the
+custom-entry UI label returned separately as `customSupplierOption: "Others"`.
+`Others` is not a merchant name to persist. Admin should submit the actual
+custom name in `merchantName`; `POST /purchases/manual` trims surrounding
+whitespace, stores whitespace-only values as `null`, and continues to accept
+custom names outside the canonical options. Imported purchase suppliers remain
+unrestricted.
+
 ---
 
 ## Testing

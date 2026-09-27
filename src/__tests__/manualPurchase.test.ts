@@ -1,6 +1,6 @@
 import { describe, it, before, after, beforeEach, afterEach } from "node:test";
 import { strict as assert } from "node:assert";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import app from "../app.js";
 import { prisma } from "../prisma/runtime.js";
@@ -124,7 +124,149 @@ async function postManualPurchase(body: any): Promise<Response> {
   });
 }
 
+function manualPurchaseBody(amountInPennies = 100) {
+  return {
+    sourceOrderReference: randomUUID(),
+    originalGrossMerchandiseTotal: amountInPennies,
+    finalTotalPaid: amountInPennies,
+    items: [{
+      sourceDescription: "Manual supplier test item",
+      quantity: 1,
+      originalGrossUnitCost: amountInPennies,
+      originalGrossLineTotal: amountInPennies,
+    }],
+  };
+}
+
+async function purchaseAnalyticsSummary() {
+  const response = await fetch(`${baseUrl}/purchase-analytics`, {
+    headers: { Authorization: `Bearer ${userToken}` },
+  });
+  assert.strictEqual(response.status, 200);
+  return await response.json() as {
+    totalAmount: string;
+    suppliers: Array<{ supplierKey: string; supplierName: string; totalAmount: string }>;
+  };
+}
+
+function toPennies(amount: string): bigint {
+  const [whole, fractional = "00"] = amount.split(".");
+  return BigInt(whole) * 100n + BigInt(fractional.padEnd(2, "0"));
+}
+
 describe("Manual Purchase API", () => {
+  it("exposes canonical suppliers and the separate custom-entry option to Admins", async () => {
+    const response = await fetch(`${baseUrl}/purchases/manual-supplier-options`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+    assert.strictEqual(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      canonicalSuppliers: [
+        "LEGO",
+        "Amazon",
+        "eBay",
+        "Smyths Toys",
+        "Argos",
+        "John Lewis",
+        "Very",
+        "Costco",
+        "ASDA",
+        "B&M",
+        "Sainsbury's",
+        "Tesco",
+        "Morrisons",
+      ],
+      customSupplierOption: "Others",
+    });
+
+    const anonymous = await fetch(`${baseUrl}/purchases/manual-supplier-options`);
+    assert.strictEqual(anonymous.status, 401);
+
+    const customer = await prisma.user.create({
+      data: {
+        email: `customer-${randomUUID()}@example.com`,
+        passwordHash: "test",
+        role: "CUSTOMER",
+        emailVerified: true,
+      },
+    });
+    userIds.push(customer.id);
+    const customerToken = jwt.sign({ id: customer.id, role: "CUSTOMER" }, config.JWT_SECRET, { expiresIn: "1h" });
+    const forbidden = await fetch(`${baseUrl}/purchases/manual-supplier-options`, {
+      headers: { Authorization: `Bearer ${customerToken}` },
+    });
+    assert.strictEqual(forbidden.status, 403);
+  });
+
+  it("trims surrounding whitespace from a manual canonical merchantName", async () => {
+    const body = { ...manualPurchaseBody(), merchantName: "  Sainsbury's  " };
+    const response = await postManualPurchase(body);
+    assert.strictEqual(response.status, 201);
+    const doc = await response.json();
+    trackPurchaseDocument(doc);
+    assert.strictEqual(doc.purchase.merchantName, "Sainsbury's");
+  });
+
+  it("trims a custom manual supplier without changing its meaningful content", async () => {
+    const body = { ...manualPurchaseBody(), merchantName: "  Local Toy Shop  " };
+    const response = await postManualPurchase(body);
+    assert.strictEqual(response.status, 201);
+    const doc = await response.json();
+    trackPurchaseDocument(doc);
+    assert.strictEqual(doc.purchase.merchantName, "Local Toy Shop");
+  });
+
+  it("persists whitespace-only and omitted manual merchant names as null", async () => {
+    const blankResponse = await postManualPurchase({ ...manualPurchaseBody(), merchantName: "   " });
+    assert.strictEqual(blankResponse.status, 201);
+    const blankDocument = await blankResponse.json();
+    trackPurchaseDocument(blankDocument);
+    assert.strictEqual(blankDocument.purchase.merchantName, null);
+
+    const omittedResponse = await postManualPurchase(manualPurchaseBody());
+    assert.strictEqual(omittedResponse.status, 201);
+    const omittedDocument = await omittedResponse.json();
+    trackPurchaseDocument(omittedDocument);
+    assert.strictEqual(omittedDocument.purchase.merchantName, null);
+  });
+
+  it("accepts arbitrary custom merchant names outside the canonical list", async () => {
+    const body = { ...manualPurchaseBody(), merchantName: "Independent Brick Shop" };
+    const response = await postManualPurchase(body);
+    assert.strictEqual(response.status, 201);
+    const doc = await response.json();
+    trackPurchaseDocument(doc);
+    assert.strictEqual(doc.purchase.merchantName, "Independent Brick Shop");
+  });
+
+  it("preserves canonical supplier spelling and groups manual purchases in existing analytics", async () => {
+    for (const merchantName of ["LEGO", "eBay", "Sainsbury's", "B&M"]) {
+      const response = await postManualPurchase({ ...manualPurchaseBody(), merchantName });
+      assert.strictEqual(response.status, 201);
+      const document = await response.json();
+      trackPurchaseDocument(document);
+      assert.strictEqual(document.purchase.merchantName, merchantName);
+    }
+
+    const before = await purchaseAnalyticsSummary();
+    for (const amount of [123, 456]) {
+      const response = await postManualPurchase({ ...manualPurchaseBody(amount), merchantName: "Sainsbury's" });
+      assert.strictEqual(response.status, 201);
+      const document = await response.json();
+      trackPurchaseDocument(document);
+      assert.strictEqual(document.purchase.merchantName, "Sainsbury's");
+    }
+    const after = await purchaseAnalyticsSummary();
+    const supplierKey = `supplier-${createHash("sha256").update("sainsbury's", "utf8").digest("hex")}`;
+    const beforeSupplier = before.suppliers.find((supplier) => supplier.supplierKey === supplierKey);
+    const afterSupplier = after.suppliers.find((supplier) => supplier.supplierKey === supplierKey);
+    assert.ok(afterSupplier, "Sainsbury's group missing from purchase analytics");
+    assert.strictEqual(
+      toPennies(afterSupplier.totalAmount) - toPennies(beforeSupplier?.totalAmount ?? "0.00"),
+      579n,
+    );
+  });
+
   it("authenticated POST /purchases/manual returns 201", async () => {
     const body = {
       sourceOrderReference: randomUUID(),
