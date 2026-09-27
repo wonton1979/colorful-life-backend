@@ -4,6 +4,7 @@ import { prisma as defaultPrisma } from "../../prisma/runtime.js";
 import type { ImageStorage } from "../../infrastructure/imageStorage/imageStorage.js";
 import { isOwnedCategoryArtworkPublicId } from "../../infrastructure/imageStorage/cloudinaryImageStorage.js";
 import { validateImage } from "../productImages/productImageValidator.js";
+import { storefrontSellableListingExistsPredicate } from "../products/storefrontSellability.js";
 
 export class CategoryNotFoundError extends Error {}
 type Db = PrismaClient;
@@ -14,6 +15,25 @@ async function lockCategory(tx: Db, categoryId: number) {
 export function createCategoryManagementService(storage: ImageStorage, db: Db = defaultPrisma) {
   return {
     async list() { return db.category.findMany({ orderBy: { id: "asc" }, select: categorySelect }); },
+    async productAvailabilitySummary(categoryId: number) {
+      const rows = await db.$queryRaw<Array<{ totalProducts: bigint; activeProducts: bigint }>>`
+        SELECT COUNT(lp."id") AS "totalProducts",
+               COUNT(lp."id") FILTER (WHERE ${storefrontSellableListingExistsPredicate()}) AS "activeProducts"
+        FROM "Category" c
+        LEFT JOIN "LegoProduct" lp ON lp."categoryId" = c."id"
+        WHERE c."id" = ${categoryId}
+        GROUP BY c."id"
+      `;
+      const row = rows[0];
+      if (!row) return null;
+      const totalProducts = Number(row.totalProducts);
+      const activeProducts = Number(row.activeProducts);
+      return {
+        totalProducts,
+        activeProducts,
+        inactiveProducts: totalProducts - activeProducts,
+      };
+    },
     async create(data: { name: string; subtitle?: string | null; description?: string | null }) {
       return db.category.create({ data, select: categorySelect });
     },
