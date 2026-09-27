@@ -4,7 +4,13 @@ import multer from "multer";
 import type { Request, Response, NextFunction } from "express";
 import { authMiddleware } from "../middleware/auth.js";
 import { requireVerifiedEmail } from "../middleware/requireVerifiedEmail.js";
-import { importPurchaseInvoice, listPurchases, getPurchaseById, createManualPurchase } from "../controllers/purchases.js";
+import {
+  importPurchaseInvoice,
+  listPurchases,
+  getPurchaseById,
+  createManualPurchase,
+  getManualPurchaseSupplierOptions,
+} from "../controllers/purchases.js";
 import { sendApiError } from "../utils/apiErrorResponse.js";
 
 const router = Router();
@@ -42,6 +48,7 @@ function uploadMiddleware(req: Request, res: Response, next: NextFunction) {
 }
 
 router.post("/import", authMiddleware, adminOnly, requireVerifiedEmail, uploadMiddleware, importPurchaseInvoice);
+router.get("/manual-supplier-options", authMiddleware, adminOnly, requireVerifiedEmail, getManualPurchaseSupplierOptions);
 router.get("/", authMiddleware, requireVerifiedEmail, listPurchases);
 router.get("/:id", authMiddleware, requireVerifiedEmail, getPurchaseById);
 router.post("/manual", authMiddleware, adminOnly, requireVerifiedEmail, createManualPurchase);

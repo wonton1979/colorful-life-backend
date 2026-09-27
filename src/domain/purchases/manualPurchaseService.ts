@@ -4,6 +4,7 @@ import { calculatePurchaseCosts } from "./purchaseImport.js";
 import { persistCalculatedPurchaseDocument } from "./purchasePersistence.js";
 import type { NormalizedPurchaseDocument } from "./purchaseImport.js";
 import type { ManualPurchaseInput } from "./manualPurchaseValidator.js";
+import { normalizeOptionalPurchaseString } from "./purchaseNormalizer.js";
 
 /**
  * Domain error raised when an explicit productListingId is supplied but no
@@ -59,7 +60,7 @@ export async function createManualPurchase(
     importHash: `manual:${randomUUID()}`,
     sourceOrderReference: input.sourceOrderReference,
     sourceOrderDate: input.sourceOrderDate,
-    merchantName: input.merchantName,
+    merchantName: normalizeOptionalPurchaseString(input.merchantName, "merchantName"),
     sourceInvoiceReference: input.sourceInvoiceReference,
     sourceDocumentDate: input.sourceDocumentDate,
     originalGrossMerchandiseTotal: input.originalGrossMerchandiseTotal,
