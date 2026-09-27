@@ -658,6 +658,24 @@ Business Expenses
 
 Routes delegate business rules to domain/service layers rather than placing financial or inventory logic directly inside HTTP controllers.
 
+### Purchase Analytics
+
+Admin-only `GET /purchase-analytics` returns company-wide gross purchased
+quantity, purchase-document spend, and spend grouped by supplier. Spend uses
+each persisted `PurchaseDocument.finalTotalPaid` once; quantity uses each
+`PurchaseItem.quantity` once, regardless of receipt or supplier-return state.
+Supplier names are trimmed and grouped case-insensitively. Null or blank names
+share the `unknown` key and display as `Unknown supplier`; named suppliers use
+a deterministic `supplier-<sha256>` key based on the normalized name.
+
+Admin-only `GET /purchase-analytics/suppliers/:supplierKey/monthly` groups
+document spend by the parent purchase's `sourceOrderDate`, in descending
+`YYYY-MM` order. Documents without a source order date are excluded from the
+month buckets and included in `undatedTotalAmount`. Month grouping uses the
+persisted date value directly, without conversion through a timezone. The
+analytics endpoints are company-wide and do not inherit the importer scope of
+purchase history or review endpoints.
+
 ---
 
 ## Testing
