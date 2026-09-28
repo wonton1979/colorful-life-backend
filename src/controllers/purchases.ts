@@ -14,6 +14,7 @@ import {
   MANUAL_PURCHASE_SUPPLIER_OPTIONS,
 } from "../domain/purchases/manualPurchaseSupplierOptions.js";
 import { ValidationError } from "../domain/purchases/purchaseImport.js";
+import { Prisma } from "../generated/prisma-client/client.js";
 import { prisma } from "../prisma/runtime.js";
 // Domain service and error classes for purchase item receiving
 import {
@@ -220,72 +221,141 @@ export const getManualPurchaseSupplierOptions = (_req: Request, res: Response) =
 export const listPurchases = async (req: Request, res: Response) => {
   const userId = (req.user as { id: number }).id;
   const pageParam = req.query.page;
-  const limitParam = req.query.limit;
-  const page = Number(pageParam ?? 1);
-  const limit = Number(limitParam ?? 20);
-  if (!Number.isInteger(page) || page < 1) {
+  const pageSizeParam = req.query.pageSize ?? req.query.limit;
+  const searchParam = req.query.search;
+  const parsePositiveInteger = (value: unknown, fallback: number): number | null => {
+    if (value === undefined) return fallback;
+    if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  };
+  const page = parsePositiveInteger(pageParam, 1);
+  const pageSize = parsePositiveInteger(pageSizeParam, 20);
+  if (page === null) {
     return res.status(400).json({ error: "Invalid page parameter" });
   }
-  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
-    return res.status(400).json({ error: "Invalid limit parameter" });
+  if (pageSize === null || pageSize > 100) {
+    return res.status(400).json({ error: "Invalid pageSize parameter" });
+  }
+  if (!Number.isSafeInteger((page - 1) * pageSize)) {
+    return res.status(400).json({ error: "Invalid page parameter" });
+  }
+  if (typeof searchParam !== "undefined" && typeof searchParam !== "string") {
+    return res.status(400).json({ error: "Invalid search parameter" });
+  }
+  const search = typeof searchParam === "string" ? searchParam.trim() : "";
+  if (search.length > 200) {
+    return res.status(400).json({ error: "Invalid search parameter" });
+  }
+
+  let dateSearch: string | undefined;
+  if (/^\d{4}-/.test(search)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(search)) {
+      return res.status(400).json({ error: "Invalid search date; use YYYY-MM-DD" });
+    }
+    const [year, month, day] = search.split("-").map(Number);
+    const candidate = new Date(0);
+    candidate.setUTCHours(0, 0, 0, 0);
+    candidate.setUTCFullYear(year, month - 1, day);
+    if (year < 1 || candidate.toISOString().slice(0, 10) !== search) {
+      return res.status(400).json({ error: "Invalid search date; use YYYY-MM-DD" });
+    }
+    dateSearch = search;
   }
   try {
-    const total = await prisma.purchase.count({
-      where: {
-        purchaseDocuments: {
-          some: {
-            importedByUserId: userId,
+    const searchFilter = search
+      ? dateSearch
+        ? Prisma.sql`AND (
+            STRPOS(LOWER(p."sourceOrderReference"), LOWER(${search})) > 0
+            OR (
+              p."sourceOrderDate" >= CAST(${dateSearch} AS timestamp)
+              AND p."sourceOrderDate" < CAST(${dateSearch} AS timestamp) + INTERVAL '1 day'
+            )
+          )`
+        : Prisma.sql`AND STRPOS(LOWER(p."sourceOrderReference"), LOWER(${search})) > 0`
+      : Prisma.empty;
+    const purchaseScope = Prisma.sql`
+      WHERE EXISTS (
+        SELECT 1 FROM "PurchaseDocument" scoped_document
+        WHERE scoped_document."purchaseId" = p."id"
+          AND scoped_document."importedByUserId" = ${userId}
+      )
+      ${searchFilter}
+    `;
+    const [countRows, pageRows] = await Promise.all([
+      prisma.$queryRaw<Array<{ totalItems: bigint }>>(Prisma.sql`
+        SELECT COUNT(*)::bigint AS "totalItems"
+        FROM "Purchase" p
+        ${purchaseScope}
+      `),
+      prisma.$queryRaw<Array<{ id: number }>>(Prisma.sql`
+        SELECT p."id"
+        FROM "Purchase" p
+        ${purchaseScope}
+        ORDER BY
+          (
+            SELECT CASE
+              WHEN COUNT(item."id") FILTER (
+                WHERE item."inventoryDisposition" = 'NON_INVENTORY'::"PurchaseItemDisposition"
+                   OR item."productListingId" IS NOT NULL
+              ) = 0 THEN 0
+              WHEN COUNT(item."id") FILTER (
+                WHERE item."inventoryDisposition" = 'NON_INVENTORY'::"PurchaseItemDisposition"
+                   OR item."productListingId" IS NOT NULL
+              ) < COUNT(item."id") THEN 1
+              ELSE 2
+            END
+            FROM "PurchaseDocument" document
+            LEFT JOIN "PurchaseItem" item ON item."purchaseDocumentId" = document."id"
+            WHERE document."purchaseId" = p."id"
+              AND document."importedByUserId" = ${userId}
+          ) ASC,
+          p."sourceOrderDate" DESC NULLS LAST,
+          p."id" DESC
+        OFFSET ${(page - 1) * pageSize}
+        LIMIT ${pageSize}
+      `),
+    ]);
+    const totalItems = Number(countRows[0]?.totalItems ?? 0n);
+    const pageIds = pageRows.map(({ id }) => id);
+    const purchases = pageIds.length
+      ? await prisma.purchase.findMany({
+          where: {
+            id: { in: pageIds },
+            purchaseDocuments: { some: { importedByUserId: userId } },
           },
-        },
-      },
-    });
-    const purchases = await prisma.purchase.findMany({
-      where: {
-        purchaseDocuments: {
-          some: {
-            importedByUserId: userId,
-          },
-        },
-      },
-      include: {
-        purchaseDocuments: {
-          where: { importedByUserId: userId },
           include: {
-            purchaseItems: { select: { productListingId: true, inventoryDisposition: true } },
+            purchaseDocuments: {
+              where: { importedByUserId: userId },
+              include: {
+                purchaseItems: { select: { productListingId: true, inventoryDisposition: true } },
+              },
+            },
           },
-        },
-      },
-      orderBy: [
-        { sourceOrderDate: "desc" },
-        { id: "desc" },
-      ],
-    });
-    // The query establishes the existing date/id order. Stable priority
-    // sorting keeps that order within each resolution group.
-    const prioritized = purchases.map((purchase, index) => {
-      const items = purchase.purchaseDocuments.flatMap((document) => document.purchaseItems);
-      const resolvedCount = items.filter((item) =>
-        item.inventoryDisposition === "NON_INVENTORY" || item.productListingId !== null,
-      ).length;
-      const priority = resolvedCount === 0 ? 0 : resolvedCount < items.length ? 1 : 2;
-      return { purchase, index, priority };
-    }).sort((a, b) => a.priority - b.priority || a.index - b.index);
-    const pagePurchases = prioritized
-      .slice((page - 1) * limit, page * limit)
-      .map(({ purchase }) => ({
+        })
+      : [];
+    const purchasesById = new Map(purchases.map((purchase) => [purchase.id, purchase]));
+    const pagePurchases = pageIds.flatMap((id) => {
+      const purchase = purchasesById.get(id);
+      if (!purchase) return [];
+      return [{
         ...purchase,
-        // Preserve the public history response shape; items are only read to
-        // derive priority from the existing listing association.
+        // Preserve the Purchase History response shape; items are only read to
+        // derive the existing resolution priority before database pagination.
         purchaseDocuments: purchase.purchaseDocuments.map(({ purchaseItems: _items, ...document }) => document),
-      }));
-    const totalPages = Math.ceil(total / limit);
+      }];
+    });
+    const totalPages = Math.ceil(totalItems / pageSize);
     res.json({
       purchases: pagePurchases,
       pagination: {
         page,
-        limit,
-        total,
+        pageSize,
+        totalItems,
         totalPages,
+        // Keep the original response field names for existing clients.
+        limit: pageSize,
+        total: totalItems,
       },
     });
   } catch (err) {
