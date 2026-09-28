@@ -15,7 +15,7 @@ const updatedProductSelect = {
   pieceCount: true,
   isRetired: true,
   categoryId: true,
-  category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } },
+  category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true, thumbnailUrl: true } },
   productImages: {
     select: { id: true, url: true, publicId: true, altText: true, sortOrder: true },
     orderBy: [{ sortOrder: "asc" }, { id: "asc" }],

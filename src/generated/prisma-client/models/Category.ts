@@ -41,6 +41,8 @@ export type CategoryMinAggregateOutputType = {
   description: string | null
   imageUrl: string | null
   imagePublicId: string | null
+  thumbnailUrl: string | null
+  thumbnailPublicId: string | null
 }
 
 export type CategoryMaxAggregateOutputType = {
@@ -50,6 +52,8 @@ export type CategoryMaxAggregateOutputType = {
   description: string | null
   imageUrl: string | null
   imagePublicId: string | null
+  thumbnailUrl: string | null
+  thumbnailPublicId: string | null
 }
 
 export type CategoryCountAggregateOutputType = {
@@ -59,6 +63,8 @@ export type CategoryCountAggregateOutputType = {
   description: number
   imageUrl: number
   imagePublicId: number
+  thumbnailUrl: number
+  thumbnailPublicId: number
   _all: number
 }
 
@@ -78,6 +84,8 @@ export type CategoryMinAggregateInputType = {
   description?: true
   imageUrl?: true
   imagePublicId?: true
+  thumbnailUrl?: true
+  thumbnailPublicId?: true
 }
 
 export type CategoryMaxAggregateInputType = {
@@ -87,6 +95,8 @@ export type CategoryMaxAggregateInputType = {
   description?: true
   imageUrl?: true
   imagePublicId?: true
+  thumbnailUrl?: true
+  thumbnailPublicId?: true
 }
 
 export type CategoryCountAggregateInputType = {
@@ -96,6 +106,8 @@ export type CategoryCountAggregateInputType = {
   description?: true
   imageUrl?: true
   imagePublicId?: true
+  thumbnailUrl?: true
+  thumbnailPublicId?: true
   _all?: true
 }
 
@@ -192,6 +204,8 @@ export type CategoryGroupByOutputType = {
   description: string | null
   imageUrl: string | null
   imagePublicId: string | null
+  thumbnailUrl: string | null
+  thumbnailPublicId: string | null
   _count: CategoryCountAggregateOutputType | null
   _avg: CategoryAvgAggregateOutputType | null
   _sum: CategorySumAggregateOutputType | null
@@ -224,6 +238,8 @@ export type CategoryWhereInput = {
   description?: Prisma.StringNullableFilter<"Category"> | string | null
   imageUrl?: Prisma.StringNullableFilter<"Category"> | string | null
   imagePublicId?: Prisma.StringNullableFilter<"Category"> | string | null
+  thumbnailUrl?: Prisma.StringNullableFilter<"Category"> | string | null
+  thumbnailPublicId?: Prisma.StringNullableFilter<"Category"> | string | null
   legoProducts?: Prisma.LegoProductListRelationFilter
 }
 
@@ -234,6 +250,8 @@ export type CategoryOrderByWithRelationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   imagePublicId?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
   legoProducts?: Prisma.LegoProductOrderByRelationAggregateInput
 }
 
@@ -247,6 +265,8 @@ export type CategoryWhereUniqueInput = Prisma.AtLeast<{
   description?: Prisma.StringNullableFilter<"Category"> | string | null
   imageUrl?: Prisma.StringNullableFilter<"Category"> | string | null
   imagePublicId?: Prisma.StringNullableFilter<"Category"> | string | null
+  thumbnailUrl?: Prisma.StringNullableFilter<"Category"> | string | null
+  thumbnailPublicId?: Prisma.StringNullableFilter<"Category"> | string | null
   legoProducts?: Prisma.LegoProductListRelationFilter
 }, "id" | "name">
 
@@ -257,6 +277,8 @@ export type CategoryOrderByWithAggregationInput = {
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   imageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   imagePublicId?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  thumbnailPublicId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.CategoryCountOrderByAggregateInput
   _avg?: Prisma.CategoryAvgOrderByAggregateInput
   _max?: Prisma.CategoryMaxOrderByAggregateInput
@@ -274,6 +296,8 @@ export type CategoryScalarWhereWithAggregatesInput = {
   description?: Prisma.StringNullableWithAggregatesFilter<"Category"> | string | null
   imageUrl?: Prisma.StringNullableWithAggregatesFilter<"Category"> | string | null
   imagePublicId?: Prisma.StringNullableWithAggregatesFilter<"Category"> | string | null
+  thumbnailUrl?: Prisma.StringNullableWithAggregatesFilter<"Category"> | string | null
+  thumbnailPublicId?: Prisma.StringNullableWithAggregatesFilter<"Category"> | string | null
 }
 
 export type CategoryCreateInput = {
@@ -282,6 +306,8 @@ export type CategoryCreateInput = {
   description?: string | null
   imageUrl?: string | null
   imagePublicId?: string | null
+  thumbnailUrl?: string | null
+  thumbnailPublicId?: string | null
   legoProducts?: Prisma.LegoProductCreateNestedManyWithoutCategoryInput
 }
 
@@ -292,6 +318,8 @@ export type CategoryUncheckedCreateInput = {
   description?: string | null
   imageUrl?: string | null
   imagePublicId?: string | null
+  thumbnailUrl?: string | null
+  thumbnailPublicId?: string | null
   legoProducts?: Prisma.LegoProductUncheckedCreateNestedManyWithoutCategoryInput
 }
 
@@ -301,6 +329,8 @@ export type CategoryUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   legoProducts?: Prisma.LegoProductUpdateManyWithoutCategoryNestedInput
 }
 
@@ -311,6 +341,8 @@ export type CategoryUncheckedUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   legoProducts?: Prisma.LegoProductUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
@@ -321,6 +353,8 @@ export type CategoryCreateManyInput = {
   description?: string | null
   imageUrl?: string | null
   imagePublicId?: string | null
+  thumbnailUrl?: string | null
+  thumbnailPublicId?: string | null
 }
 
 export type CategoryUpdateManyMutationInput = {
@@ -329,6 +363,8 @@ export type CategoryUpdateManyMutationInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CategoryUncheckedUpdateManyInput = {
@@ -338,6 +374,8 @@ export type CategoryUncheckedUpdateManyInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CategoryNullableScalarRelationFilter = {
@@ -352,6 +390,8 @@ export type CategoryCountOrderByAggregateInput = {
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
   imagePublicId?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailPublicId?: Prisma.SortOrder
 }
 
 export type CategoryAvgOrderByAggregateInput = {
@@ -365,6 +405,8 @@ export type CategoryMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
   imagePublicId?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailPublicId?: Prisma.SortOrder
 }
 
 export type CategoryMinOrderByAggregateInput = {
@@ -374,6 +416,8 @@ export type CategoryMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   imageUrl?: Prisma.SortOrder
   imagePublicId?: Prisma.SortOrder
+  thumbnailUrl?: Prisma.SortOrder
+  thumbnailPublicId?: Prisma.SortOrder
 }
 
 export type CategorySumOrderByAggregateInput = {
@@ -402,6 +446,8 @@ export type CategoryCreateWithoutLegoProductsInput = {
   description?: string | null
   imageUrl?: string | null
   imagePublicId?: string | null
+  thumbnailUrl?: string | null
+  thumbnailPublicId?: string | null
 }
 
 export type CategoryUncheckedCreateWithoutLegoProductsInput = {
@@ -411,6 +457,8 @@ export type CategoryUncheckedCreateWithoutLegoProductsInput = {
   description?: string | null
   imageUrl?: string | null
   imagePublicId?: string | null
+  thumbnailUrl?: string | null
+  thumbnailPublicId?: string | null
 }
 
 export type CategoryCreateOrConnectWithoutLegoProductsInput = {
@@ -435,6 +483,8 @@ export type CategoryUpdateWithoutLegoProductsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type CategoryUncheckedUpdateWithoutLegoProductsInput = {
@@ -444,6 +494,8 @@ export type CategoryUncheckedUpdateWithoutLegoProductsInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   imagePublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  thumbnailPublicId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -484,6 +536,8 @@ export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   description?: boolean
   imageUrl?: boolean
   imagePublicId?: boolean
+  thumbnailUrl?: boolean
+  thumbnailPublicId?: boolean
   legoProducts?: boolean | Prisma.Category$legoProductsArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["category"]>
@@ -495,6 +549,8 @@ export type CategorySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   description?: boolean
   imageUrl?: boolean
   imagePublicId?: boolean
+  thumbnailUrl?: boolean
+  thumbnailPublicId?: boolean
 }, ExtArgs["result"]["category"]>
 
 export type CategorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -504,6 +560,8 @@ export type CategorySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   description?: boolean
   imageUrl?: boolean
   imagePublicId?: boolean
+  thumbnailUrl?: boolean
+  thumbnailPublicId?: boolean
 }, ExtArgs["result"]["category"]>
 
 export type CategorySelectScalar = {
@@ -513,9 +571,11 @@ export type CategorySelectScalar = {
   description?: boolean
   imageUrl?: boolean
   imagePublicId?: boolean
+  thumbnailUrl?: boolean
+  thumbnailPublicId?: boolean
 }
 
-export type CategoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "subtitle" | "description" | "imageUrl" | "imagePublicId", ExtArgs["result"]["category"]>
+export type CategoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "subtitle" | "description" | "imageUrl" | "imagePublicId" | "thumbnailUrl" | "thumbnailPublicId", ExtArgs["result"]["category"]>
 export type CategoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   legoProducts?: boolean | Prisma.Category$legoProductsArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
@@ -535,6 +595,8 @@ export type $CategoryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     description: string | null
     imageUrl: string | null
     imagePublicId: string | null
+    thumbnailUrl: string | null
+    thumbnailPublicId: string | null
   }, ExtArgs["result"]["category"]>
   composites: {}
 }
@@ -965,6 +1027,8 @@ export interface CategoryFieldRefs {
   readonly description: Prisma.FieldRef<"Category", 'String'>
   readonly imageUrl: Prisma.FieldRef<"Category", 'String'>
   readonly imagePublicId: Prisma.FieldRef<"Category", 'String'>
+  readonly thumbnailUrl: Prisma.FieldRef<"Category", 'String'>
+  readonly thumbnailPublicId: Prisma.FieldRef<"Category", 'String'>
 }
     
 

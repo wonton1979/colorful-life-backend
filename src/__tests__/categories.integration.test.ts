@@ -71,7 +71,8 @@ describe("Category public contract", () => {
       { id: 13, name: "Others", subtitle: "More little worlds to discover", description: "Wander into a collection of delightful worlds, unusual ideas and small surprises waiting to be discovered." },
     ]);
     assert.ok(categories.every((category: Record<string, unknown>) =>
-      typeof category.description === "string" && category.imageUrl === null && !("imagePublicId" in category)));
+      typeof category.description === "string" && category.imageUrl === null && category.thumbnailUrl === null &&
+      !("imagePublicId" in category) && !("thumbnailPublicId" in category)));
   });
 
   it("creates a product by Category identity and returns the related category", async () => {
@@ -89,7 +90,7 @@ describe("Category public contract", () => {
     const body = await response.json();
     productIds.push(body.legoProductId);
     listingIds.push(body.id);
-    assert.deepEqual(body.category, { id: vehicles.id, name: "Vehicles", subtitle: "Built for the thrill", description: "Feel the joy of movement with speedy cars, powerful machines and journeys limited only by imagination.", imageUrl: null });
+    assert.deepEqual(body.category, { id: vehicles.id, name: "Vehicles", subtitle: "Built for the thrill", description: "Feel the joy of movement with speedy cars, powerful machines and journeys limited only by imagination.", imageUrl: null, thumbnailUrl: null });
     assert.equal(body.legoProduct.categoryId, vehicles.id);
   });
 

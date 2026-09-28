@@ -21,6 +21,8 @@ export function createCategoryManagementRouter(storage: ImageStorage = cloudinar
   router.patch("/:id", controller.update);
   router.put("/:id/artwork", uploadMiddleware, controller.setArtwork);
   router.delete("/:id/artwork", controller.removeArtwork);
+  router.put("/:id/thumbnail-artwork", uploadMiddleware, controller.setThumbnailArtwork);
+  router.delete("/:id/thumbnail-artwork", controller.removeThumbnailArtwork);
   return router;
 }
 export default createCategoryManagementRouter();
