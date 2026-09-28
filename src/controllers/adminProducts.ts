@@ -7,12 +7,22 @@ import {
   createAdminProductUpdateService,
 } from "../domain/products/adminProductUpdateService.js";
 import { ProductMetadataUpdateSchema } from "../domain/products/productMetadataUpdateValidator.js";
+import { createProductAvailabilitySummaryService } from "../domain/products/productAvailabilitySummary.js";
 import { Prisma } from "../generated/prisma-client/client.js";
 
 export function createAdminProductsController() {
   const service = createAdminProductLookupService();
   const updateService = createAdminProductUpdateService();
+  const availabilitySummary = createProductAvailabilitySummaryService();
   return {
+    productAvailabilitySummary: async (_req: Request, res: Response) => {
+      try {
+        return res.json(await availabilitySummary.global());
+      } catch (error) {
+        console.error("Global product availability summary failed", error);
+        return res.status(500).json({ error: "Product availability summary failed" });
+      }
+    },
     search: async (req: Request, res: Response) => {
       const parsed = AdminProductLookupQuerySchema.safeParse(req.query);
       if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });

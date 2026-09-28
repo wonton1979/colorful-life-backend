@@ -12,6 +12,7 @@ const adminOnly = (req: Request, res: Response, next: NextFunction) => {
 };
 
 router.get("/", authMiddleware, adminOnly, controller.search);
+router.get("/product-availability", authMiddleware, adminOnly, controller.productAvailabilitySummary);
 router.patch("/:productId", authMiddleware, adminOnly, controller.update);
 
 export default router;

@@ -4,7 +4,7 @@ import { prisma as defaultPrisma } from "../../prisma/runtime.js";
 import type { ImageStorage } from "../../infrastructure/imageStorage/imageStorage.js";
 import { isOwnedCategoryArtworkPublicId } from "../../infrastructure/imageStorage/cloudinaryImageStorage.js";
 import { validateImage } from "../productImages/productImageValidator.js";
-import { storefrontSellableListingExistsPredicate } from "../products/storefrontSellability.js";
+import { createProductAvailabilitySummaryService } from "../products/productAvailabilitySummary.js";
 
 export class CategoryNotFoundError extends Error {}
 type Db = PrismaClient;
@@ -17,6 +17,8 @@ async function lockCategory(tx: Db, categoryId: number) {
   await tx.$queryRaw`SELECT id FROM "Category" WHERE id = ${categoryId} FOR UPDATE`;
 }
 export function createCategoryManagementService(storage: ImageStorage, db: Db = defaultPrisma) {
+  const availabilitySummary = createProductAvailabilitySummaryService(db);
+
   async function uploadArtwork(categoryId: number, file: Express.Multer.File | undefined, slot: ArtworkSlot) {
     const { mimeType } = await validateImage(file);
     const existing = await db.category.findUnique({ where: { id: categoryId }, select: { id: true } });
@@ -86,23 +88,7 @@ export function createCategoryManagementService(storage: ImageStorage, db: Db = 
   return {
     async list() { return db.category.findMany({ orderBy: { id: "asc" }, select: categorySelect }); },
     async productAvailabilitySummary(categoryId: number) {
-      const rows = await db.$queryRaw<Array<{ totalProducts: bigint; activeProducts: bigint }>>`
-        SELECT COUNT(lp."id") AS "totalProducts",
-               COUNT(lp."id") FILTER (WHERE ${storefrontSellableListingExistsPredicate()}) AS "activeProducts"
-        FROM "Category" c
-        LEFT JOIN "LegoProduct" lp ON lp."categoryId" = c."id"
-        WHERE c."id" = ${categoryId}
-        GROUP BY c."id"
-      `;
-      const row = rows[0];
-      if (!row) return null;
-      const totalProducts = Number(row.totalProducts);
-      const activeProducts = Number(row.activeProducts);
-      return {
-        totalProducts,
-        activeProducts,
-        inactiveProducts: totalProducts - activeProducts,
-      };
+      return availabilitySummary.forCategory(categoryId);
     },
     async create(data: { name: string; subtitle?: string | null; description?: string | null }) {
       return db.category.create({ data, select: categorySelect });
