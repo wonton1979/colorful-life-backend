@@ -128,6 +128,62 @@ describe("Admin ProductListing feed", () => {
     assert.equal((await request(`/admin/categories/2147483647/product-availability`)).status, 404);
   });
 
+  it("requires ADMIN authentication for the global product availability summary", async () => {
+    const path = "/admin/products/product-availability";
+    assert.equal((await request(path, "")).status, 401);
+    assert.equal((await request(path, "invalid-token")).status, 401);
+    assert.equal((await request(path, customerToken)).status, 403);
+    const summary = await get(path);
+    assert.deepEqual(Object.keys(summary).sort(), ["activeProducts", "inactiveProducts", "totalProducts"]);
+    assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
+  });
+
+  it("summarizes unique global products with the same storefront sellability as category summaries", async () => {
+    const category = await prisma.category.create({ data: { name: `Global availability ${randomUUID()}` } });
+    const otherCategory = await prisma.category.create({ data: { name: `Global availability other ${randomUUID()}` } });
+    ids.categories.push(category.id, otherCategory.id);
+
+    const before = await get("/admin/products/product-availability");
+
+    const multiOfferProduct = await product(category.id);
+    await listing(multiOfferProduct.id, { currentStock: 3, reservedStock: 1 });
+    await listing(multiOfferProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/global-summary.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+
+    const inactiveInSameCategory = await product(category.id);
+    await listing(inactiveInSameCategory.id);
+
+    const inactiveInOtherCategory = await product(otherCategory.id);
+    await listing(inactiveInOtherCategory.id, { active: false, currentStock: 5 });
+
+    const noListingProduct = await product(null);
+
+    const summary = await get("/admin/products/product-availability");
+    assert.deepEqual(summary, {
+      totalProducts: before.totalProducts + 4,
+      activeProducts: before.activeProducts + 1,
+      inactiveProducts: before.inactiveProducts + 3,
+    });
+    assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: multiOfferProduct.id } }), 2);
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: noListingProduct.id } }), 0);
+
+    // Both summaries use the same shared service and sellability predicate.
+    assert.deepEqual(await get(`/admin/categories/${category.id}/product-availability`), {
+      totalProducts: 2,
+      activeProducts: 1,
+      inactiveProducts: 1,
+    });
+
+    await get("/admin/product-listings?page=1&pageSize=1");
+    assert.deepEqual(await get("/admin/products/product-availability"), summary);
+    await get("/admin/product-listings?page=2&pageSize=1");
+    assert.deepEqual(await get("/admin/products/product-availability"), summary);
+  });
+
   it("counts a product with both NEW and USED_LIKE_NEW stock once", async () => {
     const category = await prisma.category.create({ data: { name: `Dual condition ${randomUUID()}` } });
     ids.categories.push(category.id);
