@@ -74,7 +74,7 @@ export async function listCatalogueProducts(query: ProductCatalogueQuery) {
     const products = await tx.legoProduct.findMany({
       where: { id: { in: productIds } },
       include: {
-        category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } },
+        category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true, thumbnailUrl: true } },
         productImages,
         productListings: { select: offerSelect, orderBy: [{ condition: "asc" }, { id: "asc" }] },
       },
@@ -92,7 +92,7 @@ export async function getCatalogueProductById(productId: number) {
   const product = await prisma.legoProduct.findUnique({
     where: { id: productId },
     include: {
-      category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true } },
+      category: { select: { id: true, name: true, subtitle: true, description: true, imageUrl: true, thumbnailUrl: true } },
       productImages,
       productListings: { select: offerSelect, orderBy: [{ condition: "asc" }, { id: "asc" }] },
     },

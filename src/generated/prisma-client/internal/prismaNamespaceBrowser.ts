@@ -205,7 +205,9 @@ export const CategoryScalarFieldEnum = {
   subtitle: 'subtitle',
   description: 'description',
   imageUrl: 'imageUrl',
-  imagePublicId: 'imagePublicId'
+  imagePublicId: 'imagePublicId',
+  thumbnailUrl: 'thumbnailUrl',
+  thumbnailPublicId: 'thumbnailPublicId'
 } as const
 
 export type CategoryScalarFieldEnum = (typeof CategoryScalarFieldEnum)[keyof typeof CategoryScalarFieldEnum]

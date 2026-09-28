@@ -162,6 +162,28 @@ sellability predicate used by `GET /products`; retired-set status does not
 exclude an otherwise sellable product. This summary is independent of the
 paginated listing feed.
 
+### Category Artwork
+
+Category opening artwork remains in `imageUrl` and `imagePublicId`. The
+catalogue category-list/index thumbnail is stored independently in
+`thumbnailUrl` and `thumbnailPublicId`. `GET /categories` and category objects
+in public product responses expose `thumbnailUrl`; public responses omit
+`thumbnailPublicId`. Admin category responses include both thumbnail fields.
+
+All category artwork operations require an ADMIN Bearer token. Existing
+`PUT /admin/categories/:id/artwork` accepts multipart field `file` and uploads
+or replaces opening artwork. Existing `DELETE /admin/categories/:id/artwork`
+removes opening artwork. `PUT /admin/categories/:id/thumbnail-artwork` accepts
+multipart field `file` and uploads or replaces the catalogue thumbnail;
+`DELETE /admin/categories/:id/thumbnail-artwork` removes that thumbnail. Both
+upload routes accept JPEG, PNG, or WebP images up to 8 MiB. Replacing or
+removing either image affects only its own URL, public ID, and stored asset.
+
+New thumbnail columns are nullable. Existing categories retain their current
+opening artwork and may have a null `thumbnailUrl`. Legacy static storefront
+thumbnail assets remain in use until the separate storefront migration; this
+backend change does not copy or migrate those assets.
+
 ### Admin Product Presentation Endpoints
 
 All endpoints below require an ADMIN Bearer token. Product identity is explicit

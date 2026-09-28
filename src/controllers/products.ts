@@ -9,7 +9,7 @@ import { createProductFeatureService, FeatureProductNotFoundError, FeatureProduc
 import { createProductListingCreationService } from "../domain/products/productListingCreationService.js";
 import { productMetadataUpdateFields } from "../domain/products/productMetadataUpdateValidator.js";
 
-const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true } as const;
+const categorySelect = { id: true, name: true, subtitle: true, description: true, imageUrl: true, thumbnailUrl: true } as const;
 
 function serializeListing<T extends { legoProduct: { category?: unknown } }>(listing: T) {
   const { category, ...legoProduct } = listing.legoProduct;

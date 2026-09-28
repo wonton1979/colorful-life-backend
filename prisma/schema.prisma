@@ -283,13 +283,15 @@ model LegoProduct {
 }
 
 model Category {
-  id            Int           @id @default(autoincrement())
-  name          String        @unique
-  subtitle      String?
-  description   String?
-  imageUrl      String?
-  imagePublicId String?
-  legoProducts  LegoProduct[]
+  id                Int           @id @default(autoincrement())
+  name              String        @unique
+  subtitle          String?
+  description       String?
+  imageUrl          String?
+  imagePublicId     String?
+  thumbnailUrl      String?
+  thumbnailPublicId String?
+  legoProducts      LegoProduct[]
 }
 
 model ProductListing {

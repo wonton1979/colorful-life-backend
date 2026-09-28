@@ -119,6 +119,7 @@ describe("Admin LegoProduct metadata update", () => {
       subtitle: category.subtitle,
       description: category.description,
       imageUrl: category.imageUrl,
+      thumbnailUrl: category.thumbnailUrl,
     });
     assert.deepEqual(updated.productImages, []);
 

@@ -54,5 +54,15 @@ export function createCategoryManagementController(storage: ImageStorage) {
       if (!id) return res.status(404).json({ error: "Category not found" });
       try { return res.json(await service.removeArtwork(id)); } catch (error) { return mapError(res, error); }
     },
+    setThumbnailArtwork: async (req: Request, res: Response) => {
+      const id = categoryId(req.params.id);
+      if (!id) return res.status(404).json({ error: "Category not found" });
+      try { return res.json(await service.setThumbnailArtwork(id, req.file)); } catch (error) { return mapError(res, error); }
+    },
+    removeThumbnailArtwork: async (req: Request, res: Response) => {
+      const id = categoryId(req.params.id);
+      if (!id) return res.status(404).json({ error: "Category not found" });
+      try { return res.json(await service.removeThumbnailArtwork(id)); } catch (error) { return mapError(res, error); }
+    },
   };
 }

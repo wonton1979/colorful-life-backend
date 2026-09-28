@@ -66,14 +66,14 @@ describe("category management administration", () => {
     assert.equal(response.status, 201);
     const created = await response.json();
     categories.push(created.id);
-    assert.deepEqual(created, { id: created.id, name: "New Category", subtitle: null, description: null, imageUrl: null, imagePublicId: null });
+    assert.deepEqual(created, { id: created.id, name: "New Category", subtitle: null, description: null, imageUrl: null, imagePublicId: null, thumbnailUrl: null, thumbnailPublicId: null });
     assert.equal((await prisma.category.findUniqueOrThrow({ where: { id: created.id } })).name, "New Category");
 
     const withMetadata = await request("/admin/categories", token, { method: "POST", body: JSON.stringify({ name: "  Another Category  ", subtitle: " subtitle ", description: " description " }) });
     assert.equal(withMetadata.status, 201);
     const second = await withMetadata.json();
     categories.push(second.id);
-    assert.deepEqual(second, { id: second.id, name: "Another Category", subtitle: "subtitle", description: "description", imageUrl: null, imagePublicId: null });
+    assert.deepEqual(second, { id: second.id, name: "Another Category", subtitle: "subtitle", description: "description", imageUrl: null, imagePublicId: null, thumbnailUrl: null, thumbnailPublicId: null });
   });
   it("requires Admin authorization to create categories", async () => {
     const body = JSON.stringify({ name: "Authorized Category" });
@@ -103,7 +103,7 @@ describe("category management administration", () => {
     assert.ok(list.some((entry: { id: number }) => entry.id === value.id));
     const response = await request(`/admin/categories/${value.id}`, token, { method: "PATCH", body: JSON.stringify({ name: ` Renamed ${value.id} `, subtitle: " New subtitle ", description: "" }) });
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { id: value.id, name: `Renamed ${value.id}`, subtitle: "New subtitle", description: null, imageUrl: null, imagePublicId: null });
+    assert.deepEqual(await response.json(), { id: value.id, name: `Renamed ${value.id}`, subtitle: "New subtitle", description: null, imageUrl: null, imagePublicId: null, thumbnailUrl: null, thumbnailPublicId: null });
   });
   it("rejects invalid and missing IDs, invalid input, and duplicate names", async () => {
     const value = await category(); const token = await admin(); const existing = await prisma.category.findFirstOrThrow({ where: { id: { not: value.id } } });
@@ -116,12 +116,108 @@ describe("category management administration", () => {
     const value = await category(); const token = await admin();
     const first = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "PUT", body: artworkForm(1) })).json();
     assert.equal(first.imagePublicId, storage.uploads[0] && `colorful-life/category-artwork/${storage.uploads[0].publicId}`);
+    assert.equal(first.thumbnailUrl, null); assert.equal(first.thumbnailPublicId, null);
     const second = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "PUT", body: artworkForm(2) })).json();
     assert.notEqual(second.imagePublicId, first.imagePublicId);
     assert.deepEqual(storage.deletions, [first.imagePublicId]);
     const removed = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "DELETE" })).json();
     assert.equal(removed.imageUrl, null); assert.equal(removed.imagePublicId, null);
+    assert.equal(removed.thumbnailUrl, null); assert.equal(removed.thumbnailPublicId, null);
     assert.deepEqual(storage.deletions, [first.imagePublicId, second.imagePublicId]);
+  });
+
+  it("returns thumbnail URLs publicly without storage IDs and includes both thumbnail fields for Admins", async () => {
+    const value = await category(); const token = await admin();
+    await prisma.category.update({ where: { id: value.id }, data: {
+      imageUrl: "https://cdn.example/opening.jpg", imagePublicId: `opening-${value.id}`,
+      thumbnailUrl: "https://cdn.example/thumbnail.jpg", thumbnailPublicId: `thumbnail-${value.id}`,
+    } });
+
+    const publicCategories = await (await request("/categories")).json();
+    const publicCategory = publicCategories.find((entry: { id: number }) => entry.id === value.id);
+    assert.equal(publicCategory.imageUrl, "https://cdn.example/opening.jpg");
+    assert.equal(publicCategory.thumbnailUrl, "https://cdn.example/thumbnail.jpg");
+    assert.equal("imagePublicId" in publicCategory, false);
+    assert.equal("thumbnailPublicId" in publicCategory, false);
+
+    const adminCategories = await (await request("/admin/categories", token)).json();
+    const adminCategory = adminCategories.find((entry: { id: number }) => entry.id === value.id);
+    assert.equal(adminCategory.imagePublicId, `opening-${value.id}`);
+    assert.equal(adminCategory.thumbnailUrl, "https://cdn.example/thumbnail.jpg");
+    assert.equal(adminCategory.thumbnailPublicId, `thumbnail-${value.id}`);
+  });
+
+  it("uploads, replaces, and deletes thumbnails independently from opening artwork", async () => {
+    const value = await category(); const token = await admin();
+
+    const opening = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "PUT", body: artworkForm(3) })).json();
+    assert.ok(opening.imageUrl); assert.ok(opening.imagePublicId);
+    assert.equal(opening.thumbnailUrl, null); assert.equal(opening.thumbnailPublicId, null);
+
+    const firstThumbnail = await (await request(`/admin/categories/${value.id}/thumbnail-artwork`, token, { method: "PUT", body: artworkForm(4) })).json();
+    assert.ok(firstThumbnail.thumbnailUrl); assert.ok(firstThumbnail.thumbnailPublicId);
+    assert.equal(firstThumbnail.imageUrl, opening.imageUrl);
+    assert.equal(firstThumbnail.imagePublicId, opening.imagePublicId);
+    const persisted = await prisma.category.findUniqueOrThrow({ where: { id: value.id } });
+    assert.equal(persisted.thumbnailUrl, firstThumbnail.thumbnailUrl);
+    assert.equal(persisted.thumbnailPublicId, firstThumbnail.thumbnailPublicId);
+    assert.deepEqual(storage.deletions, []);
+
+    const secondThumbnail = await (await request(`/admin/categories/${value.id}/thumbnail-artwork`, token, { method: "PUT", body: artworkForm(5) })).json();
+    assert.notEqual(secondThumbnail.thumbnailPublicId, firstThumbnail.thumbnailPublicId);
+    assert.equal(secondThumbnail.imageUrl, opening.imageUrl);
+    assert.equal(secondThumbnail.imagePublicId, opening.imagePublicId);
+    assert.deepEqual(storage.deletions, [firstThumbnail.thumbnailPublicId]);
+
+    const thirdThumbnail = await (await request(`/admin/categories/${value.id}/thumbnail-artwork`, token, { method: "PUT", body: artworkForm(6) })).json();
+    const replacedOpening = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "PUT", body: artworkForm(7) })).json();
+    assert.equal(replacedOpening.thumbnailUrl, thirdThumbnail.thumbnailUrl);
+    assert.equal(replacedOpening.thumbnailPublicId, thirdThumbnail.thumbnailPublicId);
+    assert.deepEqual(storage.deletions, [firstThumbnail.thumbnailPublicId, secondThumbnail.thumbnailPublicId, opening.imagePublicId]);
+
+    const openingRemoved = await (await request(`/admin/categories/${value.id}/artwork`, token, { method: "DELETE" })).json();
+    assert.equal(openingRemoved.imageUrl, null); assert.equal(openingRemoved.imagePublicId, null);
+    assert.equal(openingRemoved.thumbnailUrl, thirdThumbnail.thumbnailUrl);
+    assert.equal(openingRemoved.thumbnailPublicId, thirdThumbnail.thumbnailPublicId);
+    assert.deepEqual(storage.deletions, [firstThumbnail.thumbnailPublicId, secondThumbnail.thumbnailPublicId, opening.imagePublicId, replacedOpening.imagePublicId]);
+
+    const thumbnailRemoved = await (await request(`/admin/categories/${value.id}/thumbnail-artwork`, token, { method: "DELETE" })).json();
+    assert.equal(thumbnailRemoved.thumbnailUrl, null); assert.equal(thumbnailRemoved.thumbnailPublicId, null);
+    assert.equal(thumbnailRemoved.imageUrl, null); assert.equal(thumbnailRemoved.imagePublicId, null);
+    assert.deepEqual(storage.deletions, [firstThumbnail.thumbnailPublicId, secondThumbnail.thumbnailPublicId, opening.imagePublicId, replacedOpening.imagePublicId, thirdThumbnail.thumbnailPublicId]);
+  });
+
+  it("rejects unauthenticated, non-Admin, and invalid thumbnail uploads", async () => {
+    const value = await category(); const token = await admin(); const customer = await admin("CUSTOMER");
+    const path = `/admin/categories/${value.id}/thumbnail-artwork`;
+    assert.equal((await request(path, undefined, { method: "PUT", body: artworkForm() })).status, 401);
+    assert.equal((await request(path, customer, { method: "PUT", body: artworkForm() })).status, 403);
+    assert.equal((await request(path, undefined, { method: "DELETE" })).status, 401);
+    assert.equal((await request(path, customer, { method: "DELETE" })).status, 403);
+
+    const invalid = new FormData();
+    invalid.append("file", new Blob(["not an image"], { type: "image/jpeg" }), "bad.jpg");
+    const response = await request(path, token, { method: "PUT", body: invalid });
+    assert.equal(response.status, 400);
+    assert.equal(storage.uploads.length, 0);
+    const unchanged = await prisma.category.findUniqueOrThrow({ where: { id: value.id } });
+    assert.equal(unchanged.thumbnailUrl, null); assert.equal(unchanged.thumbnailPublicId, null);
+    assert.equal(unchanged.imageUrl, null); assert.equal(unchanged.imagePublicId, null);
+  });
+
+  it("keeps a stored asset when the other artwork slot still references its public ID", async () => {
+    const value = await category(); const token = await admin();
+    const sharedPublicId = `colorful-life/category-artwork/${value.id}-00000000-0000-4000-8000-000000000001`;
+    await prisma.category.update({ where: { id: value.id }, data: {
+      imageUrl: "https://cdn.example/shared.jpg", imagePublicId: sharedPublicId,
+      thumbnailUrl: "https://cdn.example/shared.jpg", thumbnailPublicId: sharedPublicId,
+    } });
+
+    const removed = await (await request(`/admin/categories/${value.id}/thumbnail-artwork`, token, { method: "DELETE" })).json();
+    assert.equal(removed.thumbnailUrl, null); assert.equal(removed.thumbnailPublicId, null);
+    assert.equal(removed.imageUrl, "https://cdn.example/shared.jpg");
+    assert.equal(removed.imagePublicId, sharedPublicId);
+    assert.deepEqual(storage.deletions, []);
   });
   it("returns 404 for missing artwork targets and leaves state unchanged on upload failure", async () => {
     const token = await admin();
