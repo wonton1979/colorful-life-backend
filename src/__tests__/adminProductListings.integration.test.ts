@@ -128,6 +128,25 @@ describe("Admin ProductListing feed", () => {
     assert.equal((await request(`/admin/categories/2147483647/product-availability`)).status, 404);
   });
 
+  it("counts a product with both NEW and USED_LIKE_NEW stock once", async () => {
+    const category = await prisma.category.create({ data: { name: `Dual condition ${randomUUID()}` } });
+    ids.categories.push(category.id);
+    const lego = await product(category.id);
+    await listing(lego.id, { currentStock: 2 });
+    await listing(lego.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/dual-condition.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: lego.id } }), 2);
+    assert.deepEqual(await get(`/admin/categories/${category.id}/product-availability`), {
+      totalProducts: 1,
+      activeProducts: 1,
+      inactiveProducts: 0,
+    });
+  });
+
   it("uses the current database role rather than an ADMIN role embedded in an old JWT", async () => {
     const adminId = (jwt.verify(adminToken, config.JWT_SECRET) as { id: number }).id;
     await prisma.user.update({ where: { id: adminId }, data: { role: "CUSTOMER" } });
@@ -251,6 +270,40 @@ describe("Admin ProductListing feed", () => {
       usedConditionPhotos: { create: { url: "https://images.test/summary-condition.jpg", publicId: randomUUID(), sortOrder: 0 } },
     });
 
+    const newOnlyProduct = await product(category.id);
+    await listing(newOnlyProduct.id, { currentStock: 2 });
+
+    const usedOnlyProduct = await product(category.id);
+    await listing(usedOnlyProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/summary-used-only.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+
+    const mixedAvailabilityProduct = await product(category.id);
+    await listing(mixedAvailabilityProduct.id, { currentStock: 1 });
+    const outOfStockUsedListing = await listing(mixedAvailabilityProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/summary-mixed.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+    await prisma.productListing.update({
+      where: { id: outOfStockUsedListing.id },
+      data: { usedLifecycle: "SOLD", currentStock: 0 },
+    });
+
+    const noStockAcrossConditionsProduct = await product(category.id);
+    await listing(noStockAcrossConditionsProduct.id);
+    const soldUsedListing = await listing(noStockAcrossConditionsProduct.id, {
+      condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
+      damageDescription: "Box has a small crease",
+      usedConditionPhotos: { create: { url: "https://images.test/summary-no-stock.jpg", publicId: randomUUID(), sortOrder: 0 } },
+    });
+    await prisma.productListing.update({
+      where: { id: soldUsedListing.id },
+      data: { usedLifecycle: "SOLD", currentStock: 0 },
+    });
+
     const zeroStockProduct = await product(category.id);
     await listing(zeroStockProduct.id);
 
@@ -261,13 +314,13 @@ describe("Admin ProductListing feed", () => {
     await listing(inactiveListingProduct.id, { active: false, currentStock: 4 });
 
     const soldUsedProduct = await product(category.id);
-    const soldUsedListing = await listing(soldUsedProduct.id, {
+    const soldUsedProductListing = await listing(soldUsedProduct.id, {
       condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
       damageDescription: "Box has a small crease",
       usedConditionPhotos: { create: { url: "https://images.test/summary-condition.jpg", publicId: randomUUID(), sortOrder: 0 } },
     });
     await prisma.productListing.update({
-      where: { id: soldUsedListing.id },
+      where: { id: soldUsedProductListing.id },
       data: { usedLifecycle: "SOLD", currentStock: 0 },
     });
 
@@ -283,11 +336,13 @@ describe("Admin ProductListing feed", () => {
     const path = `/admin/categories/${category.id}/product-availability`;
     const summary = await get(path);
     assert.deepEqual(summary, {
-      totalProducts: 7,
-      activeProducts: 2,
-      inactiveProducts: 5,
+      totalProducts: 11,
+      activeProducts: 5,
+      inactiveProducts: 6,
     });
     assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
+    assert.equal(await prisma.legoProduct.count({ where: { categoryId: category.id } }), summary.totalProducts);
+    assert.equal(await prisma.productListing.count({ where: { legoProduct: { categoryId: category.id } } }), 13);
     assert.equal(await prisma.productListing.count({ where: { legoProductId: noListingProduct.id } }), 0);
 
     const firstListingPage = await get("/admin/product-listings?page=1&pageSize=1");
