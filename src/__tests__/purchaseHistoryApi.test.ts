@@ -230,6 +230,8 @@ describe("Purchase History API", () => {
     assert.strictEqual(body1.pagination.page, 1);
     assert.strictEqual(body1.pagination.limit, 2);
     assert.strictEqual(body1.pagination.total, 5);
+    assert.strictEqual(body1.pagination.pageSize, 2);
+    assert.strictEqual(body1.pagination.totalItems, 5);
     assert.strictEqual(body1.pagination.totalPages, 3);
     assert.strictEqual(body1.purchases.length, 2);
     const resPage2 = await fetch(`${url}/purchases?page=2&limit=2`, {
@@ -250,6 +252,10 @@ describe("Purchase History API", () => {
       { query: "limit=101", status: 400 },
       { query: "limit=xyz", status: 400 },
       { query: "limit=10x", status: 400 },
+      { query: "pageSize=0", status: 400 },
+      { query: "pageSize=101", status: 400 },
+      { query: "pageSize=1.5", status: 400 },
+      { query: "page=9007199254740991&pageSize=100", status: 400 },
     ];
     for (const c of cases) {
       const res = await fetch(`${url}/purchases?${c.query}`, {
@@ -309,6 +315,104 @@ describe("Purchase History API", () => {
     // Verify secondary ordering by id descending
     assert.strictEqual(body.purchases[1].id, Math.max(olderId1, olderId2));
     assert.strictEqual(body.purchases[2].id, Math.min(olderId1, olderId2));
+  });
+
+  it("searches exact and partial order numbers before database pagination", async () => {
+    const newestNonMatch = await createPurchase(userId, {
+      reference: "OTHER-NEWEST-001",
+      orderDate: new Date("2026-09-28T12:00:00.000Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+    const firstMatch = await createPurchase(userId, {
+      reference: "171-1234567-1234567",
+      orderDate: new Date("2026-09-27T12:00:00.000Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+    const secondMatch = await createPurchase(userId, {
+      reference: "171-7654321-7654321",
+      orderDate: new Date("2026-09-26T12:00:00.000Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+
+    const exactResponse = await fetch(`${url}/purchases?search=171-1234567-1234567`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(exactResponse.status, 200);
+    const exactBody = await exactResponse.json();
+    assert.deepEqual(exactBody.purchases.map((purchase: { id: number }) => purchase.id), [firstMatch]);
+    assert.deepEqual(exactBody.pagination, {
+      page: 1, pageSize: 20, totalItems: 1, totalPages: 1, limit: 20, total: 1,
+    });
+
+    const firstPageResponse = await fetch(`${url}/purchases?search=171-&page=1&pageSize=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const firstPage = await firstPageResponse.json();
+    assert.equal(firstPageResponse.status, 200);
+    assert.deepEqual(firstPage.purchases.map((purchase: { id: number }) => purchase.id), [firstMatch]);
+    assert.deepEqual(firstPage.pagination, {
+      page: 1, pageSize: 1, totalItems: 2, totalPages: 2, limit: 1, total: 2,
+    });
+    assert.notEqual(firstPage.purchases[0].id, newestNonMatch);
+
+    const secondPageResponse = await fetch(`${url}/purchases?search=171-&page=2&pageSize=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const secondPage = await secondPageResponse.json();
+    assert.equal(secondPageResponse.status, 200);
+    assert.deepEqual(secondPage.purchases.map((purchase: { id: number }) => purchase.id), [secondMatch]);
+    assert.equal(secondPage.pagination.totalItems, 2);
+    assert.equal(secondPage.pagination.totalPages, 2);
+
+    const noMatchesResponse = await fetch(`${url}/purchases?search=NO-SUCH-ORDER`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const noMatches = await noMatchesResponse.json();
+    assert.equal(noMatchesResponse.status, 200);
+    assert.deepEqual(noMatches.purchases, []);
+    assert.equal(noMatches.pagination.totalItems, 0);
+    assert.equal(noMatches.pagination.totalPages, 0);
+  });
+
+  it("searches the purchase date by its YYYY-MM-DD calendar date", async () => {
+    const endOfDay = await createPurchase(userId, {
+      reference: "DATE-END-OF-DAY",
+      orderDate: new Date("2026-09-27T23:59:59.999Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+    const startOfDay = await createPurchase(userId, {
+      reference: "DATE-START-OF-DAY",
+      orderDate: new Date("2026-09-27T00:00:00.000Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+    await createPurchase(userId, {
+      reference: "DATE-NEXT-DAY",
+      orderDate: new Date("2026-09-28T00:00:00.000Z"),
+      docs: [{ partNumber: 1, importHash: `hash-${Math.random()}` }],
+    });
+
+    const response = await fetch(`${url}/purchases?search=2026-09-27&pageSize=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = await response.json();
+    assert.equal(response.status, 200);
+    assert.deepEqual(body.purchases.map((purchase: { id: number }) => purchase.id), [endOfDay]);
+    assert.equal(body.pagination.totalItems, 2);
+    assert.equal(body.pagination.totalPages, 2);
+
+    const secondPage = await fetch(`${url}/purchases?search=2026-09-27&page=2&pageSize=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const secondBody = await secondPage.json();
+    assert.equal(secondPage.status, 200);
+    assert.deepEqual(secondBody.purchases.map((purchase: { id: number }) => purchase.id), [startOfDay]);
+  });
+
+  it("rejects malformed date-like search input", async () => {
+    const response = await fetch(`${url}/purchases?search=2026-02-30`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    assert.equal(response.status, 400);
   });
 
   it("prioritizes unresolved and partial inventory work while treating excluded lines as resolved", async () => {
