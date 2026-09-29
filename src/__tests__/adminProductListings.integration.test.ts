@@ -124,7 +124,7 @@ describe("Admin ProductListing feed", () => {
     const path = `/admin/categories/${category.id}/product-availability`;
     assert.equal((await request(path, "")).status, 401);
     assert.equal((await request(path, customerToken)).status, 403);
-    assert.deepEqual(await get(path), { totalProducts: 0, activeProducts: 0, inactiveProducts: 0 });
+    assert.deepEqual(await get(path), { totalProducts: 0, totalInventory: 0, activeProducts: 0, inactiveProducts: 0 });
     assert.equal((await request(`/admin/categories/2147483647/product-availability`)).status, 404);
   });
 
@@ -134,7 +134,7 @@ describe("Admin ProductListing feed", () => {
     assert.equal((await request(path, "invalid-token")).status, 401);
     assert.equal((await request(path, customerToken)).status, 403);
     const summary = await get(path);
-    assert.deepEqual(Object.keys(summary).sort(), ["activeProducts", "inactiveProducts", "totalProducts"]);
+    assert.deepEqual(Object.keys(summary).sort(), ["activeProducts", "inactiveProducts", "totalInventory", "totalProducts"]);
     assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
   });
 
@@ -146,36 +146,54 @@ describe("Admin ProductListing feed", () => {
     const before = await get("/admin/products/product-availability");
 
     const multiOfferProduct = await product(category.id);
-    await listing(multiOfferProduct.id, { currentStock: 3, reservedStock: 1 });
+    await listing(multiOfferProduct.id, { currentStock: 3 });
     await listing(multiOfferProduct.id, {
       condition: "USED_LIKE_NEW", usedLifecycle: "AVAILABLE", currentStock: 1,
       damageDescription: "Box has a small crease",
       usedConditionPhotos: { create: { url: "https://images.test/global-summary.jpg", publicId: randomUUID(), sortOrder: 0 } },
     });
+    // Each available Used offer represents one physical item. Additional NEW
+    // stock keeps this product's total listing inventory at five units.
+    await listing(multiOfferProduct.id, {
+      currentStock: 1,
+    });
 
     const inactiveInSameCategory = await product(category.id);
-    await listing(inactiveInSameCategory.id);
+    await listing(inactiveInSameCategory.id, { active: false, currentStock: 4 });
 
     const inactiveInOtherCategory = await product(otherCategory.id);
-    await listing(inactiveInOtherCategory.id, { active: false, currentStock: 5 });
+    await listing(inactiveInOtherCategory.id, { currentStock: 5, reservedStock: 2 });
 
     const noListingProduct = await product(null);
+    const noStockProduct = await product(category.id);
+    await listing(noStockProduct.id, { currentStock: 0 });
+    const unassignedProduct = await product(null);
+    await listing(unassignedProduct.id, { active: false, currentStock: 7 });
 
     const summary = await get("/admin/products/product-availability");
     assert.deepEqual(summary, {
-      totalProducts: before.totalProducts + 4,
-      activeProducts: before.activeProducts + 1,
-      inactiveProducts: before.inactiveProducts + 3,
+      totalProducts: before.totalProducts + 6,
+      totalInventory: before.totalInventory + 21,
+      activeProducts: before.activeProducts + 2,
+      inactiveProducts: before.inactiveProducts + 4,
     });
     assert.equal(summary.totalProducts, summary.activeProducts + summary.inactiveProducts);
-    assert.equal(await prisma.productListing.count({ where: { legoProductId: multiOfferProduct.id } }), 2);
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: multiOfferProduct.id } }), 3);
     assert.equal(await prisma.productListing.count({ where: { legoProductId: noListingProduct.id } }), 0);
+    assert.equal(await prisma.productListing.count({ where: { legoProductId: unassignedProduct.id } }), 1);
 
     // Both summaries use the same shared service and sellability predicate.
     assert.deepEqual(await get(`/admin/categories/${category.id}/product-availability`), {
-      totalProducts: 2,
+      totalProducts: 3,
+      totalInventory: 9,
       activeProducts: 1,
-      inactiveProducts: 1,
+      inactiveProducts: 2,
+    });
+    assert.deepEqual(await get(`/admin/categories/${otherCategory.id}/product-availability`), {
+      totalProducts: 1,
+      totalInventory: 5,
+      activeProducts: 1,
+      inactiveProducts: 0,
     });
 
     await get("/admin/product-listings?page=1&pageSize=1");
@@ -198,6 +216,7 @@ describe("Admin ProductListing feed", () => {
     assert.equal(await prisma.productListing.count({ where: { legoProductId: lego.id } }), 2);
     assert.deepEqual(await get(`/admin/categories/${category.id}/product-availability`), {
       totalProducts: 1,
+      totalInventory: 3,
       activeProducts: 1,
       inactiveProducts: 0,
     });
@@ -393,6 +412,7 @@ describe("Admin ProductListing feed", () => {
     const summary = await get(path);
     assert.deepEqual(summary, {
       totalProducts: 11,
+      totalInventory: 15,
       activeProducts: 5,
       inactiveProducts: 6,
     });
