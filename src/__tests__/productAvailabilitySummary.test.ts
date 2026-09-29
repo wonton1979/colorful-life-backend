@@ -5,11 +5,12 @@ import { createProductAvailabilitySummaryService } from "../domain/products/prod
 
 it("returns zero counts when the global catalogue query has no products", async () => {
   const db = {
-    $queryRaw: async () => [{ totalProducts: 0n, activeProducts: 0n }],
+    $queryRaw: async () => [{ totalProducts: 0n, totalInventory: 0n, activeProducts: 0n }],
   } as unknown as PrismaClient;
 
   assert.deepEqual(await createProductAvailabilitySummaryService(db).global(), {
     totalProducts: 0,
+    totalInventory: 0,
     activeProducts: 0,
     inactiveProducts: 0,
   });
