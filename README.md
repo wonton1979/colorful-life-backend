@@ -458,6 +458,61 @@ Provider network requests are intentionally performed **outside database transac
 
 ---
 
+## Customer checkout API (Issue #144)
+
+All three checkout endpoints require an authenticated, email-verified customer.
+
+### `POST /orders`
+
+The existing validated payload is `{ items: [{ productListingId, quantity }], deliveryAddress?: { recipientName, line1, line2?, city, county?, postcode, countryCode, phone? } }`. Prices and billing snapshots remain server-authoritative.
+
+Send `Idempotency-Key: <client-generated-key>` before the first creation attempt and retain it until the result is known. Keys accept 1–128 printable ASCII characters without spaces. The header is optional for backward compatibility; requests without it have no retry guarantee.
+
+The same customer, key and validated request return the same persisted order with its original pricing and address snapshots, including after an ambiguous HTTP result or process restart. Both first creation and replay return **201** using the existing response shape. A replay returns the order's current lifecycle state. Item ordering and JSON field ordering do not affect identity; changing quantity, listing or delivery intent does. Saved address or server price changes do not change an existing request's identity.
+
+Errors use `{ "error": { "code": "...", "message": "..." } }`:
+
+- **400 `INVALID_IDEMPOTENCY_KEY`**: invalid key format.
+- **409 `ORDER_IDEMPOTENCY_MISMATCH`**: key already used by this customer for a different request. Use the original payload to recover, or a new key for a new intentional order.
+- **403 `EMAIL_VERIFICATION_REQUIRED`**: verify the account before creating an order.
+
+Existing payload, address, listing and stock validation errors remain unchanged. Failed transactions do not consume the key. A committed order retains the key even after payment, expiry or cancellation; retries never create another order or extend its reservation.
+
+The order stores a unique `(userId, creationIdempotencyKey)` and SHA-256 canonical request hash. A transaction-scoped PostgreSQL advisory lock serializes matching requests across processes. Identity, order/items and stock reservations commit atomically. These internal identity fields are omitted from the creation API response. This is separate from Stripe's existing `order-<id>-stripe` provider idempotency key.
+
+### `GET /orders/:orderId`
+
+An owner can recover checkout using the existing safe order/item fields plus:
+
+- `payment: null` before a payment exists; otherwise exactly `{ status, paidAt }`. `paidAt` is an ISO timestamp or null.
+- `reservationExpiresAt`: ISO timestamp or null (cleared when the reservation is consumed or released).
+- Billing snapshot fields: `billingRecipientName`, `billingLine1`, `billingLine2`, `billingCity`, `billingCounty`, `billingPostcode`, `billingCountryCode`, `billingPhone`.
+- Delivery snapshot fields: `deliveryRecipientName`, `deliveryLine1`, `deliveryLine2`, `deliveryCity`, `deliveryCounty`, `deliveryPostcode`, `deliveryCountryCode`, `deliveryPhone`.
+
+Optional snapshot values are null. Provider references, client secrets, raw payments, refund accounting and webhook details are excluded. Another customer's order and a missing order both return **404**. `GET /orders` retains its existing list projection.
+
+### `POST /orders/:orderId/payments/stripe`
+
+Only a `PENDING` order whose reservation deadline has not elapsed can start/reuse normal checkout. Existing legacy PENDING records with a null deadline retain their previous eligibility. Already successful payments cannot restart or create another charge. The successful response remains **201 `{ clientSecret }`**; Stripe network calls remain outside database transactions and provider idempotency is unchanged.
+
+Stable conflict errors use the same error envelope:
+
+- **409 `ORDER_EXPIRED`**: status EXPIRED or elapsed reservation deadline.
+- **409 `ORDER_NOT_PAYABLE`**: CONFIRMED, DISPATCHED, COMPLETED, CANCELLED or RETURNED.
+- **409 `PAYMENT_ALREADY_COMPLETED`**: successful payment, another payment provider, or success reconciled while initiation was in flight.
+
+Missing/other-owner orders remain **404** and provider unavailability remains **503**. Re-read the order after a conflict or ambiguous initiation response.
+
+### Authoritative confirmation and recovery
+
+**Stripe browser/client success is not authoritative.** Clients must re-read `GET /orders/:orderId` and require successful payment plus a confirmed/fulfilment order state before displaying normal confirmation. A `SUCCEEDED` payment attached to an EXPIRED or CANCELLED order is a late-payment exception, not normal fulfilment. Pending/processing responses require continued backend polling/recovery.
+
+A verified, correctly correlated Stripe success with matching amount and GBP currency atomically sets payment SUCCEEDED/paidAt and confirms a still-PENDING order through the existing reservation conversion logic. The automated inventory movement is attributed to the order customer. Receipt deduplication, order-row locks and a conditional initiation update preserve exactly-once inventory conversion and monotonic payment success. Inventory failure rolls back the receipt and payment transition so webhook redelivery or reconciliation with the same event can retry; it cannot silently commit success without confirmation.
+
+Expiry, cancellation and confirmation serialize on the same order row. If expiry/cancellation commits first, late success records payment evidence and a refund/reconciliation exception without resurrecting the order. If success commits first, expiry becomes a no-op. A deadline alone does not release stock: while the order remains PENDING with its reservation, authoritative reconciliation can win before the expiry transaction. Existing refund infrastructure handles late-payment exceptions; this change does not automatically issue a refund.
+
+---
+
 ## Idempotency
 
 Payment and refund operations use stable idempotency identities.

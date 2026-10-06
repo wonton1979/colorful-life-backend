@@ -1,5 +1,6 @@
+import { sendApiError } from "../utils/apiErrorResponse.js";
 import type { Request, Response } from "express";
-import { createOrReuseStripePaymentIntent, StripePaymentAlreadyCompletedError, StripePaymentExpiredError, StripePaymentOrderNotFoundError, StripePaymentOwnershipError, StripePaymentProviderError } from "../domain/payments/stripePaymentService.js";
+import { createOrReuseStripePaymentIntent, StripePaymentAlreadyCompletedError, StripePaymentExpiredError, StripePaymentOrderNotFoundError, StripePaymentOwnershipError, StripePaymentProviderError, StripePaymentNotPayableError } from "../domain/payments/stripePaymentService.js";
 
 export async function createStripePaymentIntentHandler(req: Request, res: Response) {
   const orderId = Number(req.params.orderId);
@@ -11,7 +12,9 @@ export async function createStripePaymentIntentHandler(req: Request, res: Respon
     return res.status(201).json({ clientSecret: result.clientSecret });
   } catch (error) {
     if (error instanceof StripePaymentOrderNotFoundError || error instanceof StripePaymentOwnershipError) return res.status(404).json({ error: "Order not found" });
-    if (error instanceof StripePaymentExpiredError || error instanceof StripePaymentAlreadyCompletedError) return res.status(409).json({ error: error.message || "Order is not payable" });
+    if (error instanceof StripePaymentExpiredError) return sendApiError(res, 409, "ORDER_EXPIRED", "Order reservation has expired");
+    if (error instanceof StripePaymentAlreadyCompletedError) return sendApiError(res, 409, "PAYMENT_ALREADY_COMPLETED", "Order already has a completed payment or another provider");
+    if (error instanceof StripePaymentNotPayableError) return sendApiError(res, 409, "ORDER_NOT_PAYABLE", "Only a PENDING order can initiate checkout payment");
     if (error instanceof StripePaymentProviderError) return res.status(503).json({ error: "Payment service unavailable" });
     console.error("Stripe payment initiation error", error);
     return res.status(500).json({ error: "Internal server error" });

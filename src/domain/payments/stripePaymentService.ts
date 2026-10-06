@@ -8,6 +8,7 @@ export class StripePaymentOrderNotFoundError extends Error {}
 export class StripePaymentOwnershipError extends Error {}
 export class StripePaymentExpiredError extends Error {}
 export class StripePaymentAlreadyCompletedError extends Error {}
+export class StripePaymentNotPayableError extends Error {}
 export class StripePaymentProviderError extends Error {}
 
 export type StripePaymentClient = Pick<Stripe, "paymentIntents">;
@@ -46,6 +47,7 @@ export async function createOrReuseStripePaymentIntent(
     if (!order) throw new StripePaymentOrderNotFoundError();
     if (order.userId !== userId) throw new StripePaymentOwnershipError();
     if (order.status === OrderStatus.EXPIRED || (order.reservationExpiresAt && order.reservationExpiresAt <= new Date())) throw new StripePaymentExpiredError();
+    if (order.status !== OrderStatus.PENDING) throw new StripePaymentNotPayableError();
     const amount = toMinorUnits(order.totalAmount);
     const existing = await tx.payment.findUnique({ where: { orderId } });
     if (existing) {
@@ -71,6 +73,16 @@ export async function createOrReuseStripePaymentIntent(
 
   // Initiation/retrieval is not the authoritative payment-success boundary.
   // Verified webhook/reconciliation processing owns SUCCEEDED and paidAt.
-  const payment = await prisma.payment.update({ where: { id: local.payment.id }, data: { providerReference: intent.id, status: PaymentStatus.PROCESSING, paidAt: null } });
+  const payment = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
+    // A webhook may have finalized payment while the network request was in flight.
+    await tx.payment.updateMany({
+      where: { id: local.payment.id, status: { not: PaymentStatus.SUCCEEDED } },
+      data: { providerReference: intent.id, status: PaymentStatus.PROCESSING },
+    });
+    const current = await tx.payment.findUniqueOrThrow({ where: { id: local.payment.id } });
+    return current;
+  });
+  if (payment.status === PaymentStatus.SUCCEEDED) throw new StripePaymentAlreadyCompletedError();
   return { paymentId: payment.id, providerReference: intent.id, clientSecret: intent.client_secret, status: intent.status };
 }

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 // Order creation service. Implements the domain rules for creating a
 // customer order without touching the database outside a single Prisma
 // transaction. The service is intentionally lightweight and returns the
@@ -19,6 +20,28 @@ import {
 import { OrderStatus } from "../../generated/prisma-client/enums.js";
 import { expireOrderReservation } from "./orderExpiryService.js";
 
+export class OrderIdempotencyMismatchError extends Error {
+  constructor() { super("Idempotency key was already used with a different order request"); }
+}
+
+export class InvalidOrderIdempotencyKeyError extends Error {
+  constructor() { super("Idempotency-Key must contain 1–128 printable ASCII characters without spaces"); }
+}
+
+function requestHash(input: CreateOrderInput) {
+  const address = input.deliveryAddress;
+  // Hash validated client intent, independent of prices and mutable saved addresses.
+  return createHash("sha256").update(JSON.stringify({
+    items: [...input.items].sort((a, b) => a.productListingId - b.productListingId)
+      .map(({ productListingId, quantity }) => ({ productListingId, quantity })),
+    deliveryAddress: address ? {
+      recipientName: address.recipientName, line1: address.line1, line2: address.line2 ?? null,
+      city: address.city, county: address.county ?? null, postcode: address.postcode,
+      countryCode: address.countryCode, phone: address.phone ?? null,
+    } : null,
+  })).digest("hex");
+}
+
 /**
  * Creates a new order for the supplied user.
  *
@@ -29,7 +52,12 @@ import { expireOrderReservation } from "./orderExpiryService.js";
 export async function createOrder(
   userId: number,
   input: CreateOrderInput,
+  idempotencyKey?: string,
 ){
+  if (idempotencyKey !== undefined && !/^[\x21-\x7e]{1,128}$/.test(idempotencyKey)) {
+    throw new InvalidOrderIdempotencyKeyError();
+  }
+  const hash = idempotencyKey === undefined ? undefined : requestHash(input);
   // --- 1. Check for duplicate product listings in the request payload
   const listingIdsSet = new Set<number>();
   for (const item of input.items) {
@@ -49,6 +77,17 @@ export async function createOrder(
   });
   if (!currentUser) throw new OrderUserNotFoundError();
   if (!currentUser.emailVerified) throw new EmailVerificationRequiredError();
+
+  if (idempotencyKey !== undefined) {
+    const existing = await prisma.order.findUnique({
+      where: { userId_creationIdempotencyKey: { userId, creationIdempotencyKey: idempotencyKey } },
+      include: { orderItems: true },
+    });
+    if (existing) {
+      if (existing.creationRequestHash !== hash) throw new OrderIdempotencyMismatchError();
+      return existing;
+    }
+  }
 
   const requestedListingIds = Array.from(listingIdsSet);
   const expiredCandidates = await prisma.order.findMany({
@@ -75,6 +114,20 @@ export async function createOrder(
     });
     if (!user) throw new OrderUserNotFoundError();
     if (!user.emailVerified) throw new EmailVerificationRequiredError();
+
+    if (idempotencyKey !== undefined) {
+      // Transaction-scoped PostgreSQL lock serializes same-customer/key attempts
+      // across processes. The unique index is a second durable safeguard.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`order-create:${userId}:${idempotencyKey}`}, 0))`;
+      const existing = await tx.order.findUnique({
+        where: { userId_creationIdempotencyKey: { userId, creationIdempotencyKey: idempotencyKey } },
+        include: { orderItems: true },
+      });
+      if (existing) {
+        if (existing.creationRequestHash !== hash) throw new OrderIdempotencyMismatchError();
+        return existing;
+      }
+    }
 
     // 2a. Billing address
     const defaultBillingAddrs = await tx.address.findMany({
@@ -163,6 +216,8 @@ export async function createOrder(
     const order = await tx.order.create({
       data: {
         userId,
+        creationIdempotencyKey: idempotencyKey,
+        creationRequestHash: hash,
         billingRecipientName: billing.recipientName,
         billingLine1: billing.line1,
         billingLine2: billing.line2 ?? undefined,

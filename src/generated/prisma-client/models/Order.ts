@@ -44,6 +44,8 @@ export type OrderMinAggregateOutputType = {
   id: number | null
   userId: number | null
   status: $Enums.OrderStatus | null
+  creationIdempotencyKey: string | null
+  creationRequestHash: string | null
   billingRecipientName: string | null
   billingLine1: string | null
   billingLine2: string | null
@@ -78,6 +80,8 @@ export type OrderMaxAggregateOutputType = {
   id: number | null
   userId: number | null
   status: $Enums.OrderStatus | null
+  creationIdempotencyKey: string | null
+  creationRequestHash: string | null
   billingRecipientName: string | null
   billingLine1: string | null
   billingLine2: string | null
@@ -112,6 +116,8 @@ export type OrderCountAggregateOutputType = {
   id: number
   userId: number
   status: number
+  creationIdempotencyKey: number
+  creationRequestHash: number
   billingRecipientName: number
   billingLine1: number
   billingLine2: number
@@ -162,6 +168,8 @@ export type OrderMinAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  creationIdempotencyKey?: true
+  creationRequestHash?: true
   billingRecipientName?: true
   billingLine1?: true
   billingLine2?: true
@@ -196,6 +204,8 @@ export type OrderMaxAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  creationIdempotencyKey?: true
+  creationRequestHash?: true
   billingRecipientName?: true
   billingLine1?: true
   billingLine2?: true
@@ -230,6 +240,8 @@ export type OrderCountAggregateInputType = {
   id?: true
   userId?: true
   status?: true
+  creationIdempotencyKey?: true
+  creationRequestHash?: true
   billingRecipientName?: true
   billingLine1?: true
   billingLine2?: true
@@ -351,6 +363,8 @@ export type OrderGroupByOutputType = {
   id: number
   userId: number
   status: $Enums.OrderStatus
+  creationIdempotencyKey: string | null
+  creationRequestHash: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2: string | null
@@ -408,6 +422,8 @@ export type OrderWhereInput = {
   id?: Prisma.IntFilter<"Order"> | number
   userId?: Prisma.IntFilter<"Order"> | number
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.StringNullableFilter<"Order"> | string | null
+  creationRequestHash?: Prisma.StringNullableFilter<"Order"> | string | null
   billingRecipientName?: Prisma.StringFilter<"Order"> | string
   billingLine1?: Prisma.StringFilter<"Order"> | string
   billingLine2?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -446,6 +462,8 @@ export type OrderOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  creationIdempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  creationRequestHash?: Prisma.SortOrderInput | Prisma.SortOrder
   billingRecipientName?: Prisma.SortOrder
   billingLine1?: Prisma.SortOrder
   billingLine2?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -482,11 +500,14 @@ export type OrderOrderByWithRelationInput = {
 
 export type OrderWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  userId_creationIdempotencyKey?: Prisma.OrderUserIdCreationIdempotencyKeyCompoundUniqueInput
   AND?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
   OR?: Prisma.OrderWhereInput[]
   NOT?: Prisma.OrderWhereInput | Prisma.OrderWhereInput[]
   userId?: Prisma.IntFilter<"Order"> | number
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.StringNullableFilter<"Order"> | string | null
+  creationRequestHash?: Prisma.StringNullableFilter<"Order"> | string | null
   billingRecipientName?: Prisma.StringFilter<"Order"> | string
   billingLine1?: Prisma.StringFilter<"Order"> | string
   billingLine2?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -519,12 +540,14 @@ export type OrderWhereUniqueInput = Prisma.AtLeast<{
   orderItems?: Prisma.OrderItemListRelationFilter
   payments?: Prisma.PaymentListRelationFilter
   refunds?: Prisma.RefundListRelationFilter
-}, "id">
+}, "id" | "userId_creationIdempotencyKey">
 
 export type OrderOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  creationIdempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  creationRequestHash?: Prisma.SortOrderInput | Prisma.SortOrder
   billingRecipientName?: Prisma.SortOrder
   billingLine1?: Prisma.SortOrder
   billingLine2?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -567,6 +590,8 @@ export type OrderScalarWhereWithAggregatesInput = {
   id?: Prisma.IntWithAggregatesFilter<"Order"> | number
   userId?: Prisma.IntWithAggregatesFilter<"Order"> | number
   status?: Prisma.EnumOrderStatusWithAggregatesFilter<"Order"> | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
+  creationRequestHash?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
   billingRecipientName?: Prisma.StringWithAggregatesFilter<"Order"> | string
   billingLine1?: Prisma.StringWithAggregatesFilter<"Order"> | string
   billingLine2?: Prisma.StringNullableWithAggregatesFilter<"Order"> | string | null
@@ -599,6 +624,8 @@ export type OrderScalarWhereWithAggregatesInput = {
 
 export type OrderCreateInput = {
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -637,6 +664,8 @@ export type OrderUncheckedCreateInput = {
   id?: number
   userId: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -672,6 +701,8 @@ export type OrderUncheckedCreateInput = {
 
 export type OrderUpdateInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -710,6 +741,8 @@ export type OrderUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -747,6 +780,8 @@ export type OrderCreateManyInput = {
   id?: number
   userId: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -779,6 +814,8 @@ export type OrderCreateManyInput = {
 
 export type OrderUpdateManyMutationInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -813,6 +850,8 @@ export type OrderUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -853,10 +892,17 @@ export type OrderOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type OrderUserIdCreationIdempotencyKeyCompoundUniqueInput = {
+  userId: number
+  creationIdempotencyKey: string
+}
+
 export type OrderCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  creationIdempotencyKey?: Prisma.SortOrder
+  creationRequestHash?: Prisma.SortOrder
   billingRecipientName?: Prisma.SortOrder
   billingLine1?: Prisma.SortOrder
   billingLine2?: Prisma.SortOrder
@@ -898,6 +944,8 @@ export type OrderMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  creationIdempotencyKey?: Prisma.SortOrder
+  creationRequestHash?: Prisma.SortOrder
   billingRecipientName?: Prisma.SortOrder
   billingLine1?: Prisma.SortOrder
   billingLine2?: Prisma.SortOrder
@@ -932,6 +980,8 @@ export type OrderMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  creationIdempotencyKey?: Prisma.SortOrder
+  creationRequestHash?: Prisma.SortOrder
   billingRecipientName?: Prisma.SortOrder
   billingLine1?: Prisma.SortOrder
   billingLine2?: Prisma.SortOrder
@@ -1072,6 +1122,8 @@ export type OrderUpdateOneRequiredWithoutOrderItemsNestedInput = {
 
 export type OrderCreateWithoutUserInput = {
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1108,6 +1160,8 @@ export type OrderCreateWithoutUserInput = {
 export type OrderUncheckedCreateWithoutUserInput = {
   id?: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1174,6 +1228,8 @@ export type OrderScalarWhereInput = {
   id?: Prisma.IntFilter<"Order"> | number
   userId?: Prisma.IntFilter<"Order"> | number
   status?: Prisma.EnumOrderStatusFilter<"Order"> | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.StringNullableFilter<"Order"> | string | null
+  creationRequestHash?: Prisma.StringNullableFilter<"Order"> | string | null
   billingRecipientName?: Prisma.StringFilter<"Order"> | string
   billingLine1?: Prisma.StringFilter<"Order"> | string
   billingLine2?: Prisma.StringNullableFilter<"Order"> | string | null
@@ -1206,6 +1262,8 @@ export type OrderScalarWhereInput = {
 
 export type OrderCreateWithoutPaymentsInput = {
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1243,6 +1301,8 @@ export type OrderUncheckedCreateWithoutPaymentsInput = {
   id?: number
   userId: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1293,6 +1353,8 @@ export type OrderUpdateToOneWithWhereWithoutPaymentsInput = {
 
 export type OrderUpdateWithoutPaymentsInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1330,6 +1392,8 @@ export type OrderUncheckedUpdateWithoutPaymentsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1364,6 +1428,8 @@ export type OrderUncheckedUpdateWithoutPaymentsInput = {
 
 export type OrderCreateWithoutRefundsInput = {
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1401,6 +1467,8 @@ export type OrderUncheckedCreateWithoutRefundsInput = {
   id?: number
   userId: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1451,6 +1519,8 @@ export type OrderUpdateToOneWithWhereWithoutRefundsInput = {
 
 export type OrderUpdateWithoutRefundsInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1488,6 +1558,8 @@ export type OrderUncheckedUpdateWithoutRefundsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1522,6 +1594,8 @@ export type OrderUncheckedUpdateWithoutRefundsInput = {
 
 export type OrderCreateWithoutOrderItemsInput = {
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1559,6 +1633,8 @@ export type OrderUncheckedCreateWithoutOrderItemsInput = {
   id?: number
   userId: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1609,6 +1685,8 @@ export type OrderUpdateToOneWithWhereWithoutOrderItemsInput = {
 
 export type OrderUpdateWithoutOrderItemsInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1646,6 +1724,8 @@ export type OrderUncheckedUpdateWithoutOrderItemsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   userId?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1681,6 +1761,8 @@ export type OrderUncheckedUpdateWithoutOrderItemsInput = {
 export type OrderCreateManyUserInput = {
   id?: number
   status?: $Enums.OrderStatus
+  creationIdempotencyKey?: string | null
+  creationRequestHash?: string | null
   billingRecipientName: string
   billingLine1: string
   billingLine2?: string | null
@@ -1713,6 +1795,8 @@ export type OrderCreateManyUserInput = {
 
 export type OrderUpdateWithoutUserInput = {
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1749,6 +1833,8 @@ export type OrderUpdateWithoutUserInput = {
 export type OrderUncheckedUpdateWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1785,6 +1871,8 @@ export type OrderUncheckedUpdateWithoutUserInput = {
 export type OrderUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.EnumOrderStatusFieldUpdateOperationsInput | $Enums.OrderStatus
+  creationIdempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creationRequestHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   billingRecipientName?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine1?: Prisma.StringFieldUpdateOperationsInput | string
   billingLine2?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1868,6 +1956,8 @@ export type OrderSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   id?: boolean
   userId?: boolean
   status?: boolean
+  creationIdempotencyKey?: boolean
+  creationRequestHash?: boolean
   billingRecipientName?: boolean
   billingLine1?: boolean
   billingLine2?: boolean
@@ -1907,6 +1997,8 @@ export type OrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   userId?: boolean
   status?: boolean
+  creationIdempotencyKey?: boolean
+  creationRequestHash?: boolean
   billingRecipientName?: boolean
   billingLine1?: boolean
   billingLine2?: boolean
@@ -1942,6 +2034,8 @@ export type OrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   id?: boolean
   userId?: boolean
   status?: boolean
+  creationIdempotencyKey?: boolean
+  creationRequestHash?: boolean
   billingRecipientName?: boolean
   billingLine1?: boolean
   billingLine2?: boolean
@@ -1977,6 +2071,8 @@ export type OrderSelectScalar = {
   id?: boolean
   userId?: boolean
   status?: boolean
+  creationIdempotencyKey?: boolean
+  creationRequestHash?: boolean
   billingRecipientName?: boolean
   billingLine1?: boolean
   billingLine2?: boolean
@@ -2007,7 +2103,7 @@ export type OrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "reservationExpiresAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "completedAt" | "updatedAt", ExtArgs["result"]["order"]>
+export type OrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "status" | "creationIdempotencyKey" | "creationRequestHash" | "billingRecipientName" | "billingLine1" | "billingLine2" | "billingCity" | "billingCounty" | "billingPostcode" | "billingCountryCode" | "billingPhone" | "deliveryRecipientName" | "deliveryLine1" | "deliveryLine2" | "deliveryCity" | "deliveryCounty" | "deliveryPostcode" | "deliveryCountryCode" | "deliveryPhone" | "totalAmount" | "actualShippingCost" | "shippingCarrier" | "trackingNumber" | "dispatchedAt" | "reservationExpiresAt" | "createdAt" | "cancelledAt" | "cancelledBy" | "cancellationReason" | "completedAt" | "updatedAt", ExtArgs["result"]["order"]>
 export type OrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   orderItems?: boolean | Prisma.Order$orderItemsArgs<ExtArgs>
@@ -2034,6 +2130,8 @@ export type $OrderPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     id: number
     userId: number
     status: $Enums.OrderStatus
+    creationIdempotencyKey: string | null
+    creationRequestHash: string | null
     billingRecipientName: string
     billingLine1: string
     billingLine2: string | null
@@ -2492,6 +2590,8 @@ export interface OrderFieldRefs {
   readonly id: Prisma.FieldRef<"Order", 'Int'>
   readonly userId: Prisma.FieldRef<"Order", 'Int'>
   readonly status: Prisma.FieldRef<"Order", 'OrderStatus'>
+  readonly creationIdempotencyKey: Prisma.FieldRef<"Order", 'String'>
+  readonly creationRequestHash: Prisma.FieldRef<"Order", 'String'>
   readonly billingRecipientName: Prisma.FieldRef<"Order", 'String'>
   readonly billingLine1: Prisma.FieldRef<"Order", 'String'>
   readonly billingLine2: Prisma.FieldRef<"Order", 'String'>

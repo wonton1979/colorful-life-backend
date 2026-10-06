@@ -414,6 +414,8 @@ model Order {
   userId               Int
   user                 User        @relation(fields: [userId], references: [id], onDelete: Restrict)
   status               OrderStatus @default(PENDING)
+  creationIdempotencyKey String? @db.VarChar(128)
+  creationRequestHash String? @db.VarChar(64)
   // Billing address snapshot – comes from the user's saved/default address
   billingRecipientName String
   billingLine1         String
@@ -451,6 +453,7 @@ model Order {
   payments              Payment[]
   refunds               Refund[]
 
+  @@unique([userId, creationIdempotencyKey])
   @@index([userId])
 }
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { CreateOrderSchema } from "../domain/orders/orderValidator.js";
 import { completeOrder } from "../domain/orders/orderCompletionService.js";
-import { createOrder } from "../domain/orders/orderService.js";
+import { createOrder, OrderIdempotencyMismatchError, InvalidOrderIdempotencyKeyError } from "../domain/orders/orderService.js";
 // Error type used by the completion service
 import { OrderNotCompletableError } from "../domain/orders/orderCompletionErrors.js";
 import { OrderNotFoundError as OrderNotFoundErrorComplete } from "../domain/orders/orderDispatchErrors.js";
@@ -96,9 +96,12 @@ export const createOrderHandler = async (req: Request, res: Response) => {
   }
   const userId = (req.user as { id: number }).id;
   try {
-    const order = await createOrder(userId, parseResult.data);
-    return res.status(201).json(order);
+    const order = await createOrder(userId, parseResult.data, req.get("Idempotency-Key"));
+    const { creationIdempotencyKey: _key, creationRequestHash: _hash, ...response } = order;
+    return res.status(201).json(response);
   } catch (err: unknown) {
+      if (err instanceof OrderIdempotencyMismatchError) return sendApiError(res, 409, "ORDER_IDEMPOTENCY_MISMATCH", err.message);
+      if (err instanceof InvalidOrderIdempotencyKeyError) return sendApiError(res, 400, "INVALID_IDEMPOTENCY_KEY", err.message);
       if (err instanceof EmailVerificationRequiredError) {
         return sendApiError(res, 403, "EMAIL_VERIFICATION_REQUIRED", err.message);
       }

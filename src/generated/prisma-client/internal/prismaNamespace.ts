@@ -2472,6 +2472,8 @@ export const OrderScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
   status: 'status',
+  creationIdempotencyKey: 'creationIdempotencyKey',
+  creationRequestHash: 'creationRequestHash',
   billingRecipientName: 'billingRecipientName',
   billingLine1: 'billingLine1',
   billingLine2: 'billingLine2',
