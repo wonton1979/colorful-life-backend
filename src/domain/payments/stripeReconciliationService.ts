@@ -1,3 +1,4 @@
+import { confirmOrderInTransaction } from "../orders/orderConfirmationService.js";
 import { PaymentProvider, PaymentStatus, OrderStatus } from "../../generated/prisma-client/enums.js";
 import { prisma } from "../../prisma/runtime.js";
 import { Decimal } from "@prisma/client/runtime/client";
@@ -17,29 +18,58 @@ export async function reconcileStripePaymentEvent(event: StripePaymentIntentEven
   try {
     return await prisma.$transaction(async (tx) => {
       const receipt = await tx.paymentWebhookEvent.create({ data: { provider: PaymentProvider.STRIPE, providerEventId: event.id, eventType: event.type } });
-      const payment = await tx.payment.findFirst({ where: { provider: PaymentProvider.STRIPE, providerReference: event.paymentIntentId }, include: { order: true } });
+      // Correlate a verified event arriving before initiation persists the provider
+      // reference using the server-authored orderId metadata and pending attempt.
+      const metadataOrderId = Number(event.metadata?.orderId);
+      const candidate = await tx.payment.findFirst({ where: {
+        provider: PaymentProvider.STRIPE,
+        OR: [
+          { providerReference: event.paymentIntentId },
+          ...(Number.isSafeInteger(metadataOrderId) && metadataOrderId > 0 ? [{ orderId: metadataOrderId, providerReference: `pending:order-${metadataOrderId}-stripe` }] : []),
+        ],
+      } });
+      if (candidate) await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${candidate.orderId} FOR UPDATE`;
+      const payment = candidate ? await tx.payment.findUnique({ where: { id: candidate.id }, include: { order: true } }) : null;
       if (!payment) {
         await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Unknown Stripe payment" } });
         return { duplicate: false, handled: false };
       }
       const expectedAmount = new Decimal(payment.amount).mul(100).toNumber();
+      if (payment.providerReference !== event.paymentIntentId && !payment.providerReference.startsWith("pending:")) {
+        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe payment reference mismatch" } });
+        return { duplicate: false, handled: false };
+      }
+      if (event.metadata?.orderId && event.metadata.orderId !== String(payment.orderId)) {
+        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe order correlation mismatch" } });
+        return { duplicate: false, handled: false };
+      }
       if (event.type === "payment_intent.succeeded" && (event.amount !== expectedAmount || event.currency.toLowerCase() !== "gbp")) {
         await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe payment amount or currency mismatch" } });
         return { duplicate: false, handled: false };
       }
       if (event.type === "payment_intent.succeeded" && payment.status !== PaymentStatus.SUCCEEDED) {
-        await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.SUCCEEDED, paidAt: new Date() } });
+        await tx.payment.update({ where: { id: payment.id }, data: { providerReference: event.paymentIntentId, status: PaymentStatus.SUCCEEDED, paidAt: payment.paidAt ?? new Date() } });
       } else if (event.type === "payment_intent.payment_failed" && payment.status !== PaymentStatus.SUCCEEDED) {
         await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.FAILED } });
       } else if (event.type === "payment_intent.canceled" && payment.status !== PaymentStatus.SUCCEEDED) {
         await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.CANCELED } });
       }
-      const reconciliation = event.type === "payment_intent.succeeded" && payment.order.status === OrderStatus.EXPIRED ? "Captured payment for expired order requires refund/reconciliation" : null;
+      // Receipt, payment success, inventory conversion and order status commit
+      // together. A conversion failure rolls everything back so Stripe can retry.
+      if (event.type === "payment_intent.succeeded" && payment.order.status === OrderStatus.PENDING) {
+        await confirmOrderInTransaction(tx, payment.order.userId, payment.orderId);
+      }
+      const reconciliation = event.type === "payment_intent.succeeded" &&
+        (payment.order.status === OrderStatus.EXPIRED || payment.order.status === OrderStatus.CANCELLED || payment.order.status === OrderStatus.RETURNED)
+        ? `Captured payment for ${payment.order.status.toLowerCase()} order requires refund/reconciliation` : null;
       await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: reconciliation } });
       return { duplicate: false, handled: true };
     });
   } catch (error: unknown) {
-    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002") return { duplicate: true, handled: true };
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002") {
+      const receipt = await prisma.paymentWebhookEvent.findFirst({ where: { provider: PaymentProvider.STRIPE, providerEventId: event.id } });
+      if (receipt) return { duplicate: true, handled: true };
+    }
     throw error;
   }
 }

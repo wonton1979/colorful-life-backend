@@ -1,6 +1,11 @@
 import type { Response } from "express";
 
 export type ApiErrorCode =
+  | "ORDER_IDEMPOTENCY_MISMATCH"
+  | "INVALID_IDEMPOTENCY_KEY"
+  | "ORDER_EXPIRED"
+  | "ORDER_NOT_PAYABLE"
+  | "PAYMENT_ALREADY_COMPLETED"
   | "AUTH_REQUIRED"
   | "SESSION_INVALID"
   | "FORBIDDEN"

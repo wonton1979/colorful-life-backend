@@ -28,6 +28,7 @@ export async function cancelOrder(
   const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
 
   const updatedOrder = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order || order.userId !== userId) {
       throw new OrderNotFoundError(orderId);
@@ -114,6 +115,7 @@ export async function cancelOrderByAdmin(
   const cancellableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED];
 
   const updatedOrder = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${orderId} FOR UPDATE`;
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order) {
       throw new OrderNotFoundError(orderId);

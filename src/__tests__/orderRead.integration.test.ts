@@ -98,6 +98,14 @@ describe("customer order reads", () => {
     assert.strictEqual(response.status, 200);
     const body = await response.json();
     assert.deepStrictEqual({ id: body.id, status: body.status, totalAmount: body.totalAmount, itemQuantity: body.orderItems[0].quantity, unitPrice: body.orderItems[0].unitPrice, lineTotal: body.orderItems[0].lineTotal }, { id: order.id, status: "PENDING", totalAmount: "30", itemQuantity: 2, unitPrice: "15", lineTotal: "30" });
+    assert.equal(body.payment, null);
+    assert.equal(body.reservationExpiresAt, order.reservationExpiresAt?.toISOString());
+    for (const prefix of ["billing", "delivery"]) {
+      assert.deepEqual(Object.fromEntries(["RecipientName", "Line1", "Line2", "City", "County", "Postcode", "CountryCode", "Phone"].map((field) => [field, body[`${prefix}${field}`]])), {
+        RecipientName: "Customer", Line1: "1 Test Street", Line2: null,
+        City: "Testville", County: null, Postcode: "T1", CountryCode: "GB", Phone: null,
+      });
+    }
     assert.strictEqual(body.orderItems[0].productListing.legoProduct.title, "Read Product");
     assert.strictEqual(body.actualShippingCost, undefined);
     assert.strictEqual(body.user, undefined);
@@ -107,6 +115,21 @@ describe("customer order reads", () => {
     assert.strictEqual(body.payments, undefined);
     assert.strictEqual(body.refunds, undefined);
     assert.strictEqual(body.returns, undefined);
+  });
+
+  it("exposes only authoritative payment status and paidAt to the owner", async () => {
+    const owner = await makeUser(); const other = await makeUser(); const listing = await makeListing();
+    const order = await makeOrder(owner.id, listing.id);
+    await prisma.payment.create({ data: { orderId: order.id, amount: order.totalAmount, provider: "STRIPE", providerReference: "pi_private", status: "PROCESSING", idempotencyKey: randomUUID() } });
+    const pending = await (await get(owner.token, `/orders/${order.id}`)).json();
+    assert.deepEqual(pending.payment, { status: "PROCESSING", paidAt: null });
+    const paidAt = new Date("2026-10-01T12:00:00Z");
+    await prisma.payment.update({ where: { orderId: order.id }, data: { status: "SUCCEEDED", paidAt } });
+    const paid = await (await get(owner.token, `/orders/${order.id}`)).json();
+    assert.deepEqual(paid.payment, { status: "SUCCEEDED", paidAt: paidAt.toISOString() });
+    assert.equal(paid.payments, undefined); assert.equal(paid.creationRequestHash, undefined);
+    const forbidden = await get(other.token, `/orders/${order.id}`);
+    assert.equal(forbidden.status, 404); assert.deepEqual(await forbidden.json(), { error: "Order not found" });
   });
 
   it("returns dispatch and completion fields but not actual shipping cost", async () => {

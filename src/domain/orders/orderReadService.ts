@@ -41,8 +41,21 @@ export async function listCustomerOrders(userId: number) {
 }
 
 export async function getCustomerOrder(userId: number, orderId: number) {
-  return prisma.order.findFirst({
+  const order = await prisma.order.findFirst({
     where: { id: orderId, userId },
-    select: orderReadSelect,
+    select: {
+      ...orderReadSelect,
+      reservationExpiresAt: true,
+      billingRecipientName: true, billingLine1: true, billingLine2: true,
+      billingCity: true, billingCounty: true, billingPostcode: true,
+      billingCountryCode: true, billingPhone: true,
+      deliveryRecipientName: true, deliveryLine1: true, deliveryLine2: true,
+      deliveryCity: true, deliveryCounty: true, deliveryPostcode: true,
+      deliveryCountryCode: true, deliveryPhone: true,
+      payments: { select: { status: true, paidAt: true } },
+    },
   });
+  if (!order) return null;
+  const { payments, ...safeOrder } = order;
+  return { ...safeOrder, payment: payments[0] ?? null };
 }
