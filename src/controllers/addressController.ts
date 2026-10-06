@@ -54,6 +54,11 @@ function mapAddressToApi(addr: AddressSelect): AddressOutput {
   };
 }
 
+/** Serialize every address mutation on the stable owner row, including an empty address book. */
+async function lockAddressOwner(tx: Prisma.TransactionClient, userId: number): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`;
+}
+
 // ---------------------------------------------------------------------------
 // Validation schemas
 // ---------------------------------------------------------------------------
@@ -153,6 +158,7 @@ export const createAddress = async (req: Request, res: Response) => {
   const data = parseResult.data;
   try {
     const created = await prisma.$transaction(async (tx) => {
+      await lockAddressOwner(tx, userId);
       const addressCount = await tx.address.count({ where: { userId } });
       const isFirst = addressCount === 0;
       let isDefaultShipping = data.isDefaultShipping ?? false;
@@ -208,12 +214,21 @@ export const updateAddress = async (req: Request, res: Response) => {
   const data = parseResult.data;
   try {
     const result = await prisma.$transaction(async (tx) => {
+      await lockAddressOwner(tx, userId);
       const address = await tx.address.findFirst({
         where: { id: addressId, userId },
         select: { id: true, userId: true, isDefault: true, isDefaultBilling: true },
       });
       if (!address) {
         return null;
+      }
+      // Reject the complete request before clearing either role. Returning a
+      // rejection from a transaction callback commits any preceding writes.
+      if (data.isDefaultShipping === false && address.isDefault) {
+        return "cannot_unset_shipping_default";
+      }
+      if (data.isDefaultBilling === false && address.isDefaultBilling) {
+        return "cannot_unset_billing_default";
       }
       const updateData: Prisma.AddressUpdateInput = {};
       if (data.recipientName !== undefined) updateData.recipientName = data.recipientName;
@@ -227,16 +242,12 @@ export const updateAddress = async (req: Request, res: Response) => {
         if (data.isDefaultShipping) {
           await tx.address.updateMany({ where: { userId, isDefault: true }, data: { isDefault: false } });
           updateData.isDefault = true;
-        } else if (address.isDefault) {
-          return "cannot_unset_shipping_default";
         }
       }
       if (data.isDefaultBilling !== undefined) {
         if (data.isDefaultBilling) {
           await tx.address.updateMany({ where: { userId, isDefaultBilling: true }, data: { isDefaultBilling: false } });
           updateData.isDefaultBilling = true;
-        } else if (address.isDefaultBilling) {
-          return "cannot_unset_billing_default";
         }
       }
       const updatedAddr = await tx.address.update({ where: { id: addressId }, data: updateData, select: { id: true, recipientName: true, line1: true, line2: true, city: true, postcode: true, countryCode: true, phone: true, isDefault: true, isDefaultBilling: true } });
@@ -272,6 +283,7 @@ export const deleteAddress = async (req: Request, res: Response) => {
   }
   try {
     const deleted = await prisma.$transaction(async (tx) => {
+      await lockAddressOwner(tx, userId);
       const address = await tx.address.findFirst({ where: { id: addressId, userId }, select: { id: true, userId: true, isDefault: true, isDefaultBilling: true } });
       if (!address) {
         return false;
