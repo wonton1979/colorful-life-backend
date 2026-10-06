@@ -1,6 +1,8 @@
 import type { Response } from "express";
 
 export type ApiErrorCode =
+  | "STRIPE_RECOVERY_UNAVAILABLE"
+  | "STRIPE_RECOVERY_MISMATCH"
   | "ORDER_IDEMPOTENCY_MISMATCH"
   | "INVALID_IDEMPOTENCY_KEY"
   | "ORDER_EXPIRED"
