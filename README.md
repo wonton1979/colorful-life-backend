@@ -503,6 +503,35 @@ Stable conflict errors use the same error envelope:
 
 Missing/other-owner orders remain **404** and provider unavailability remains **503**. Re-read the order after a conflict or ambiguous initiation response.
 
+### `POST /orders/:orderId/payments/stripe/reconcile` (Issue #146)
+
+Explicit fallback for a missed Stripe webhook. Requires authentication, verified email and ownership of the order, just like customer checkout reads. No request body or query parameters are required; any browser-supplied intent ID, success status or amount is ignored. The backend selects the existing local Stripe Payment and retrieves its persisted `providerReference` server-side. It never creates, confirms, cancels or refunds a provider payment.
+
+**200** returns exactly the safe `GET /orders/:orderId` Order projection, including `status`, `payment: { status, paidAt }`, reservation expiry, items and address snapshots. It does not expose the retrieved intent, provider references, client secrets or reconciliation internals. HTTP 200 means recovery inspected the provider state; it does **not** by itself mean payment/order confirmation succeeded. The storefront must inspect both payment and order status.
+
+For a valid Stripe `succeeded` result, recovery validates the local payment/order identity, unchanged persisted reference, exact returned intent ID, required `metadata.orderId`, payment amount against order total, exact GBP amount/currency, and `amount_received` equal to the expected amount. It then uses the same transaction/domain transition as webhook reconciliation: Payment SUCCEEDED/paidAt, PENDING → CONFIRMED and exactly-once reservation conversion/inventory movement. `paidAt` follows the existing convention: time the backend first records success, preserved on subsequent reconciliation.
+
+All non-success statuses (`processing`, `requires_payment_method`, `requires_action`, `requires_confirmation`, `requires_capture`, `canceled`) leave local payment/order state unchanged. A stale non-success response cannot overwrite a webhook success. Re-read the returned local state; never start another charge merely because recovery remains pending.
+
+Errors:
+
+- **400**: invalid order ID.
+- **401**: existing `AUTH_REQUIRED` / `SESSION_INVALID` authentication errors.
+- **403 `EMAIL_VERIFICATION_REQUIRED`**: account verification required.
+- **404**: same response for missing and other-customer orders.
+- **409 `STRIPE_RECOVERY_UNAVAILABLE`**: no local payment, non-Stripe payment, or missing/pending provider reference. Recovery will not guess an intent or create one to repair a placeholder.
+- **409 `STRIPE_RECOVERY_MISMATCH`**: provider/local correlation or financial validation failed, including a changed payment identity while retrieval was in flight. No recovery business changes commit.
+- **503**: Stripe unavailable or not configured; no recovery business changes commit.
+- **500 `INTERNAL_SERVER_ERROR`**: internal/inventory conversion failure; the recovery transaction rolls back and the same request can safely retry after the underlying problem is resolved.
+
+Stripe retrieval runs outside the database transaction. Recovery then locks the order, reloads the exact local payment and validates current identity before applying shared reconciliation. Webhook/recovery/repeated recovery use the same lock, monotonic success rules and confirmation implementation. Successful retrieval evidence is retained in the existing `PaymentWebhookEvent` store with distinct `eventType: payment_intent.recovered` and namespaced identity `recovery:<local-payment-id>:<intent-id>:succeeded`; this is a recovery audit record, not a claimed Stripe webhook delivery. The record and business changes commit atomically. Repeated recovery retains one audit record and cannot deduct inventory again.
+
+Terminal-state rules remain unchanged. EXPIRED/CANCELLED/RETURNED orders retain their status; captured success is recorded with the existing refund/reconciliation exception in the evidence store. CONFIRMED/DISPATCHED/COMPLETED orders are not reset or converted again. No automatic refund is introduced.
+
+An elapsed deadline alone does not release an order's reservation: recovery can confirm a still-reserved PENDING order if it commits before expiry. If expiry commits first—even while recovery retrieves Stripe—the order remains EXPIRED and success follows the existing late-payment exception path. This issue does not redesign expiry or guarantee automatic discovery before expiry.
+
+The verified webhook remains the primary path. Normal GETs remain local reads. The storefront may subsequently wire its explicit “Recheck order status” action to this POST and inspect the returned Order; bounded retries/polling of GET alone cannot discover a completely missed webhook. Frontend integration is separate.
+
 ### Authoritative confirmation and recovery
 
 **Stripe browser/client success is not authoritative.** Clients must re-read `GET /orders/:orderId` and require successful payment plus a confirmed/fulfilment order state before displaying normal confirmation. A `SUCCEEDED` payment attached to an EXPIRED or CANCELLED order is a late-payment exception, not normal fulfilment. Pending/processing responses require continued backend polling/recovery.

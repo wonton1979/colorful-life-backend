@@ -1,3 +1,4 @@
+import type { Prisma } from "../../generated/prisma-client/client.js";
 import { confirmOrderInTransaction } from "../orders/orderConfirmationService.js";
 import { PaymentProvider, PaymentStatus, OrderStatus } from "../../generated/prisma-client/enums.js";
 import { prisma } from "../../prisma/runtime.js";
@@ -13,6 +14,43 @@ export type StripePaymentIntentEvent = {
   currency: string;
   metadata?: Record<string, string>;
 };
+
+type StripePaymentWithOrder = Prisma.PaymentGetPayload<{ include: { order: true } }>;
+export type StripePaymentOutcome = Omit<StripePaymentIntentEvent, "id">;
+
+/** Financial/correlation checks shared by verified webhooks and server retrieval. */
+export function validateStripePaymentOutcome(payment: StripePaymentWithOrder, event: StripePaymentOutcome): string | null {
+  const expectedAmount = new Decimal(payment.amount).mul(100).toNumber();
+  if (payment.providerReference !== event.paymentIntentId && !payment.providerReference.startsWith("pending:")) {
+    return "Stripe payment reference mismatch";
+  }
+  if (event.metadata?.orderId && event.metadata.orderId !== String(payment.orderId)) {
+    return "Stripe order correlation mismatch";
+  }
+  if (event.type === "payment_intent.succeeded" && (event.amount !== expectedAmount || event.currency.toLowerCase() !== "gbp")) {
+    return "Stripe payment amount or currency mismatch";
+  }
+  return null;
+}
+
+/** Caller must hold the order-row lock and validate authoritative evidence first. */
+export async function applyStripePaymentOutcome(tx: Prisma.TransactionClient, payment: StripePaymentWithOrder, event: StripePaymentOutcome): Promise<string | null> {
+  if (event.type === "payment_intent.succeeded" && payment.status !== PaymentStatus.SUCCEEDED) {
+    await tx.payment.update({ where: { id: payment.id }, data: { providerReference: event.paymentIntentId, status: PaymentStatus.SUCCEEDED, paidAt: payment.paidAt ?? new Date() } });
+  } else if (event.type === "payment_intent.payment_failed" && payment.status !== PaymentStatus.SUCCEEDED) {
+    await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.FAILED } });
+  } else if (event.type === "payment_intent.canceled" && payment.status !== PaymentStatus.SUCCEEDED) {
+    await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.CANCELED } });
+  }
+  // Evidence, payment success and inventory conversion commit together. Failure
+  // rolls everything back, permitting a webhook redelivery or recovery retry.
+  if (event.type === "payment_intent.succeeded" && payment.order.status === OrderStatus.PENDING) {
+    await confirmOrderInTransaction(tx, payment.order.userId, payment.orderId);
+  }
+  return event.type === "payment_intent.succeeded" &&
+    (payment.order.status === OrderStatus.EXPIRED || payment.order.status === OrderStatus.CANCELLED || payment.order.status === OrderStatus.RETURNED)
+    ? `Captured payment for ${payment.order.status.toLowerCase()} order requires refund/reconciliation` : null;
+}
 
 export async function reconcileStripePaymentEvent(event: StripePaymentIntentEvent): Promise<{ duplicate: boolean; handled: boolean }> {
   try {
@@ -34,34 +72,12 @@ export async function reconcileStripePaymentEvent(event: StripePaymentIntentEven
         await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Unknown Stripe payment" } });
         return { duplicate: false, handled: false };
       }
-      const expectedAmount = new Decimal(payment.amount).mul(100).toNumber();
-      if (payment.providerReference !== event.paymentIntentId && !payment.providerReference.startsWith("pending:")) {
-        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe payment reference mismatch" } });
+      const validationError = validateStripePaymentOutcome(payment, event);
+      if (validationError) {
+        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: validationError } });
         return { duplicate: false, handled: false };
       }
-      if (event.metadata?.orderId && event.metadata.orderId !== String(payment.orderId)) {
-        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe order correlation mismatch" } });
-        return { duplicate: false, handled: false };
-      }
-      if (event.type === "payment_intent.succeeded" && (event.amount !== expectedAmount || event.currency.toLowerCase() !== "gbp")) {
-        await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: "Stripe payment amount or currency mismatch" } });
-        return { duplicate: false, handled: false };
-      }
-      if (event.type === "payment_intent.succeeded" && payment.status !== PaymentStatus.SUCCEEDED) {
-        await tx.payment.update({ where: { id: payment.id }, data: { providerReference: event.paymentIntentId, status: PaymentStatus.SUCCEEDED, paidAt: payment.paidAt ?? new Date() } });
-      } else if (event.type === "payment_intent.payment_failed" && payment.status !== PaymentStatus.SUCCEEDED) {
-        await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.FAILED } });
-      } else if (event.type === "payment_intent.canceled" && payment.status !== PaymentStatus.SUCCEEDED) {
-        await tx.payment.update({ where: { id: payment.id }, data: { status: PaymentStatus.CANCELED } });
-      }
-      // Receipt, payment success, inventory conversion and order status commit
-      // together. A conversion failure rolls everything back so Stripe can retry.
-      if (event.type === "payment_intent.succeeded" && payment.order.status === OrderStatus.PENDING) {
-        await confirmOrderInTransaction(tx, payment.order.userId, payment.orderId);
-      }
-      const reconciliation = event.type === "payment_intent.succeeded" &&
-        (payment.order.status === OrderStatus.EXPIRED || payment.order.status === OrderStatus.CANCELLED || payment.order.status === OrderStatus.RETURNED)
-        ? `Captured payment for ${payment.order.status.toLowerCase()} order requires refund/reconciliation` : null;
+      const reconciliation = await applyStripePaymentOutcome(tx, payment, event);
       await tx.paymentWebhookEvent.update({ where: { id: receipt.id }, data: { processedAt: new Date(), processingError: reconciliation } });
       return { duplicate: false, handled: true };
     });
