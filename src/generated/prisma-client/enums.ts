@@ -215,3 +215,14 @@ export const BusinessExpenseSourceType = {
 } as const
 
 export type BusinessExpenseSourceType = (typeof BusinessExpenseSourceType)[keyof typeof BusinessExpenseSourceType]
+
+
+export const CartReconciliationState = {
+  ACTIVE: 'ACTIVE',
+  CONSUME_PENDING: 'CONSUME_PENDING',
+  RELEASE_PENDING: 'RELEASE_PENDING',
+  CONSUMED: 'CONSUMED',
+  RELEASED: 'RELEASED'
+} as const
+
+export type CartReconciliationState = (typeof CartReconciliationState)[keyof typeof CartReconciliationState]

@@ -413,6 +413,8 @@ export const ModelName = {
   InventoryMovement: 'InventoryMovement',
   InventoryAudit: 'InventoryAudit',
   Order: 'Order',
+  OrderCartProvenance: 'OrderCartProvenance',
+  OrderCartAllocation: 'OrderCartAllocation',
   Payment: 'Payment',
   PaymentWebhookEvent: 'PaymentWebhookEvent',
   Refund: 'Refund',
@@ -436,7 +438,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "businessExpense" | "user" | "refreshSession" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "category" | "productListing" | "usedConditionPhoto" | "cart" | "cartItem" | "productImage" | "inventoryMovement" | "inventoryAudit" | "order" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
+    modelProps: "businessExpense" | "user" | "refreshSession" | "emailVerificationToken" | "passwordResetToken" | "address" | "legoProduct" | "category" | "productListing" | "usedConditionPhoto" | "cart" | "cartItem" | "productImage" | "inventoryMovement" | "inventoryAudit" | "order" | "orderCartProvenance" | "orderCartAllocation" | "payment" | "paymentWebhookEvent" | "refund" | "orderItem" | "orderReturn" | "purchase" | "purchaseDocument" | "purchaseItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1624,6 +1626,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    OrderCartProvenance: {
+      payload: Prisma.$OrderCartProvenancePayload<ExtArgs>
+      fields: Prisma.OrderCartProvenanceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderCartProvenanceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderCartProvenanceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        findFirst: {
+          args: Prisma.OrderCartProvenanceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderCartProvenanceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        findMany: {
+          args: Prisma.OrderCartProvenanceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>[]
+        }
+        create: {
+          args: Prisma.OrderCartProvenanceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        createMany: {
+          args: Prisma.OrderCartProvenanceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderCartProvenanceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>[]
+        }
+        delete: {
+          args: Prisma.OrderCartProvenanceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        update: {
+          args: Prisma.OrderCartProvenanceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderCartProvenanceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderCartProvenanceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderCartProvenanceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderCartProvenanceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartProvenancePayload>
+        }
+        aggregate: {
+          args: Prisma.OrderCartProvenanceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderCartProvenance>
+        }
+        groupBy: {
+          args: Prisma.OrderCartProvenanceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderCartProvenanceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderCartProvenanceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderCartProvenanceCountAggregateOutputType> | number
+        }
+      }
+    }
+    OrderCartAllocation: {
+      payload: Prisma.$OrderCartAllocationPayload<ExtArgs>
+      fields: Prisma.OrderCartAllocationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OrderCartAllocationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OrderCartAllocationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        findFirst: {
+          args: Prisma.OrderCartAllocationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OrderCartAllocationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        findMany: {
+          args: Prisma.OrderCartAllocationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>[]
+        }
+        create: {
+          args: Prisma.OrderCartAllocationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        createMany: {
+          args: Prisma.OrderCartAllocationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OrderCartAllocationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>[]
+        }
+        delete: {
+          args: Prisma.OrderCartAllocationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        update: {
+          args: Prisma.OrderCartAllocationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        deleteMany: {
+          args: Prisma.OrderCartAllocationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OrderCartAllocationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OrderCartAllocationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>[]
+        }
+        upsert: {
+          args: Prisma.OrderCartAllocationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OrderCartAllocationPayload>
+        }
+        aggregate: {
+          args: Prisma.OrderCartAllocationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOrderCartAllocation>
+        }
+        groupBy: {
+          args: Prisma.OrderCartAllocationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderCartAllocationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OrderCartAllocationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OrderCartAllocationCountAggregateOutputType> | number
+        }
+      }
+    }
     Payment: {
       payload: Prisma.$PaymentPayload<ExtArgs>
       fields: Prisma.PaymentFieldRefs
@@ -2507,6 +2657,29 @@ export const OrderScalarFieldEnum = {
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
 
 
+export const OrderCartProvenanceScalarFieldEnum = {
+  orderId: 'orderId',
+  cartId: 'cartId',
+  state: 'state',
+  completedAt: 'completedAt',
+  lastError: 'lastError'
+} as const
+
+export type OrderCartProvenanceScalarFieldEnum = (typeof OrderCartProvenanceScalarFieldEnum)[keyof typeof OrderCartProvenanceScalarFieldEnum]
+
+
+export const OrderCartAllocationScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  cartItemId: 'cartItemId',
+  productListingId: 'productListingId',
+  quantity: 'quantity',
+  visibleQuantity: 'visibleQuantity'
+} as const
+
+export type OrderCartAllocationScalarFieldEnum = (typeof OrderCartAllocationScalarFieldEnum)[keyof typeof OrderCartAllocationScalarFieldEnum]
+
+
 export const PaymentScalarFieldEnum = {
   id: 'id',
   orderId: 'orderId',
@@ -2928,6 +3101,20 @@ export type ListEnumCancellationReasonFieldRefInput<$PrismaModel> = FieldRefInpu
 
 
 /**
+ * Reference to a field of type 'CartReconciliationState'
+ */
+export type EnumCartReconciliationStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CartReconciliationState'>
+
+
+
+/**
+ * Reference to a field of type 'CartReconciliationState[]'
+ */
+export type ListEnumCartReconciliationStateFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CartReconciliationState[]'>
+
+
+
+/**
  * Reference to a field of type 'PaymentProvider'
  */
 export type EnumPaymentProviderFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentProvider'>
@@ -3247,6 +3434,8 @@ export type GlobalOmitConfig = {
   inventoryMovement?: Prisma.InventoryMovementOmit
   inventoryAudit?: Prisma.InventoryAuditOmit
   order?: Prisma.OrderOmit
+  orderCartProvenance?: Prisma.OrderCartProvenanceOmit
+  orderCartAllocation?: Prisma.OrderCartAllocationOmit
   payment?: Prisma.PaymentOmit
   paymentWebhookEvent?: Prisma.PaymentWebhookEventOmit
   refund?: Prisma.RefundOmit

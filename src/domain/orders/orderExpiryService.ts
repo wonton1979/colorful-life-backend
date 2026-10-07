@@ -1,3 +1,4 @@
+import { queueCartReconciliation } from "../cart/cartProvenanceService.js";
 import { prisma } from "../../prisma/runtime.js";
 import { OrderStatus, PaymentStatus } from "../../generated/prisma-client/enums.js";
 import { InsufficientReservedStockError } from "./orderCancellationErrors.js";
@@ -36,7 +37,7 @@ export async function expireOrderReservation(orderId: number, asOf = new Date())
       where: { orderId },
       select: { productListingId: true, quantity: true },
     });
-    for (const item of items) {
+    for (const item of items.sort((a, b) => a.productListingId - b.productListingId)) {
       const release = await tx.productListing.updateMany({
         where: {
           id: item.productListingId,
@@ -49,6 +50,7 @@ export async function expireOrderReservation(orderId: number, asOf = new Date())
       }
     }
 
+    await queueCartReconciliation(tx, orderId, false);
     return tx.order.findUnique({ where: { id: orderId } });
   });
 }

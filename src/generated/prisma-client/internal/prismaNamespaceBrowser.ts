@@ -67,6 +67,8 @@ export const ModelName = {
   InventoryMovement: 'InventoryMovement',
   InventoryAudit: 'InventoryAudit',
   Order: 'Order',
+  OrderCartProvenance: 'OrderCartProvenance',
+  OrderCartAllocation: 'OrderCartAllocation',
   Payment: 'Payment',
   PaymentWebhookEvent: 'PaymentWebhookEvent',
   Refund: 'Refund',
@@ -343,6 +345,29 @@ export const OrderScalarFieldEnum = {
 } as const
 
 export type OrderScalarFieldEnum = (typeof OrderScalarFieldEnum)[keyof typeof OrderScalarFieldEnum]
+
+
+export const OrderCartProvenanceScalarFieldEnum = {
+  orderId: 'orderId',
+  cartId: 'cartId',
+  state: 'state',
+  completedAt: 'completedAt',
+  lastError: 'lastError'
+} as const
+
+export type OrderCartProvenanceScalarFieldEnum = (typeof OrderCartProvenanceScalarFieldEnum)[keyof typeof OrderCartProvenanceScalarFieldEnum]
+
+
+export const OrderCartAllocationScalarFieldEnum = {
+  id: 'id',
+  orderId: 'orderId',
+  cartItemId: 'cartItemId',
+  productListingId: 'productListingId',
+  quantity: 'quantity',
+  visibleQuantity: 'visibleQuantity'
+} as const
+
+export type OrderCartAllocationScalarFieldEnum = (typeof OrderCartAllocationScalarFieldEnum)[keyof typeof OrderCartAllocationScalarFieldEnum]
 
 
 export const PaymentScalarFieldEnum = {

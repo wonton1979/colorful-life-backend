@@ -1,3 +1,4 @@
+import { queueCartReconciliation } from "../cart/cartProvenanceService.js";
 import { prisma } from "../../prisma/runtime.js";
 import {
   OrderStatus,
@@ -56,7 +57,7 @@ export async function cancelOrder(
 
     if (order.status === OrderStatus.PENDING) {
       const orderItems = await tx.orderItem.findMany({ where: { orderId }, select: { productListingId: true, quantity: true } });
-      for (const item of orderItems) {
+      for (const item of orderItems.sort((a, b) => a.productListingId - b.productListingId)) {
         const released = await tx.productListing.updateMany({
           where: { id: item.productListingId, reservedStock: { gte: item.quantity } },
           data: { reservedStock: { decrement: item.quantity } },
@@ -69,7 +70,7 @@ export async function cancelOrder(
         select: { productListingId: true, quantity: true, productListing: { select: { condition: true } } },
       });
 
-      for (const item of orderItems) {
+      for (const item of orderItems.sort((a, b) => a.productListingId - b.productListingId)) {
         // A confirmed Used offer is terminal once consumed; a later cancellation
         // must not make that physical item sellable again.
         if (item.productListing.condition === "USED_LIKE_NEW") continue;
@@ -89,6 +90,7 @@ export async function cancelOrder(
       }
     }
 
+    if (order.status === OrderStatus.PENDING) await queueCartReconciliation(tx, orderId, false);
     const updated = await tx.order.findUnique({ where: { id: orderId } });
     if (!updated) {
       throw new OrderNotFoundError(orderId);
@@ -142,7 +144,7 @@ export async function cancelOrderByAdmin(
 
     if (order.status === OrderStatus.PENDING) {
       const orderItems = await tx.orderItem.findMany({ where: { orderId }, select: { productListingId: true, quantity: true } });
-      for (const item of orderItems) {
+      for (const item of orderItems.sort((a, b) => a.productListingId - b.productListingId)) {
         const released = await tx.productListing.updateMany({
           where: { id: item.productListingId, reservedStock: { gte: item.quantity } },
           data: { reservedStock: { decrement: item.quantity } },
@@ -155,7 +157,7 @@ export async function cancelOrderByAdmin(
         select: { productListingId: true, quantity: true, productListing: { select: { condition: true } } },
       });
 
-      for (const item of orderItems) {
+      for (const item of orderItems.sort((a, b) => a.productListingId - b.productListingId)) {
         if (item.productListing.condition === "USED_LIKE_NEW") continue;
         await tx.productListing.update({
           where: { id: item.productListingId },
@@ -173,6 +175,7 @@ export async function cancelOrderByAdmin(
       }
     }
 
+    if (order.status === OrderStatus.PENDING) await queueCartReconciliation(tx, orderId, false);
     const updated = await tx.order.findUnique({ where: { id: orderId } });
     if (!updated) {
       throw new OrderNotFoundError(orderId);

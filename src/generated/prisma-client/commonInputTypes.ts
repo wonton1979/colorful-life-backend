@@ -443,6 +443,23 @@ export type EnumCancellationReasonNullableWithAggregatesFilter<$PrismaModel = ne
   _max?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
 }
 
+export type EnumCartReconciliationStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.CartReconciliationState | Prisma.EnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  in?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel> | $Enums.CartReconciliationState
+}
+
+export type EnumCartReconciliationStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CartReconciliationState | Prisma.EnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  in?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCartReconciliationStateWithAggregatesFilter<$PrismaModel> | $Enums.CartReconciliationState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel>
+}
+
 export type EnumPaymentProviderFilter<$PrismaModel = never> = {
   equals?: $Enums.PaymentProvider | Prisma.EnumPaymentProviderFieldRefInput<$PrismaModel>
   in?: $Enums.PaymentProvider[] | Prisma.ListEnumPaymentProviderFieldRefInput<$PrismaModel>
@@ -1104,6 +1121,23 @@ export type NestedEnumCancellationReasonNullableWithAggregatesFilter<$PrismaMode
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumCancellationReasonNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumCartReconciliationStateFilter<$PrismaModel = never> = {
+  equals?: $Enums.CartReconciliationState | Prisma.EnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  in?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel> | $Enums.CartReconciliationState
+}
+
+export type NestedEnumCartReconciliationStateWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.CartReconciliationState | Prisma.EnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  in?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  notIn?: $Enums.CartReconciliationState[] | Prisma.ListEnumCartReconciliationStateFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumCartReconciliationStateWithAggregatesFilter<$PrismaModel> | $Enums.CartReconciliationState
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumCartReconciliationStateFilter<$PrismaModel>
 }
 
 export type NestedEnumPaymentProviderFilter<$PrismaModel = never> = {

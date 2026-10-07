@@ -1,3 +1,4 @@
+import { lockCustomerCart, settleCartReconciliation, prepareOrderCartAllocation, allocateOrderCart } from "../cart/cartProvenanceService.js";
 import { createHash } from "node:crypto";
 // Order creation service. Implements the domain rules for creating a
 // customer order without touching the database outside a single Prisma
@@ -129,6 +130,14 @@ export async function createOrder(
       }
     }
 
+    // No existing Order locks are acquired while this customer cart lock is held.
+    // Stock locks precede task/allocation writes, matching confirmation ordering.
+    await lockCustomerCart(tx, userId);
+    for (const listingId of [...listingIdsSet].sort((a, b) => a - b)) {
+      await tx.$queryRaw`SELECT id FROM "ProductListing" WHERE id = ${listingId} FOR UPDATE`;
+    }
+    await settleCartReconciliation(tx, userId);
+
     // 2a. Billing address
     const defaultBillingAddrs = await tx.address.findMany({
       where: { userId, isDefaultBilling: true },
@@ -198,6 +207,9 @@ export async function createOrder(
       };
     });
 
+    // Give already-owned cart quantity its stable conflict before attempting a
+    // second stock reservation. The customer lock protects the plan until commit.
+    const cartAllocation = await prepareOrderCartAllocation(tx, userId, input.items);
     const createdAt = now;
     for (const item of orderItemCreateData) {
       const reservationResult = await tx.$executeRaw`
@@ -243,6 +255,7 @@ export async function createOrder(
       },
       include: { orderItems: true },
     });
+    await allocateOrderCart(tx, order.id, cartAllocation);
     return order;
   });
 }

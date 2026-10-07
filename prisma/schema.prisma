@@ -339,6 +339,7 @@ model Cart {
   userId    Int        @unique
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     CartItem[]
+  orderProvenance OrderCartProvenance[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 }
@@ -350,6 +351,7 @@ model CartItem {
   productListingId Int
   productListing   ProductListing @relation(fields: [productListingId], references: [id], onDelete: Restrict)
   quantity         Int
+  orderAllocations OrderCartAllocation[]
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -452,9 +454,48 @@ model Order {
   orderItems            OrderItem[]
   payments              Payment[]
   refunds               Refund[]
+  cartProvenance        OrderCartProvenance?
 
   @@unique([userId, creationIdempotencyKey])
   @@index([userId])
+}
+
+// No backfill: absence means there is no trustworthy cart provenance.
+enum CartReconciliationState {
+  ACTIVE
+  CONSUME_PENDING
+  RELEASE_PENDING
+  CONSUMED
+  RELEASED
+}
+
+model OrderCartProvenance {
+  orderId Int @id
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  cartId Int
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  state CartReconciliationState @default(ACTIVE)
+  completedAt DateTime?
+  lastError String?
+  allocations OrderCartAllocation[]
+
+  @@index([state, orderId])
+  @@index([cartId, state])
+}
+
+model OrderCartAllocation {
+  id Int @id @default(autoincrement())
+  orderId Int
+  provenance OrderCartProvenance @relation(fields: [orderId], references: [orderId], onDelete: Cascade)
+  // Bound to a row identity, never to a listing recreated after removal.
+  cartItemId Int?
+  cartItem CartItem? @relation(fields: [cartItemId], references: [id], onDelete: SetNull)
+  productListingId Int
+  quantity Int
+  visibleQuantity Int
+
+  @@unique([orderId, productListingId])
+  @@index([cartItemId])
 }
 
 // -----------------------------------------------------------------------------
