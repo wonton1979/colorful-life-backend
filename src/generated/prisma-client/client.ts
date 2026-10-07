@@ -122,6 +122,16 @@ export type InventoryAudit = Prisma.InventoryAuditModel
  */
 export type Order = Prisma.OrderModel
 /**
+ * Model OrderCartProvenance
+ *
+ */
+export type OrderCartProvenance = Prisma.OrderCartProvenanceModel
+/**
+ * Model OrderCartAllocation
+ *
+ */
+export type OrderCartAllocation = Prisma.OrderCartAllocationModel
+/**
  * Model Payment
  *
  */

@@ -1,3 +1,4 @@
+import { queueCartReconciliation } from "../cart/cartProvenanceService.js";
 import type { Prisma } from "../../generated/prisma-client/client.js";
 import { prisma } from "../../prisma/runtime.js";
 import { OrderStatus, InventoryMovementType } from "../../generated/prisma-client/enums.js";
@@ -31,7 +32,7 @@ export async function confirmOrderInTransaction(tx: Prisma.TransactionClient, pe
   }
 
   // Validate stock and perform deductions
-  for (const item of order.orderItems) {
+  for (const item of [...order.orderItems].sort((a, b) => a.productListingId - b.productListingId)) {
     const conversionResult = await tx.$executeRaw`
       UPDATE "ProductListing"
       SET "currentStock" = "currentStock" - ${item.quantity},
@@ -64,5 +65,6 @@ export async function confirmOrderInTransaction(tx: Prisma.TransactionClient, pe
     where: { id: orderId, status: OrderStatus.PENDING },
     data: { status: OrderStatus.CONFIRMED, reservationExpiresAt: null },
   });
+  await queueCartReconciliation(tx, orderId, true);
   return updatedOrder;
 }

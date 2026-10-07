@@ -1,3 +1,4 @@
+import { CartQuantityAllocatedError } from "../domain/cart/cartProvenanceService.js";
 import { Request, Response } from "express";
 import { CreateOrderSchema } from "../domain/orders/orderValidator.js";
 import { completeOrder } from "../domain/orders/orderCompletionService.js";
@@ -100,6 +101,7 @@ export const createOrderHandler = async (req: Request, res: Response) => {
     const { creationIdempotencyKey: _key, creationRequestHash: _hash, ...response } = order;
     return res.status(201).json(response);
   } catch (err: unknown) {
+      if (err instanceof CartQuantityAllocatedError) return sendApiError(res, 409, "CART_QUANTITY_UNAVAILABLE", err.message);
       if (err instanceof OrderIdempotencyMismatchError) return sendApiError(res, 409, "ORDER_IDEMPOTENCY_MISMATCH", err.message);
       if (err instanceof InvalidOrderIdempotencyKeyError) return sendApiError(res, 400, "INVALID_IDEMPOTENCY_KEY", err.message);
       if (err instanceof EmailVerificationRequiredError) {
